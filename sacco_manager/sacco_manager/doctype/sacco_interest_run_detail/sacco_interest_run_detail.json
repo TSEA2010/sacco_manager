@@ -1,0 +1,72 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-04-21 15:12:39.836974",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "member",
+  "savings_account",
+  "opening_balance",
+  "interest_rate",
+  "column_break_rlii",
+  "interest_earned",
+  "savings_transaction"
+ ],
+ "fields": [
+  {
+   "fieldname": "member",
+   "fieldtype": "Link",
+   "label": "Member",
+   "options": "SACCO Member"
+  },
+  {
+   "fieldname": "savings_account",
+   "fieldtype": "Link",
+   "label": "Savings Account",
+   "options": "SACCO Savings Account"
+  },
+  {
+   "fetch_from": "savings_account.balance",
+   "fieldname": "opening_balance",
+   "fieldtype": "Currency",
+   "label": "Opening Balance"
+  },
+  {
+   "fetch_from": "savings_account.interest_rate",
+   "fieldname": "interest_rate",
+   "fieldtype": "Float",
+   "label": "Interest Rate (%)"
+  },
+  {
+   "fieldname": "column_break_rlii",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "interest_earned",
+   "fieldtype": "Currency",
+   "label": "Interest Earned"
+  },
+  {
+   "fieldname": "savings_transaction",
+   "fieldtype": "Link",
+   "label": "Transaction",
+   "options": "SACCO Savings Transaction"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-04-21 23:35:06.240042",
+ "modified_by": "Administrator",
+ "module": "Sacco Manager",
+ "name": "SACCO Interest Run Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
