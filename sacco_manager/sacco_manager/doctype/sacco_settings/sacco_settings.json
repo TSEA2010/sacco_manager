@@ -11,7 +11,8 @@
   "column_break_qndu",
   "income_account",
   "interest_account",
-  "default_share_price"
+  "default_share_price",
+  "naming_code"
  ],
  "fields": [
   {
@@ -52,13 +53,19 @@
    "fieldtype": "Link",
    "label": "Interest Account",
    "options": "Account"
+  },
+  {
+   "description": "example TSEA, TS, WHK",
+   "fieldname": "naming_code",
+   "fieldtype": "Data",
+   "label": "Naming Code"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-04-23 18:24:57.254082",
+ "modified": "2026-05-07 12:47:24.961329",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Settings",

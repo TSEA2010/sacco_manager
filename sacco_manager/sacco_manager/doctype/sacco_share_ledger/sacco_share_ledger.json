@@ -63,7 +63,8 @@
   {
    "fieldname": "price_per_share",
    "fieldtype": "Currency",
-   "label": "Price Per Share"
+   "label": "Price Per Share",
+   "read_only": 1
   },
   {
    "fieldname": "total_amount",
@@ -88,7 +89,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-04-24 12:02:35.893047",
+ "modified": "2026-05-07 13:13:16.548017",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Share Ledger",

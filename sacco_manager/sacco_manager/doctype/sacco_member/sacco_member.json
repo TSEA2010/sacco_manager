@@ -8,15 +8,33 @@
  "field_order": [
   "member_details_section",
   "member_no",
-  "full_name",
+  "first_name",
+  "middle_name",
+  "last_name",
   "id_number",
   "phone",
   "email_id",
+  "branch",
+  "member_type",
   "column_break_phvr",
   "joining_date",
   "status",
+  "kra_pin",
+  "marital_status",
+  "date_of_birth",
+  "gender",
+  "full_name",
+  "salutation",
+  "shares_section",
   "total_shares",
-  "share_balance"
+  "column_break_ogrp",
+  "share_balance",
+  "next_of_kin_section",
+  "contact_name",
+  "contact_email",
+  "column_break_ixxz",
+  "contact_phone",
+  "relation"
  ],
  "fields": [
   {
@@ -32,18 +50,23 @@
   {
    "fieldname": "full_name",
    "fieldtype": "Data",
-   "label": "Full Name"
+   "label": "Full Name",
+   "read_only": 1
   },
   {
    "fieldname": "id_number",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "ID Number",
+   "reqd": 1,
    "unique": 1
   },
   {
    "fieldname": "phone",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Phone",
+   "reqd": 1,
    "unique": 1
   },
   {
@@ -51,6 +74,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "Today",
    "fieldname": "joining_date",
    "fieldtype": "Date",
    "label": "Joining Date"
@@ -80,6 +104,104 @@
    "fieldtype": "Currency",
    "label": "Share Balance",
    "read_only": 1
+  },
+  {
+   "fieldname": "next_of_kin_section",
+   "fieldtype": "Section Break",
+   "label": "Next of Kin"
+  },
+  {
+   "fieldname": "contact_name",
+   "fieldtype": "Data",
+   "label": "Contact Name"
+  },
+  {
+   "fieldname": "contact_email",
+   "fieldtype": "Data",
+   "label": "Contact Email"
+  },
+  {
+   "fieldname": "column_break_ixxz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contact_phone",
+   "fieldtype": "Int",
+   "label": "Contact Phone"
+  },
+  {
+   "fieldname": "relation",
+   "fieldtype": "Data",
+   "label": "Relation"
+  },
+  {
+   "fieldname": "date_of_birth",
+   "fieldtype": "Date",
+   "label": "Date Of Birth"
+  },
+  {
+   "fieldname": "kra_pin",
+   "fieldtype": "Data",
+   "label": "KRA Pin",
+   "reqd": 1
+  },
+  {
+   "fieldname": "marital_status",
+   "fieldtype": "Select",
+   "label": "Marital Status",
+   "options": "\nSingle\nMarried\nDivorced\nWindowed"
+  },
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "First Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "middle_name",
+   "fieldtype": "Data",
+   "label": "Middle Name"
+  },
+  {
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Last Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "gender",
+   "fieldtype": "Select",
+   "label": "Gender",
+   "options": "\nMale\nFemale\nPrefer Not to Say\nAll"
+  },
+  {
+   "fieldname": "shares_section",
+   "fieldtype": "Section Break",
+   "label": "Shares"
+  },
+  {
+   "fieldname": "column_break_ogrp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Branch"
+  },
+  {
+   "default": "Ordinary",
+   "fieldname": "member_type",
+   "fieldtype": "Select",
+   "label": "Member Type",
+   "options": "\nOrdinary"
+  },
+  {
+   "fieldname": "salutation",
+   "fieldtype": "Select",
+   "label": "Salutation"
   }
  ],
  "grid_page_length": 50,
@@ -102,7 +224,7 @@
    "link_fieldname": "member"
   }
  ],
- "modified": "2026-04-24 12:02:50.109900",
+ "modified": "2026-05-07 13:11:43.835467",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Member",
