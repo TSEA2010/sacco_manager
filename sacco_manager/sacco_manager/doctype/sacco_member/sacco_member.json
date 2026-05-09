@@ -25,6 +25,9 @@
   "gender",
   "full_name",
   "salutation",
+  "is_user",
+  "portal_user_created",
+  "user_id",
   "shares_section",
   "total_shares",
   "column_break_ogrp",
@@ -34,7 +37,11 @@
   "contact_email",
   "column_break_ixxz",
   "contact_phone",
-  "relation"
+  "relation",
+  "customer_details_tab",
+  "customer",
+  "column_break_xeqa",
+  "customer_group"
  ],
  "fields": [
   {
@@ -202,6 +209,48 @@
    "fieldname": "salutation",
    "fieldtype": "Select",
    "label": "Salutation"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_user",
+   "fieldtype": "Check",
+   "label": "Is User"
+  },
+  {
+   "depends_on": "is_user",
+   "fieldname": "user_id",
+   "fieldtype": "Data",
+   "label": "User",
+   "options": "User"
+  },
+  {
+   "default": "0",
+   "fieldname": "portal_user_created",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Portal User"
+  },
+  {
+   "fieldname": "customer_details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Customer Details"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "column_break_xeqa",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "customer.customer_group",
+   "fieldname": "customer_group",
+   "fieldtype": "Link",
+   "label": "Customer Group",
+   "options": "Customer Group"
   }
  ],
  "grid_page_length": 50,
@@ -224,7 +273,7 @@
    "link_fieldname": "member"
   }
  ],
- "modified": "2026-05-07 13:11:43.835467",
+ "modified": "2026-05-09 17:33:00.595625",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Member",

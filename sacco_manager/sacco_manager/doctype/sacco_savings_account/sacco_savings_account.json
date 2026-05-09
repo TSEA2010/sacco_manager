@@ -17,7 +17,7 @@
  "fields": [
   {
    "fieldname": "account_no",
-   "fieldtype": "Autocomplete",
+   "fieldtype": "Data",
    "label": "Account Number"
   },
   {
@@ -59,7 +59,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-04-24 12:04:10.788971",
+ "modified": "2026-05-09 10:49:12.127631",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Savings Account",
