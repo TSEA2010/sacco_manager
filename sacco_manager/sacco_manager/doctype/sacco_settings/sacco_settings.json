@@ -8,6 +8,8 @@
   "savings_liability_account",
   "share_capital_account",
   "cash_account",
+  "sacco_loan_security_type",
+  "savings_multiplier",
   "column_break_qndu",
   "income_account",
   "interest_account",
@@ -59,13 +61,29 @@
    "fieldname": "naming_code",
    "fieldtype": "Data",
    "label": "Naming Code"
+  },
+  {
+   "description": "The Loan Security Type used when auto-creating security from SACCO savings",
+   "fieldname": "sacco_loan_security_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "SACCO Loan Security Type",
+   "options": "Loan Security Type",
+   "reqd": 1
+  },
+  {
+   "default": "3",
+   "description": "Loan security value = savings balance \u00d7 this multiplier (e.g. 4 = members can borrow 4\u00d7 their savings)",
+   "fieldname": "savings_multiplier",
+   "fieldtype": "Float",
+   "label": "Savings Multiplier"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-05-07 12:47:24.961329",
+ "modified": "2026-05-21 00:14:48.777133",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Settings",

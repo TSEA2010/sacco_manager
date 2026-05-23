@@ -17,7 +17,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Setup",
-   "link_count": 2,
+   "link_count": 3,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -45,8 +45,18 @@
   {
    "hidden": 0,
    "is_query_report": 0,
+   "label": "Stock Forecast",
+   "link_count": 0,
+   "link_to": "Stock Demand Forecast",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Master",
-   "link_count": 5,
+   "link_count": 6,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -100,9 +110,19 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO Monthly Savings Run",
+   "link_count": 0,
+   "link_to": "SACCO Monthly Savings Run",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2026-05-07 11:28:28.050974",
+ "modified": "2026-05-21 00:45:18.592106",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "Sacco Manager",

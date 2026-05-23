@@ -23,10 +23,8 @@ class SACCOSavingsTransaction(Document):
                 "message": f"Starting on_submit for {self.name}",
                 "type": "info"
             })
-            
             self.update_balance()
             self.post_gl()
-            
             frappe.publish_realtime("console_log", {
                 "message": f"Successfully submitted {self.name}",
                 "type": "success"
@@ -60,7 +58,11 @@ class SACCOSavingsTransaction(Document):
                 new_bal = acc.balance - self.amount
             self.balance_after = new_bal
             frappe.db.set_value("SACCO Savings Account", self.savings_account, "balance", new_bal)
-            
+
+            # Sync loan security collateral value
+            acc.balance = new_bal
+            acc.sync_loan_security()
+
             frappe.publish_realtime("console_log", {
                 "message": f"Balance updated: {acc.balance} -> {new_bal}",
                 "type": "debug"
@@ -76,6 +78,10 @@ class SACCOSavingsTransaction(Document):
         else:
             new_bal = acc.balance + self.amount
         frappe.db.set_value("SACCO Savings Account", self.savings_account, "balance", new_bal)
+
+        # Sync loan security collateral value on cancel
+        acc.balance = new_bal
+        acc.sync_loan_security()
 
     def post_gl(self):
         try:

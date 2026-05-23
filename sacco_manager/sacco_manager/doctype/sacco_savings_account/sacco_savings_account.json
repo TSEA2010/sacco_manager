@@ -9,10 +9,12 @@
   "account_no",
   "member",
   "account_type",
+  "loan_security",
   "column_break_araf",
   "interest_rate",
   "balance",
-  "status"
+  "status",
+  "monthly_contribution"
  ],
  "fields": [
   {
@@ -54,12 +56,24 @@
    "fieldtype": "Select",
    "label": "Status",
    "options": "\nActive\nOpen"
+  },
+  {
+   "fieldname": "loan_security",
+   "fieldtype": "Link",
+   "label": "Loan Security",
+   "options": "Loan Security"
+  },
+  {
+   "description": "Pledged monthly savings amount",
+   "fieldname": "monthly_contribution",
+   "fieldtype": "Currency",
+   "label": "Monthly Contribution"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-09 10:49:12.127631",
+ "modified": "2026-05-21 00:25:28.924939",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Savings Account",
