@@ -14,7 +14,12 @@
   "income_account",
   "interest_account",
   "default_share_price",
-  "naming_code"
+  "naming_code",
+  "remittance_section",
+  "remittance_due_day",
+  "penalty_rate",
+  "column_break_mxqo",
+  "penalty_income_account"
  ],
  "fields": [
   {
@@ -77,13 +82,40 @@
    "fieldname": "savings_multiplier",
    "fieldtype": "Float",
    "label": "Savings Multiplier"
+  },
+  {
+   "fieldname": "remittance_section",
+   "fieldtype": "Section Break",
+   "label": "Check-off Remittance"
+  },
+  {
+   "default": "5",
+   "description": "Day of month by which branches must remit (default 5th)",
+   "fieldname": "remittance_due_day",
+   "fieldtype": "Int",
+   "label": "Remittance Due Day"
+  },
+  {
+   "fieldname": "penalty_rate",
+   "fieldtype": "Percent",
+   "label": "Late Penalty Rate (% per month)"
+  },
+  {
+   "fieldname": "column_break_mxqo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "penalty_income_account",
+   "fieldtype": "Link",
+   "label": "Penalty Income Account",
+   "options": "Account"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-05-21 00:14:48.777133",
+ "modified": "2026-05-23 12:35:33.269104",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Settings",
