@@ -78,6 +78,7 @@
    "label": "Date"
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "journal_entry",
    "fieldtype": "Link",
    "label": "Journal Entry",
@@ -89,7 +90,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-07 13:13:16.548017",
+ "modified": "2026-05-25 22:32:25.064575",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Share Ledger",
