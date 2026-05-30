@@ -122,13 +122,14 @@ class SACCOMember(Document):
 
         # Direct field mappings
         field_map = {
-            "joining_date": "joining_date",
+            "joining_date": "custom_joining_date",
             "phone":        "mobile_no",
             "kra_pin":      "tax_id",
-            "date_of_birth":"date_of_birth",
+            "date_of_birth":"custom_date_of_birth",
             "marital_status":"marital_status",
             "email_id":     "email_id",
             "branch":       "branch",
+            "id_number":      "national_id",
         }
         for member_field, customer_field in field_map.items():
             value = self.get(member_field)
