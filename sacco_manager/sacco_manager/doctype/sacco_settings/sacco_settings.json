@@ -19,7 +19,11 @@
   "remittance_due_day",
   "penalty_rate",
   "column_break_mxqo",
-  "penalty_income_account"
+  "penalty_income_account",
+  "registration_fee_section",
+  "registration_fee_amount",
+  "column_break_gytk",
+  "registration_fee_income_account"
  ],
  "fields": [
   {
@@ -109,13 +113,33 @@
    "fieldtype": "Link",
    "label": "Penalty Income Account",
    "options": "Account"
+  },
+  {
+   "fieldname": "registration_fee_section",
+   "fieldtype": "Section Break",
+   "label": "Registration Fee"
+  },
+  {
+   "fieldname": "registration_fee_amount",
+   "fieldtype": "Currency",
+   "label": "Registration Fee Amount"
+  },
+  {
+   "fieldname": "column_break_gytk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "registration_fee_income_account",
+   "fieldtype": "Link",
+   "label": "Registration Fee Income Account",
+   "options": "Account"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-05-23 12:35:33.269104",
+ "modified": "2026-06-03 08:41:02.803174",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Settings",

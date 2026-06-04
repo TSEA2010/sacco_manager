@@ -30,6 +30,7 @@
   "user_id",
   "shares_section",
   "total_shares",
+  "registration_fee_je",
   "column_break_ogrp",
   "share_balance",
   "next_of_kin_section",
@@ -251,6 +252,12 @@
    "fieldtype": "Link",
    "label": "Customer Group",
    "options": "Customer Group"
+  },
+  {
+   "fieldname": "registration_fee_je",
+   "fieldtype": "Link",
+   "label": "Registration Fee JE",
+   "options": "Journal Entry"
   }
  ],
  "grid_page_length": 50,
@@ -273,7 +280,7 @@
    "link_fieldname": "member"
   }
  ],
- "modified": "2026-05-09 17:33:00.595625",
+ "modified": "2026-06-03 08:45:43.354920",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Member",
