@@ -132,7 +132,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-06-03 14:18:02.315437",
+ "modified": "2026-06-20 13:39:14.200239",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "Sacco Manager",
@@ -149,7 +149,7 @@
    "role": "Accounts Manager"
   }
  ],
- "sequence_id": 1.0,
+ "sequence_id": 4.0,
  "shortcuts": [],
  "title": "Sacco Manager"
 }

@@ -25,6 +25,7 @@
   "column_break_zayn",
   "penalty_amount",
   "penalty_journal_entry",
+  "receipt_journal_entry",
   "members_section",
   "members"
  ],
@@ -161,13 +162,20 @@
    "fieldtype": "Table",
    "label": "Members",
    "options": "SACCO Branch Remittance Member"
+  },
+  {
+   "fieldname": "receipt_journal_entry",
+   "fieldtype": "Link",
+   "label": "Receipt Journal Entry",
+   "options": "Journal Entry",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-23 13:18:09.322701",
+ "modified": "2026-07-13 19:25:41.220530",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Branch Remittance",
@@ -195,7 +203,7 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Sacco Member",
+   "role": "SACCO Member",
    "share": 1,
    "submit": 1,
    "write": 1

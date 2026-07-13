@@ -7,7 +7,6 @@ app_license = "mit"
 
 # Apps
 # ------------------
-
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
@@ -128,6 +127,9 @@ app_license = "mit"
 # DocType Class
 # ---------------
 # Override standard doctype classes
+override_doctype_class = {
+    "Loan Repayment": "sacco_manager.overrides.loan_repayment.CustomLoanRepayment"
+}
 
 # override_doctype_class = {
 # 	"ToDo": "custom_app.overrides.CustomToDo"
@@ -148,6 +150,11 @@ app_license = "mit"
 # Scheduled Tasks
 # ---------------
 
+scheduler_events = {
+    "daily": [
+        "sacco_manager.overrides.delinquency_interest.apply_monthly_delinquency_interest"
+    ]
+}
 # scheduler_events = {
 # 	"all": [
 # 		"sacco_manager.tasks.all"
