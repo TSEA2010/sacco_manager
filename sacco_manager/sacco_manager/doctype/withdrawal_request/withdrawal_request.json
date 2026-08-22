@@ -12,6 +12,7 @@
   "savings_account",
   "amount",
   "savings_transaction",
+  "transaction_date",
   "column_break_bcnm",
   "reason",
   "status",
@@ -64,7 +65,8 @@
   {
    "fieldname": "reason",
    "fieldtype": "Small Text",
-   "label": "Reason"
+   "label": "Reason",
+   "reqd": 1
   },
   {
    "fieldname": "status",
@@ -95,13 +97,18 @@
    "label": "Initiated By",
    "options": "User",
    "read_only": 1
+  },
+  {
+   "fieldname": "transaction_date",
+   "fieldtype": "Date",
+   "label": "Transaction Date"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-04-24 12:03:34.067994",
+ "modified": "2026-08-22 10:27:39.998860",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "Withdrawal Request",

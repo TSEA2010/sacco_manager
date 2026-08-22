@@ -81,8 +81,7 @@ app_license = "mit"
 # Installation
 # ------------
 
-# before_install = "sacco_manager.install.before_install"
-# after_install = "sacco_manager.install.after_install"
+after_install = "sacco_manager.setup.ensure_party_type"
 
 # Uninstallation
 # ------------
@@ -147,6 +146,12 @@ override_doctype_class = {
 # 	}
 # }
 
+doc_events = {
+    "Loan Application": {
+        "validate": "sacco_manager.overrides.loan_application.validate"
+    }
+}
+
 # Scheduled Tasks
 # ---------------
 
@@ -155,6 +160,11 @@ scheduler_events = {
         "sacco_manager.overrides.delinquency_interest.apply_monthly_delinquency_interest"
     ]
 }
+
+# Runs after every `bench migrate` so the "SACCO Member" Party Type
+# (required for GL posting on savings/share transactions) always exists,
+# on this site and on any future site the app is installed to.
+after_migrate = ["sacco_manager.setup.ensure_party_type"]
 # scheduler_events = {
 # 	"all": [
 # 		"sacco_manager.tasks.all"
@@ -248,4 +258,3 @@ scheduler_events = {
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-

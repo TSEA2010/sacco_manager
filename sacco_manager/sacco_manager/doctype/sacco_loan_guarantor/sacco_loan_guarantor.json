@@ -1,0 +1,146 @@
+{
+ "actions": [],
+ "autoname": "format:GRT-{loan_application}-{#####}",
+ "creation": "2026-08-12 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "loan_application",
+  "applicant_member",
+  "column_break_1",
+  "status",
+  "is_self",
+  "responded_on",
+  "section_break_1",
+  "guarantor_member",
+  "guarantor_name",
+  "savings_account",
+  "column_break_2",
+  "pledge_value",
+  "multiplier",
+  "loan_security",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "loan_application",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Loan Application",
+   "options": "Loan Application",
+   "reqd": 1
+  },
+  {
+   "fieldname": "applicant_member",
+   "fieldtype": "Link",
+   "label": "Applicant (Borrower)",
+   "options": "SACCO Member"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending\nConfirmed\nDeclined",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_self",
+   "fieldtype": "Check",
+   "label": "Is Self (Applicant's Own Pledge)"
+  },
+  {
+   "fieldname": "responded_on",
+   "fieldtype": "Datetime",
+   "label": "Responded On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "guarantor_member",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Guarantor Member",
+   "options": "SACCO Member",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "guarantor_member.full_name",
+   "fieldname": "guarantor_name",
+   "fieldtype": "Data",
+   "label": "Guarantor Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "savings_account",
+   "fieldtype": "Link",
+   "label": "Savings Account",
+   "options": "SACCO Savings Account"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pledge_value",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Pledge Value"
+  },
+  {
+   "fieldname": "multiplier",
+   "fieldtype": "Float",
+   "label": "Multiplier Applied"
+  },
+  {
+   "fieldname": "loan_security",
+   "fieldtype": "Link",
+   "label": "Loan Security",
+   "options": "Loan Security"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 0,
+ "links": [],
+ "modified": "2026-08-12 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sacco Manager",
+ "name": "SACCO Loan Guarantor",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

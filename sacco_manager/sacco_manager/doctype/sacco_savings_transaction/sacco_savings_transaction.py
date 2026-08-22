@@ -51,20 +51,27 @@ class SACCOSavingsTransaction(Document):
 
     def update_balance(self):
         try:
-            acc = frappe.get_doc("SACCO Savings Account", self.savings_account)
+            # Lock the account row for the duration of this DB transaction so
+            # concurrent deposits/withdrawals against the same account can't
+            # race and overwrite each other's balance update.
+            current_balance = frappe.db.get_value(
+                "SACCO Savings Account", self.savings_account, "balance", for_update=True
+            ) or 0
+
             if self.transaction_type in ("Deposit", "Interest"):
-                new_bal = acc.balance + self.amount
+                new_bal = current_balance + self.amount
             else:
-                new_bal = acc.balance - self.amount
+                new_bal = current_balance - self.amount
             self.balance_after = new_bal
             frappe.db.set_value("SACCO Savings Account", self.savings_account, "balance", new_bal)
 
             # Sync loan security collateral value
+            acc = frappe.get_doc("SACCO Savings Account", self.savings_account)
             acc.balance = new_bal
             acc.sync_loan_security()
 
             frappe.publish_realtime("console_log", {
-                "message": f"Balance updated: {acc.balance} -> {new_bal}",
+                "message": f"Balance updated: {current_balance} -> {new_bal}",
                 "type": "debug"
             })
         except Exception as e:
@@ -72,14 +79,17 @@ class SACCOSavingsTransaction(Document):
             raise
 
     def reverse_balance(self):
-        acc = frappe.get_doc("SACCO Savings Account", self.savings_account)
+        current_balance = frappe.db.get_value(
+            "SACCO Savings Account", self.savings_account, "balance", for_update=True
+        ) or 0
         if self.transaction_type in ("Deposit", "Interest"):
-            new_bal = acc.balance - self.amount
+            new_bal = current_balance - self.amount
         else:
-            new_bal = acc.balance + self.amount
+            new_bal = current_balance + self.amount
         frappe.db.set_value("SACCO Savings Account", self.savings_account, "balance", new_bal)
 
         # Sync loan security collateral value on cancel
+        acc = frappe.get_doc("SACCO Savings Account", self.savings_account)
         acc.balance = new_bal
         acc.sync_loan_security()
 
@@ -92,6 +102,7 @@ class SACCOSavingsTransaction(Document):
             jv = frappe.new_doc("Journal Entry")
             jv.posting_date = self.posting_date or frappe.utils.today()
             jv.voucher_type = "Journal Entry"
+            jv.company = frappe.db.get_value("Account", settings.savings_liability_account, "company")
             jv.user_remark = f"{self.transaction_type} - {self.member}"
 
             if self.transaction_type == "Deposit":

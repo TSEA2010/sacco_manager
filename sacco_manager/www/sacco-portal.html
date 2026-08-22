@@ -82,6 +82,16 @@
 .sp-loan-mini-bar{height:5px;background:#f0ece6;border-radius:3px;overflow:hidden;margin:7px 0 5px}
 .sp-loan-mini-fill{height:100%;border-radius:3px;background:#1a3c2e}
 .sp-loan-mini-pct{font-size:11px;color:#aaa}
+.sp-acct-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f7f5f2}
+.sp-acct-row:last-child{border-bottom:none}
+.sp-acct-icon{width:34px;height:34px;border-radius:9px;background:#f0f7f4;color:#1a3c2e;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-acct-icon svg{width:16px;height:16px}
+.sp-acct-name{font-size:13px;font-weight:600;color:#1a1a1a}
+.sp-acct-sub{font-size:11px;color:#aaa;font-family:'DM Mono',monospace}
+.sp-acct-bal{font-size:14px;font-weight:600;font-family:'DM Mono',monospace;color:#1a1a1a;white-space:nowrap;margin-left:auto}
+.sp-acct-total{display:flex;justify-content:space-between;align-items:center;padding-top:12px;margin-top:2px;border-top:1.5px solid #1a3c2e10}
+.sp-acct-total-label{font-size:12px;font-weight:600;color:#1a3c2e;text-transform:uppercase;letter-spacing:.04em}
+.sp-acct-total-val{font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#1a3c2e}
 .sp-act-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f7f5f2}
 .sp-act-item:last-child{border-bottom:none;padding-bottom:0}
 .sp-act-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
@@ -159,6 +169,13 @@ table.sp-table{width:100%;border-collapse:collapse;font-size:13px}
 .sp-form-hint{font-size:11px;color:#aaa;margin-top:1px}
 .sp-form-actions{display:flex;justify-content:flex-end;gap:10px;padding-top:18px;border-top:1px solid #f0ece6;margin-top:8px}
 
+/* ── kill native browser chrome so every field matches the design system ── */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23bbb' stroke-width='1.6'%3E%3Cpath d='M5 7.5 10 12.5 15 7.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:14px}
+input[type=month]{color-scheme:light}
+
 /* ── FIELD PREFIX/SUFFIX wrapper ── */
 .sp-field-wrap{position:relative}
 .sp-field-wrap input,.sp-field-wrap select{width:100%}
@@ -234,7 +251,9 @@ table.sp-table{width:100%;border-collapse:collapse;font-size:13px}
 .sp-empty svg{width:40px;height:40px;margin:0 auto 12px;display:block;opacity:.4}
 .sp-empty p{font-size:13px}
 .sp-filter-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-.sp-filter-row select,.sp-filter-row input[type=month]{padding:8px 12px;border:1.5px solid #e5e0d8;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1a1a1a;background:#fff;outline:none}
+.sp-filter-row select,.sp-filter-row input[type=month]{padding:9px 32px 9px 13px;border:1.5px solid #e5e0d8;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1a1a1a;background-color:#fafaf9;outline:none;transition:border-color .15s,box-shadow .15s}
+.sp-filter-row input[type=month]{padding-right:13px}
+.sp-filter-row select:focus,.sp-filter-row input[type=month]:focus{border-color:#1a3c2e;box-shadow:0 0 0 3px rgba(26,60,46,.08);background-color:#fff}
 .sp-app-card{border:1px solid #e5e0d8;border-radius:12px;padding:16px 18px;margin-bottom:10px;background:#fff}
 .sp-app-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
 .sp-app-name{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:2px}
@@ -408,11 +427,12 @@ function renderOverview(s){
       '<div class="sp-hero-score"><div class="sp-hero-score-label">Score</div><div class="sp-hero-score-val">',score,' <span class="sp-hero-score-max">/ 100</span></div></div>',
     '</div>',
     '<div class="sp-metrics">',
-      metric("accent","Savings balance",fmt_kes(s.savings_balance),s.savings&&s.savings.name?esc(s.savings.name):""),
+      metric("accent","Savings balance",fmt_kes(s.savings_balance),(s.savings_accounts||[]).length+" account"+((s.savings_accounts||[]).length!==1?"s":"")),
       metric("","Share capital",(s.total_shares||0).toLocaleString()+" shares",fmt_kes(s.share_value)+" value"),
       metric("","Total outstanding",fmt_kes(outstanding),loans.length+" loan"+(loans.length!==1?"s":"")+" active"),
       metric("","Available credit",fmt_kes(avail),"of "+fmt_kes(limit)+" limit"),
     '</div>',
+    savingsAccountsCard(s.savings_accounts,s.savings_balance,true),
     '<div class="sp-panels">',
       '<div class="sp-card" style="margin-bottom:0">',
         '<div class="sp-card-header"><div class="sp-card-title">',I.shield,' Credit health</div><span style="font-size:12px;color:'+gaugeLabelColor+';font-weight:600">',gaugeLabel,'</span></div>',
@@ -443,6 +463,25 @@ function renderOverview(s){
 }
 function activityFromLoans(s){var items=[];(s.active_loans||[]).forEach(function(l){items.push('<div class="sp-act-item"><div class="sp-act-dot" style="background:#fef9c3;color:#d97706">₤</div><div><div class="sp-act-text">Loan disbursed — <strong>'+fmt_kes(l.loan_amount)+'</strong> ('+esc(l.loan_type||l.name)+')</div><div class="sp-act-time">'+fmt_date(l.repayment_start_date)+'</div></div></div>');});if(!items.length)return '<div style="text-align:center;padding:24px 0;color:#aaa;font-size:13px">No recent activity.</div>';return items.slice(0,4).join("");}
 function metric(cls,label,value,sub){return['<div class="sp-metric'+(cls?" "+cls:"")+'">','<div class="sp-metric-label">',label,'</div>','<div class="sp-metric-value">',value,'</div>',sub?'<div class="sp-metric-sub">'+sub+'</div>':"","</div>"].join("");}
+function savingsAccountsCard(accounts,total,showLink){
+  accounts=accounts||[];
+  if(!accounts.length)return "";
+  var rows=accounts.map(function(a){
+    return['<div class="sp-acct-row">',
+      '<div class="sp-acct-icon">',I.piggy,'</div>',
+      '<div><div class="sp-acct-name">',esc(a.account_type||"Savings"),'</div>',
+      '<div class="sp-acct-sub">',esc(a.account_no||a.name),' &middot; ',esc(a.status||"Active"),'</div></div>',
+      '<div class="sp-acct-bal">',fmt_kes(a.balance),'</div>',
+    '</div>'].join("");
+  }).join("");
+  return[
+    '<div class="sp-card">',
+      '<div class="sp-card-header"><div class="sp-card-title">',I.piggy,' Savings accounts</div>',showLink?'<button class="sp-card-action" onclick="spTab(\'savings\')">View all &rarr;</button>':"","</div>",
+      rows,
+      accounts.length>1?['<div class="sp-acct-total"><span class="sp-acct-total-label">Total across ',accounts.length,' accounts</span><span class="sp-acct-total-val">',fmt_kes(total),'</span></div>'].join(""):"",
+    '</div>',
+  ].join("");
+}
 function miniStat(label,val){return '<div style="text-align:center"><div style="font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#aaa;margin-bottom:3px">'+esc(label)+'</div><div style="font-size:12px;font-weight:600;color:#1a1a1a;font-family:\'DM Mono\',monospace">'+esc(val)+'</div></div>';}
 
 /* ── SAVINGS ── */
@@ -454,12 +493,14 @@ function renderSavingsTab(main){
     var dep=S.savings_tx.filter(function(t){return t.transaction_type==="Deposit";}).reduce(function(a,t){return a+flt(t.amount);},0);
     var wdr=S.savings_tx.filter(function(t){return t.transaction_type==="Withdrawal";}).reduce(function(a,t){return a+flt(t.amount);},0);
     var intr=S.savings_tx.filter(function(t){return t.transaction_type==="Interest";}).reduce(function(a,t){return a+flt(t.amount);},0);
+    var accounts=s.savings_accounts||[];
     main.innerHTML=[
       '<div class="sp-section active">',
-      '<div class="sp-section-header"><div class="sp-section-title">Savings account</div><div class="sp-section-sub">',esc(s.savings&&s.savings.name||"--"),'</div></div>',
-      '<div class="sp-metrics">',metric("accent","Current balance",fmt_kes(s.savings_balance),""),metric("","Total deposited",fmt_kes(dep),"All time"),metric("","Total withdrawn",fmt_kes(wdr),"All time"),metric("","Interest earned",fmt_kes(intr),"All time"),'</div>',
+      '<div class="sp-section-header"><div class="sp-section-title">Savings accounts</div><div class="sp-section-sub">',accounts.length,' account'+(accounts.length!==1?"s":""),'</div></div>',
+      '<div class="sp-metrics">',metric("accent","Total balance",fmt_kes(s.savings_balance),accounts.length+" account"+(accounts.length!==1?"s":"")),metric("","Total deposited",fmt_kes(dep),"All time"),metric("","Total withdrawn",fmt_kes(wdr),"All time"),metric("","Interest earned",fmt_kes(intr),"All time"),'</div>',
+      savingsAccountsCard(accounts,s.savings_balance,false),
       '<div class="sp-card"><div class="sp-card-header"><div class="sp-card-title">',I.list,' Savings transactions</div></div><div class="sp-table-wrap">',
-      S.savings_tx.length?['<table class="sp-table"><thead><tr><th>Date</th><th>Type</th><th>Reference</th><th>Remarks</th><th class="num">Amount</th><th class="num">Balance</th></tr></thead><tbody>',S.savings_tx.map(function(t){var isWdr=t.transaction_type==="Withdrawal";return '<tr><td style="white-space:nowrap">'+fmt_date(t.transaction_date)+'</td><td>'+txPill(t.transaction_type)+'</td><td style="font-family:\'DM Mono\',monospace;font-size:12px">'+esc(t.reference_name||"--")+'</td><td style="color:#888;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.remarks||"")+'</td><td class="num '+(isWdr?"dr":"cr")+'">'+(isWdr?"−":"+")+Number(t.amount||0).toLocaleString()+'</td><td class="num">'+Number(t.running_balance||0).toLocaleString()+'</td></tr>';}).join(""),'</tbody></table>'].join(""):emptyState("No savings transactions found."),
+      S.savings_tx.length?['<table class="sp-table"><thead><tr><th>Date</th><th>Account</th><th>Type</th><th>Reference</th><th>Remarks</th><th class="num">Amount</th><th class="num">Balance</th></tr></thead><tbody>',S.savings_tx.map(function(t){var isWdr=t.transaction_type==="Withdrawal";return '<tr><td style="white-space:nowrap">'+fmt_date(t.transaction_date)+'</td><td style="font-family:\'DM Mono\',monospace;font-size:12px;color:#888">'+esc(t.savings_account||"--")+'</td><td>'+txPill(t.transaction_type)+'</td><td style="font-family:\'DM Mono\',monospace;font-size:12px">'+esc(t.reference_name||"--")+'</td><td style="color:#888;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.remarks||"")+'</td><td class="num '+(isWdr?"dr":"cr")+'">'+(isWdr?"−":"+")+Number(t.amount||0).toLocaleString()+'</td><td class="num">'+Number(t.running_balance||0).toLocaleString()+'</td></tr>';}).join(""),'</tbody></table>'].join(""):emptyState("No savings transactions found."),
       '</div></div></div>',
     ].join("");
   }).catch(function(e){main.innerHTML=errState(e);});
@@ -825,9 +866,12 @@ function spRenderGuarantors(){
         '</div>',
         '<div class="sp-g-actions">',
           '<div style="text-align:right">',
-            '<div style="font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#aaa;margin-bottom:5px">Pledge amount (KES)</div>',
+            '<div style="font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#aaa;margin-bottom:5px">Pledge amount</div>',
             '<div style="display:flex;align-items:center;gap:8px">',
-              '<input type="number" class="sp-g-shares-input" style="width:130px" min="0" max="'+pledgeMax+'" step="1000" value="'+flt(g.pledge_value).toFixed(0)+'" onchange="spGuarantorPledgeChanged('+i+',this.value)" oninput="spGuarantorPledgeChanged('+i+',this.value)">',
+              '<div class="sp-field-wrap" style="width:150px">',
+                '<span class="sp-field-pre">KES</span>',
+                '<input type="number" class="sp-g-shares-input has-pre" min="0" max="'+pledgeMax+'" step="1000" value="'+flt(g.pledge_value).toFixed(0)+'" onchange="spGuarantorPledgeChanged('+i+',this.value)" oninput="spGuarantorPledgeChanged('+i+',this.value)">',
+              '</div>',
               '<span style="font-size:10px;color:#aaa;white-space:nowrap">max: '+fmt_kes(pledgeMax)+'</span>',
             '</div>',
           '</div>',

@@ -24,9 +24,15 @@ class SACCOShareLedger(Document):
         self.update_member_shares(reverse=True)
 
     def update_member_shares(self, reverse=False):
-        member = frappe.get_doc("SACCO Member", self.member)
-        current_shares = member.get("total_shares") or 0
-        current_balance = member.get("share_balance") or 0.0
+        # Lock the member row for the duration of this DB transaction so
+        # concurrent share purchases/redemptions against the same member
+        # can't race and overwrite each other's totals.
+        locked = frappe.db.get_value(
+            "SACCO Member", self.member, ["total_shares", "share_balance"],
+            as_dict=True, for_update=True
+        ) or {}
+        current_shares = locked.get("total_shares") or 0
+        current_balance = locked.get("share_balance") or 0.0
 
         if self.transaction_type == "Purchase":
             new_shares = current_shares - self.shares if reverse else current_shares + self.shares
@@ -52,6 +58,7 @@ class SACCOShareLedger(Document):
         jv = frappe.new_doc("Journal Entry")
         jv.posting_date = self.date or frappe.utils.today()
         jv.voucher_type = "Journal Entry"
+        jv.company = frappe.db.get_value("Account", settings.share_capital_account, "company")
         jv.user_remark = f"Share {self.transaction_type} - {self.member}"
         if self.transaction_type == "Purchase":
             jv.append("accounts", {
