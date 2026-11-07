@@ -39,14 +39,13 @@ def require_setting(fieldname, label=None):
 def normalize_ke_phone(value):
 	"""Return a Safaricom/Airtel style MSISDN 2547XXXXXXXX / 2541XXXXXXXX, or None if not a KE mobile."""
 	digits = re.sub(r"\D", "", str(value or ""))
-	if not digits:
-		return None
-	if digits.startswith("254") and len(digits) == 12:
-		return digits
 	if digits.startswith("0") and len(digits) == 10:
-		return "254" + digits[1:]
-	if len(digits) == 9 and digits[0] in "17":
-		return "254" + digits
+		digits = "254" + digits[1:]
+	elif len(digits) == 9:
+		digits = "254" + digits
+	# Kenyan mobile numbers are 2547XXXXXXXX or 2541XXXXXXXX (landlines like 020 are not)
+	if len(digits) == 12 and digits.startswith("254") and digits[3] in "17":
+		return digits
 	return None
 
 
@@ -108,10 +107,9 @@ def get_committed_pledges(savings_account, exclude_application=None):
 	for r in rows:
 		if r.app_docstatus == 2 or (r.app_status and r.app_status not in OPEN_APPLICATION_STATUSES):
 			continue
-		loan = frappe.db.get_value(
-			"Loan", {"loan_application": r.loan_application, "docstatus": 1}, ["status"], as_dict=True
-		)
-		if loan and loan.status in ("Closed", "Settled", "Written Off", "Loan Closure Requested"):
+		loans = frappe.get_all("Loan", filters={"loan_application": r.loan_application, "docstatus": 1}, pluck="status")
+		# released only when every loan on the application (incl. a refinanced top-up) is closed
+		if loans and all(s in ("Closed", "Settled", "Written Off", "Loan Closure Requested") for s in loans):
 			continue
 		total += flt(r.pledge_value)
 	return total

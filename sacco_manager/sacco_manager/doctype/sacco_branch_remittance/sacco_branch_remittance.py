@@ -55,8 +55,12 @@ class SACCOBranchRemittance(Document):
 	def _set_due_date(self):
 		due_day = int(get_settings().remittance_due_day or 5)
 		month = list(calendar.month_name).index(self.period_month)
-		# due on day N of the period month (same rule as the original app)
+		# check-off for month M is remitted after payroll: due on day N of month M+1
 		year = int(self.period_year)
+		if month == 12:
+			year, month = year + 1, 1
+		else:
+			month += 1
 		due_day = min(due_day, calendar.monthrange(year, month)[1])
 		self.due_date = f"{year}-{month:02d}-{due_day:02d}"
 
@@ -69,9 +73,11 @@ class SACCOBranchRemittance(Document):
 			return
 		s = get_settings()
 		self.penalty_rate = flt(s.penalty_rate)
-		cap = flt(s.max_penalty_percent) or 100
+		cap = flt(s.max_penalty_percent) or 10
 		self.is_late, self.days_late = 1, days
-		penalty = flt(self.expected_amount) * self.penalty_rate / 100 * days / 30
+		# charge only on what was still outstanding when it was late
+		base = flt(self.expected_amount) - flt(self.received_amount) if flt(self.received_amount) < flt(self.expected_amount) else flt(self.expected_amount)
+		penalty = base * self.penalty_rate / 100 * days / 30
 		self.penalty_amount = round(min(penalty, flt(self.expected_amount) * cap / 100), 2)
 
 	@frappe.whitelist()
@@ -91,33 +97,50 @@ class SACCOBranchRemittance(Document):
 			fields=["name", "full_name"], order_by="member_no")
 		self.members = []
 		for m in members:
-			acc = frappe.get_all("SACCO Savings Account", filters={"member": m.name, "status": "Active"},
+			acc = frappe.get_all("SACCO Savings Account", filters={"member": m.name, "status": ["in", ["Active", "Dormant"]]},
 				fields=["name", "monthly_contribution"], order_by="creation asc", limit=1)
-			loans = get_active_loans(m.name)
-			loan = loans[0] if loans else None
+			loans = get_active_loans(m.name) or [None]
 			saving = flt(acc[0].monthly_contribution) if acc else 0
-			repay = flt(loan.monthly_repayment_amount) if loan else 0
-			if not saving and not repay:
-				continue
-			self.append("members", {
-				"member": m.name,
-				"member_name": m.full_name,
-				"savings_account": acc[0].name if acc else None,
-				"expected_amount": saving,
-				"received_savings": saving,
-				"loan": loan.name if loan else None,
-				"expected_loan_repayment": repay,
-				"received_loan_repayment": repay,
-				"status": "Pending",
-			})
+			for i, loan in enumerate(loans):  # one row per active loan; savings on the first row
+				repay = flt(loan.monthly_repayment_amount) if loan else 0
+				sav = saving if i == 0 else 0
+				if not sav and not repay:
+					continue
+				self.append("members", {
+					"member": m.name,
+					"member_name": m.full_name,
+					"savings_account": acc[0].name if acc else None,
+					"expected_amount": sav,
+					"received_savings": sav,
+					"loan": loan.name if loan else None,
+					"expected_loan_repayment": repay,
+					"received_loan_repayment": repay,
+					"status": "Pending",
+				})
 		if not self.members:
 			frappe.throw(_("No active members with contributions or loans found in {0}.").format(self.branch))
 		self.save()
 		frappe.msgprint(_("Fetched {0} members. Expected: {1}").format(
 			len(self.members), frappe.format_value(self.expected_amount, {"fieldtype": "Currency"})), alert=True)
 
+	def _check_duplicates(self):
+		dup = frappe.db.get_value("SACCO Branch Remittance", {"branch": self.branch, "period_month": self.period_month,
+			"period_year": self.period_year, "docstatus": 1, "name": ["!=", self.name]}, "name")
+		if dup:
+			frappe.throw(_("{0} {1} {2} was already remitted in {3}.").format(self.branch, self.period_month, self.period_year, dup))
+		run = frappe.db.get_value("SACCO Monthly Savings Run", {"period_month": self.period_month,
+			"period_year": self.period_year, "docstatus": 1}, "name")
+		if run:
+			accounts = [r.savings_account for r in self.members if flt(r.received_savings) and r.savings_account]
+			both = frappe.get_all("SACCO Monthly Savings Run Member", filters={"parent": run, "status": "Posted",
+				"savings_account": ["in", accounts or [""]]}, pluck="member")
+			if both:
+				frappe.throw(_("Savings for {0} were already posted for this month in Monthly Savings Run {1}.").format(
+					", ".join(both[:5]), run))
+
 	def before_submit(self):
 		enforce_maker_checker(self, _("submit"))
+		self._check_duplicates()
 		if flt(self.received_amount) <= 0 or not self.received_date:
 			frappe.throw(_("Enter the Amount Received and Date Received before submitting."))
 		if not self.payment_account:
@@ -145,8 +168,18 @@ class SACCOBranchRemittance(Document):
 						reference_number=self.name, remarks=label)
 					r.db_set("loan_repayment", rp.name)
 				if flt(r.share_amount) > 0:
-					sh = create_share_entry(r.member, r.share_amount, self.received_date, clearing, reference=ref)
-					r.db_set("share_entry", sh.name)
+					price = flt(get_settings().default_share_price)
+					whole = (flt(r.share_amount) // price) * price if price else 0
+					if whole > 0:
+						sh = create_share_entry(r.member, whole, self.received_date, clearing, reference=ref)
+						r.db_set("share_entry", sh.name)
+					remainder = flt(r.share_amount) - whole
+					if remainder > 0.005:
+						if not r.savings_account:
+							frappe.throw(_("no savings account for the share remainder"))
+						create_savings_transaction(r.savings_account, "Deposit", remainder, self.received_date,
+							payment_account=clearing, mode_of_payment="Check-off", reference=ref,
+							remarks=label + " (share remainder)")
 				r.db_set("status", "Posted")
 			except Exception as e:
 				frappe.throw(_("Row {0} ({1}): {2}").format(r.idx, r.member_name or r.member, describe_error(e)))

@@ -92,6 +92,43 @@ def allocate_manually(txn, target, member, savings_account=None, loan=None, note
 
 
 @frappe.whitelist(methods=["POST"])
+def reverse_allocation(txn, reason):
+	"""Undo an allocation (wrong member / account): cancels every posting it created and marks the
+	payment Unallocated again so it can be re-allocated. The M-Pesa record itself is never deleted."""
+	frappe.only_for(("SACCO Manager", "SACCO Administrator", "System Manager"))
+	doc = frappe.get_doc("SACCO M-Pesa Transaction", txn)
+	if doc.status != "Allocated":
+		frappe.throw(_("Only allocated payments can be reversed."))
+	ref = doc.receipt_number or doc.name
+	targets = [("SACCO Savings Transaction", n) for n in frappe.get_all("SACCO Savings Transaction",
+		filters={"reference_doctype": "SACCO M-Pesa Transaction", "reference_name": doc.name, "docstatus": 1}, pluck="name")]
+	targets += [("Loan Repayment", n) for n in frappe.get_all("Loan Repayment",
+		filters={"reference_number": ref, "docstatus": 1}, pluck="name")]
+	targets += [("SACCO Share Ledger", n) for n in frappe.get_all("SACCO Share Ledger",
+		filters={"reference_no": ref, "docstatus": 1}, pluck="name")]
+	for dt, name in reversed(targets):
+		d = frappe.get_doc(dt, name)
+		d.flags.from_parent = True
+		d.flags.ignore_permissions = True
+		d.cancel()
+	doc.db_set({"status": "Unallocated", "allocated_doctype": None, "allocated_document": None, "allocated_by": None,
+		"allocation_note": _("Allocation reversed by {0}: {1}").format(frappe.session.user, reason)})
+	return len(targets)
+
+
+@frappe.whitelist(methods=["POST"])
+def mark_payout_failed(txn, reason):
+	"""B2C payout that timed out / never completed: mark it Failed so the withdrawal can be retried or cancelled.
+	Check the M-Pesa statement first: only use this if the money did NOT leave the shortcode."""
+	frappe.only_for(("SACCO Manager", "SACCO Administrator", "System Manager"))
+	doc = frappe.get_doc("SACCO M-Pesa Transaction", txn)
+	if doc.direction != "Outbound" or doc.status != "Pending":
+		frappe.throw(_("Only pending outbound payouts can be marked failed."))
+	doc.db_set({"status": "Failed", "result_description": _("Marked failed by {0}: {1}").format(frappe.session.user, reason)})
+	return "Failed"
+
+
+@frappe.whitelist(methods=["POST"])
 def register_c2b_urls(account):
 	frappe.only_for(("SACCO Administrator", "System Manager"))
 	resp = Daraja(account).register_c2b_urls()

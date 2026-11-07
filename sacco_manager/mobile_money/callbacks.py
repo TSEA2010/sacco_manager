@@ -159,4 +159,10 @@ def b2c_timeout(**kwargs):
 	_account()
 	p = _payload()
 	frappe.log_error(title="M-Pesa B2C timeout", message=json.dumps(p)[:4000])
+	originator = (p.get("Result") or p).get("OriginatorConversationID") if isinstance(p, dict) else None
+	name = frappe.db.get_value("SACCO M-Pesa Transaction", {"transaction_id": originator, "status": "Pending"}, "name") if originator else None
+	if name:
+		frappe.db.set_value("SACCO M-Pesa Transaction", name, {"status": "Failed",
+			"result_description": "Queue timeout reported by Safaricom - check the M-Pesa statement before retrying."})
+		frappe.db.commit()
 	_respond()

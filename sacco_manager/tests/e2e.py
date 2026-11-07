@@ -7,6 +7,7 @@
 Never run on production: it creates (then rolls back) members, postings and users.
 """
 
+import pathlib
 import traceback
 
 import frappe
@@ -127,7 +128,9 @@ def t_member():
 
 @check("deposit posts balanced JE and updates balance")
 def t_deposit():
-	from sacco_manager.sacco_manager.doctype.sacco_savings_transaction.sacco_savings_transaction import create_savings_transaction
+	from sacco_manager.sacco_manager.doctype.sacco_savings_transaction.sacco_savings_transaction import (
+		create_savings_transaction,
+	)
 
 	t = create_savings_transaction(CTX.acc, "Deposit", 50000, add_days(today(), -60), remarks="opening")
 	je = je_balanced(t.journal_entry)
@@ -216,7 +219,7 @@ def t_token():
 	tok = P.make_guarantor_token("APP-1", "SCC-0001")
 	assert P.verify_guarantor_token("APP-1", "SCC-0001", tok)
 	assert not P.verify_guarantor_token("APP-1", "SCC-0002", tok)
-	exp, sig = tok.split(".")
+	_exp, _sig = tok.split(".")
 	old = f"{int(time.time()) - 10}.{P._sign(f'APP-1:SCC-0001:{int(time.time()) - 10}')}"
 	assert not P.verify_guarantor_token("APP-1", "SCC-0001", old)
 	return "ok"
@@ -287,7 +290,9 @@ def t_mpesa():
 
 @check("interest run on average daily balance with WHT")
 def t_interest():
-	from sacco_manager.sacco_manager.doctype.sacco_interest_run.sacco_interest_run import average_daily_balance
+	from sacco_manager.sacco_manager.doctype.sacco_interest_run.sacco_interest_run import (
+		average_daily_balance,
+	)
 
 	adb, closing = average_daily_balance(CTX.acc, add_days(today(), -90), today())
 	run = frappe.get_doc({"doctype": "SACCO Interest Run", "period_start": add_days(today(), -90), "period_end": today(),
@@ -318,7 +323,7 @@ def t_dividend():
 	run = frappe.get_doc("SACCO Dividend Run", run.name)
 	run.submit()
 	je_balanced(run.journal_entry)
-	row = [d for d in run.details if d.member == CTX.member][0]
+	row = next(d for d in run.details if d.member == CTX.member)
 	return f"shares {sh.shares}; gross {row.gross_dividend} wht {row.wht_amount} net {row.net_dividend} -> {row.savings_transaction}"
 
 
@@ -406,6 +411,133 @@ def t_system_manager():
 	return "own withdrawal approved; loan application approved; full rights on core doctypes"
 
 
+@check("statement PDF, movement report, management and AGM packs")
+def t_reporting():
+	from sacco_manager import management_pack, statements
+	from sacco_manager.sacco_manager.report.sacco_monthly_movement.sacco_monthly_movement import movement
+
+	pdf = statements.statement_pdf(CTX.member, add_days(today(), -365), today())
+	assert pdf[:4] == b"%PDF" and len(pdf) > 3000, len(pdf)
+	mv = movement(add_days(today(), -400), today())
+	sav_check = [r for r in mv if r["section"] == "Savings" and r["item"].startswith("GL ")]
+	assert sav_check and sav_check[0]["note"] == "OK", sav_check
+	m_pdf = management_pack.build_pdf(add_days(today(), -30), today(), "Test pack")
+	a_pdf = management_pack.build_pdf("2026-01-01", "2026-10-31", "Test AGM", agm=True, dividend_rate=8)
+	assert m_pdf[:4] == b"%PDF" and a_pdf[:4] == b"%PDF"
+	url = management_pack.generate_management_pack(10, 2026, send=0)
+	assert url and frappe.db.exists("File", {"file_url": url})
+	(pathlib.Path("/tmp") / "e2e_pack.pdf").write_bytes(m_pdf)
+	(pathlib.Path("/tmp") / "e2e_agm.pdf").write_bytes(a_pdf)
+	(pathlib.Path("/tmp") / "e2e_statement.pdf").write_bytes(pdf)
+	return f"statement {len(pdf)//1024} KB; savings roll-forward ties to GL; pack {len(m_pdf)//1024} KB; AGM {len(a_pdf)//1024} KB"
+
+
+@check("defaulters report, number cards, data export, consent")
+def t_misc_features():
+	from frappe.desk.query_report import run
+
+	from sacco_manager import dashboard, data_protection
+
+	res = run("Defaulters and Guarantors", filters={"as_at": today(), "min_days": 30}, ignore_prepared_report=True)
+	assert res.get("result") is not None
+	cards = (dashboard.loan_book()["value"], dashboard.par30()["value"], dashboard.pending_approvals()["value"])
+	data_protection.record_consent(CTX.member, "Signed form")
+	assert frappe.db.get_value("SACCO Member", CTX.member, "consent_data_processing") == 1
+	data_protection.export_member_data(CTX.member)
+	assert frappe.local.response.filecontent and '"savings_transactions"' in frappe.local.response.filecontent
+	dq = run("Member Data Quality", filters={"scope": "Current or with balance"}, ignore_prepared_report=True)
+	dq_all = run("Member Data Quality", filters={"scope": "All members"}, ignore_prepared_report=True)
+	return (f"defaulters {len(res['result'])}; cards loan book {cards[0]:,.0f} PAR30 {cards[1]}% pending {cards[2]}; "
+		f"data quality in scope {len(dq['result'])} vs all {len(dq_all['result'])}")
+
+
+@check("board approval required for large loans")
+def t_board_approval():
+	if not CTX.app:
+		raise AssertionError("no application")
+	frappe.db.set_single_value("SACCO Settings", "board_approval_loan_limit", 50000)
+	frappe.clear_cache(doctype="SACCO Settings")
+	frappe.db.set_value("Loan Application", CTX.app, "status", "Open")
+	frappe.db.set_value("SACCO Loan Guarantor", {"loan_application": CTX.app}, "status", "Confirmed")
+	frappe.set_user(CTX.manager)
+	app = frappe.get_doc("Loan Application", CTX.app)
+	app.status = "Approved"
+	msg = expect_error(app.save, contains="board approval")
+	frappe.set_user("Administrator")
+	ba = frappe.get_doc({"doctype": "SACCO Board Approval", "approval_type": "Loan above limit", "subject": "Test loan",
+		"decision": "Approved", "meeting_date": today(), "minute_ref": "MIN/TEST/1",
+		"reference_doctype": "Loan Application", "reference_name": CTX.app}).insert()
+	ba.submit()
+	frappe.set_user(CTX.manager)
+	app = frappe.get_doc("Loan Application", CTX.app)
+	app.status = "Approved"
+	app.save()
+	return f"blocked without approval ('{msg[:45]}'), approved after {ba.name}"
+
+
+@check("SMS notifications queue without errors")
+def t_sms():
+	from sacco_manager import notifications
+	from sacco_manager.sacco_manager.doctype.sacco_savings_transaction.sacco_savings_transaction import (
+		create_savings_transaction,
+	)
+
+	frappe.db.set_single_value("SACCO Settings", "sms_enabled", 1)
+	frappe.clear_cache(doctype="SACCO Settings")
+	sent = []
+	orig = notifications.queue_sms
+	notifications.queue_sms = lambda phone, message, reference=None: sent.append((phone, message))
+	try:
+		create_savings_transaction(CTX.acc, "Deposit", 777, today(), remarks="sms test")
+		notifications.on_savings_transaction_submit(frappe.get_last_doc("SACCO Savings Transaction"))
+	finally:
+		notifications.queue_sms = orig
+	assert sent and sent[0][0] == "254712345678" and "777" in sent[0][1], sent
+	return sent[0][1]
+
+
+@check("audit fixes: remittance due date, share transfer, cancel guard, control-account guard")
+def t_audit_fixes():
+
+	# 1. remittance for October is due on the 5th of November; on-time receipt has no penalty
+	r = frappe.get_doc({"doctype": "SACCO Branch Remittance", "branch": "DR. Plumber", "period_month": "October",
+		"period_year": 2026, "received_date": "2026-11-04", "received_amount": 1000})
+	r.append("members", {"member": CTX.member, "savings_account": CTX.acc, "expected_amount": 1000, "received_savings": 1000})
+	r.run_method("validate")
+	assert str(r.due_date) == "2026-11-05" and not r.is_late, (r.due_date, r.is_late)
+	r.received_date = "2026-11-20"
+	r.run_method("validate")
+	assert r.is_late and 0 < r.penalty_amount <= 100, r.penalty_amount  # capped at 10% of 1,000
+	# 2. share transfer moves shares and member-level GL between two members in one JE
+	from sacco_manager.sacco_manager.doctype.sacco_share_ledger.sacco_share_ledger import create_share_entry
+
+	create_share_entry(CTX.member, 1000, today(), frappe.db.get_single_value("SACCO Settings", "cash_account"))
+	out = frappe.get_doc({"doctype": "SACCO Share Ledger", "member": CTX.member, "transaction_type": "Transfer Out",
+		"shares": 20, "date": today(), "transfer_member": CTX.member2}).insert()
+	out.submit()
+	je = frappe.get_doc("Journal Entry", out.journal_entry)
+	parties = {(a.party, flt(a.debit), flt(a.credit)) for a in je.accounts}
+	assert (CTX.member, 400.0, 0.0) in parties and (CTX.member2, 0.0, 400.0) in parties, parties
+	assert frappe.db.get_value("SACCO Member", CTX.member2, "total_shares") == 20
+	expect_error(lambda: frappe.get_doc({"doctype": "SACCO Share Ledger", "member": CTX.member, "transaction_type": "Redemption",
+		"shares": 1, "date": today()}).insert(), contains="exits") if "System Manager" not in frappe.get_roles() else None
+	# 3. a savings transaction created by a run cannot be cancelled on its own
+	st = frappe.get_all("SACCO Savings Transaction", filters={"reference_doctype": ["is", "set"], "docstatus": 1,
+		"member": CTX.member}, pluck="name", limit=1)
+	if st:
+		expect_error(frappe.get_doc("SACCO Savings Transaction", st[0]).cancel, contains="cancel or reverse")
+	# 4. manual JE to members' savings is refused for non-System Managers
+	frappe.set_user(CTX.accountant)
+	sav = frappe.db.get_single_value("SACCO Settings", "savings_liability_account")
+	cash = frappe.db.get_single_value("SACCO Settings", "cash_account")
+	je2 = frappe.get_doc({"doctype": "Journal Entry", "company": CTX.company, "posting_date": today(), "accounts": [
+		{"account": cash, "debit_in_account_currency": 10}, {"account": sav, "credit_in_account_currency": 10,
+		"party_type": "SACCO Member", "party": CTX.member}]})
+	msg = expect_error(je2.insert, contains="SACCO transactions")
+	frappe.set_user("Administrator")
+	return f"due {r.due_date}, penalty {r.penalty_amount}; transfer JE {je.name}; manual JE blocked: {msg[:50]}"
+
+
 @check("reports run")
 def t_reports():
 	from frappe.desk.query_report import run
@@ -419,6 +551,10 @@ def t_reports():
 		("Guarantor Exposure", {}),
 		("SACCO Prudential Summary", {"as_at": today()}),
 		("Member Data Quality", {}),
+		("Defaulters and Guarantors", {"as_at": today(), "min_days": 30}),
+		("SACCO Monthly Movement", {"from_date": add_days(today(), -30), "to_date": today()}),
+		("Branch Remittance", {"year": 2026}),
+		("Member Overview", {"month": 6, "year": 2026}),
 		("Member Overview", {}),
 	]:
 		res = run(name, filters=filters, ignore_prepared_report=True)
@@ -433,7 +569,8 @@ def run():
 	frappe.flags.in_test = True
 	try:
 		for t in [t_setup, t_settings_guard, t_member, t_deposit, t_withdrawal, t_auditor, t_portal, t_token,
-				t_approval, t_mpesa, t_interest, t_dividend, t_remittance, t_topup, t_system_manager, t_reports]:
+				t_approval, t_mpesa, t_interest, t_dividend, t_remittance, t_topup, t_system_manager, t_reporting, t_misc_features,
+				t_board_approval, t_sms, t_audit_fixes, t_reports]:
 			t()
 	finally:
 		frappe.db.rollback()

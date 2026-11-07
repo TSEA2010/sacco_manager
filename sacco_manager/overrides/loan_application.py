@@ -23,6 +23,11 @@ def validate(doc, method=None):
 		return
 	if not set(APPROVERS) & set(frappe.get_roles()) and not frappe.flags.in_import:
 		frappe.throw(_("Only a SACCO Manager can approve loan applications."), frappe.PermissionError)
+	from sacco_manager.sacco_manager.doctype.sacco_board_approval.sacco_board_approval import (
+		check_loan_application,
+	)
+
+	check_loan_application(doc)
 
 	rows = frappe.get_all(
 		"SACCO Loan Guarantor",

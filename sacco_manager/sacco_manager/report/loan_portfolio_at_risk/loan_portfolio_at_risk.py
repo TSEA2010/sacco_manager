@@ -32,17 +32,23 @@ def execute(filters=None):
 	as_at = getdate(f.as_at)
 	cond = [
 		"l.docstatus=1",
-		"l.status IN ('Disbursed','Partially Disbursed','Active')",
+		"l.status NOT IN ('Written Off', 'Cancelled')",
 		"l.disbursement_date <= %(as_at)s",
 	]
-	vals = {"as_at": as_at}
+	vals = {"as_at": as_at, "eod": f"{as_at} 23:59:59"}
 	if f.loan_product:
 		cond.append("l.loan_product=%(lp)s")
 		vals["lp"] = f.loan_product
 	loans = frappe.db.sql(
 		f"""SELECT l.name, l.applicant, l.applicant_name, l.loan_product, l.disbursement_date,
-			l.disbursed_amount, l.total_principal_paid, m.member_no, m.branch
-		FROM `tabLoan` l LEFT JOIN `tabSACCO Member` m ON m.customer = l.applicant
+			(SELECT IFNULL(SUM(d.disbursed_amount), 0) FROM `tabLoan Disbursement` d
+				WHERE d.against_loan = l.name AND d.docstatus = 1 AND d.disbursement_date <= %(as_at)s) AS disbursed_amount,
+			(SELECT IFNULL(SUM(r.principal_amount_paid), 0) FROM `tabLoan Repayment` r
+				WHERE r.against_loan = l.name AND r.docstatus = 1 AND r.posting_date <= %(eod)s) AS total_principal_paid,
+			m.member_no, m.branch
+		FROM `tabLoan` l
+		LEFT JOIN (SELECT customer, MIN(member_no) AS member_no, MIN(branch) AS branch FROM `tabSACCO Member`
+			WHERE IFNULL(customer, '') != '' GROUP BY customer) m ON m.customer = l.applicant
 		WHERE {" AND ".join(cond)}""",
 		vals,
 		as_dict=True,
@@ -56,7 +62,7 @@ def execute(filters=None):
 			FROM `tabLoan Demand`
 			WHERE docstatus=1 AND outstanding_amount > 0.5 AND demand_date <= %s
 			GROUP BY loan""",
-			as_at,
+			f"{as_at} 23:59:59",
 			as_dict=True,
 		)
 	}
@@ -67,7 +73,7 @@ def execute(filters=None):
 		if principal <= 0.5:
 			continue
 		a = arrears.get(ln.name)
-		days = max(0, date_diff(as_at, a.oldest)) if a else 0
+		days = max(0, date_diff(as_at, getdate(a.oldest))) if a else 0
 		cls, prov = classify(days)
 		provision = round(principal * prov / 100, 2)
 		buckets[cls][0] += 1

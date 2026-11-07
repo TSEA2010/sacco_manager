@@ -1,0 +1,77 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 10px; color: #1a1a1a; }
+  h1 { font-size: 17px; color: #1a3c2e; margin: 0 0 2px; }
+  h2 { font-size: 12.5px; color: #1a3c2e; margin: 16px 0 5px; border-bottom: 1px solid #1a3c2e; padding-bottom: 2px; }
+  .muted { color: #666; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  th { background: #1a3c2e; color: #fff; text-align: left; padding: 3px 5px; font-weight: 600; }
+  td { padding: 2px 5px; border-bottom: 1px solid #e8e8e8; vertical-align: top; }
+  .num { text-align: right; white-space: nowrap; }
+  tr.sec td { background: #eef3f0; font-weight: 700; }
+  .ok { color: #1b7a3a; } .bad { color: #b42318; font-weight: 700; }
+  .note { font-size: 9px; color: #666; }
+</style></head><body>
+<h1>{{ title }}</h1>
+<div class="muted">{{ company }} &middot; Period {{ from_date }} to {{ to_date }} &middot; Generated {{ generated }}</div>
+
+<h2>1. Movement for the period</h2>
+<table>
+  <tr><th>Item</th><th class="num">Amount</th><th>Check</th></tr>
+  {% set ns = namespace(sec="") %}
+  {% for r in movement %}
+    {% if r.section != ns.sec %}{% set ns.sec = r.section %}<tr class="sec"><td colspan="3">{{ r.section }}</td></tr>{% endif %}
+    <tr><td>{{ r.item }}</td><td class="num">{{ fmt(r.amount) }}</td>
+      <td class="{{ 'ok' if r.note == 'OK' else ('bad' if r.note else '') }}">{{ r.note }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>2. Loan portfolio quality</h2>
+<table>
+  <tr>{% for s in par_summary %}<th>{{ s.label }}</th>{% endfor %}</tr>
+  <tr>{% for s in par_summary %}<td>{{ fmt(s.value) }}{% if s.datatype == "Percent" %}%{% endif %}</td>{% endfor %}</tr>
+</table>
+<table>
+  <tr><th>Classification</th><th class="num">Loans</th><th class="num">Principal</th><th class="num">Provision</th></tr>
+  {% for b in par_buckets %}<tr><td>{{ b[0] }}</td><td class="num">{{ b[1] }}</td><td class="num">{{ fmt(b[2]) }}</td><td class="num">{{ fmt(b[3]) }}</td></tr>{% endfor %}
+</table>
+
+<h2>3. Top defaulters (with guarantors)</h2>
+<table>
+  <tr><th>Loan</th><th>Borrower</th><th>Employer</th><th class="num">Days</th><th class="num">Overdue</th><th class="num">Principal</th><th>Guarantors</th></tr>
+  {% for d in defaulters %}<tr><td>{{ d.loan }}</td><td>{{ d.borrower }} ({{ d.member_no }})</td><td>{{ d.branch or "" }}</td>
+    <td class="num">{{ d.days }}</td><td class="num">{{ fmt(d.overdue) }}</td><td class="num">{{ fmt(d.principal_outstanding) }}</td><td>{{ d.guarantors }}</td></tr>{% endfor %}
+</table>
+
+<h2>4. Employer remittances received in the period</h2>
+{% if remittances %}<table>
+  <tr><th>Employer</th><th>For</th><th class="num">Expected</th><th class="num">Received</th><th class="num">Penalty</th><th>Status</th></tr>
+  {% for r in remittances %}<tr><td>{{ r.branch }}</td><td>{{ r.period_month }} {{ r.period_year }}</td><td class="num">{{ fmt(r.expected_amount) }}</td>
+    <td class="num">{{ fmt(r.received_amount) }}</td><td class="num">{{ fmt(r.penalty_amount) }}</td><td>{{ r.status }}</td></tr>{% endfor %}
+</table>{% else %}<div class="note">No remittances recorded in this period.</div>{% endif %}
+
+{% if agm %}
+<h2>5. Membership by employer</h2>
+<table><tr><th>Employer / branch</th><th class="num">Members</th><th class="num">Savings</th><th class="num">Share capital</th></tr>
+  {% for b in by_branch %}<tr><td>{{ b.branch }}</td><td class="num">{{ b.members }}</td><td class="num">{{ fmt(b.savings) }}</td><td class="num">{{ fmt(b.shares) }}</td></tr>{% endfor %}
+</table>
+<h2>6. Dividend proposal</h2>
+<table>
+  <tr><td>Share capital</td><td class="num">{{ fmt(dividend.capital) }}</td></tr>
+  <tr><td>Proposed rate</td><td class="num">{{ fmt(dividend.rate) }}%</td></tr>
+  <tr><td>Gross dividend</td><td class="num">{{ fmt(dividend.gross) }}</td></tr>
+  <tr><td>Withholding tax ({{ fmt(dividend.wht_rate) }}%)</td><td class="num">{{ fmt(dividend.wht) }}</td></tr>
+  <tr><td><b>Net to members</b></td><td class="num"><b>{{ fmt(dividend.net) }}</b></td></tr>
+</table>
+<div class="note">Subject to audited accounts and AGM resolution. Once approved, post it with a SACCO Dividend Run.</div>
+{% endif %}
+
+<h2>{{ 7 if agm else 5 }}. Trial balance as at {{ to_date }}</h2>
+<table><tr><th>Account</th><th>Type</th><th class="num">Debit balance</th><th class="num">Credit balance</th></tr>
+  {% for r in tb %}<tr><td>{{ r.account }}</td><td>{{ r.root_type }}</td>
+    <td class="num">{{ fmt(r.balance) if r.balance > 0 else "" }}</td><td class="num">{{ fmt(-r.balance) if r.balance < 0 else "" }}</td></tr>{% endfor %}
+  <tr class="sec"><td colspan="2">Difference (must be 0.00)</td><td class="num" colspan="2">{{ fmt(tb_total) }}</td></tr>
+</table>
+<div class="note">Figures come straight from ERPNext. Until the loan book is rebuilt at the 31-Oct-2026 cut-off, loan, interest and bank figures reflect the original migration and are not reliable.</div>
+</body></html>

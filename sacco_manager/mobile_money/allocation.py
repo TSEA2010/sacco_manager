@@ -20,7 +20,9 @@ from frappe import _
 from frappe.utils import flt, getdate
 
 from sacco_manager.lending_utils import create_loan_repayment, get_active_loans, loan_outstanding
-from sacco_manager.sacco_manager.doctype.sacco_registration_fee.sacco_registration_fee import create_registration_fee
+from sacco_manager.sacco_manager.doctype.sacco_registration_fee.sacco_registration_fee import (
+	create_registration_fee,
+)
 from sacco_manager.sacco_manager.doctype.sacco_savings_transaction.sacco_savings_transaction import (
 	create_savings_transaction,
 )
@@ -82,7 +84,7 @@ def parse_reference(bill_ref, msisdn=None):
 
 
 def _primary_savings(member):
-	acc = frappe.get_all("SACCO Savings Account", filters={"member": member, "status": "Active"},
+	acc = frappe.get_all("SACCO Savings Account", filters={"member": member, "status": ["in", ["Active", "Dormant"]]},
 		order_by="creation asc", pluck="name", limit=1)
 	if not acc:
 		frappe.throw(_("Member {0} has no active savings account.").format(member))
@@ -119,24 +121,28 @@ def allocate(txn_name, target=None, member=None, savings_account=None, loan=None
 	frappe.db.savepoint("sacco_mpesa_alloc")
 	try:
 		if target == "Loan Repayment":
-			if not loan:
-				loans = get_active_loans(member)
-				loan = loans[0].name if loans else None
-			if not loan:
-				target = "Savings"
+			# a named loan first, then the member's other active loans, oldest first
+			queue = [loan] if loan else []
+			queue += [ln.name for ln in get_active_loans(member) if ln.name not in queue]
+			if not queue:
 				notes.append(_("No active loan; credited to savings."))
-			else:
-				payable = loan_outstanding(loan, posting_date)["payable"]
+			for ln_name in queue:
+				if amount <= 0.005:
+					break
+				payable = loan_outstanding(ln_name, posting_date)["payable"]
+				if payable <= 0.005 and ln_name != queue[0]:
+					continue
 				to_loan = min(amount, payable) if payable > 0 else amount
-				rp = create_loan_repayment(loan, to_loan, posting_date, gl, reference_number=receipt,
+				rp = create_loan_repayment(ln_name, to_loan, posting_date, gl, reference_number=receipt,
 					remarks=f"M-Pesa {receipt}", mode_of_payment="M-Pesa")
-				first_doc = ("Loan Repayment", rp.name)
+				if rp.meta.has_field("sacco_mpesa_transaction"):
+					rp.db_set("sacco_mpesa_transaction", txn.name)
+				first_doc = first_doc or ("Loan Repayment", rp.name)
+				loan = loan or ln_name
 				amount -= to_loan
-				if amount > 0.5:
-					notes.append(_("Excess {0} over loan payable credited to savings.").format(amount))
-					target = "Savings"
-				else:
-					amount = 0
+			if amount > 0.005:
+				notes.append(_("Remaining {0} credited to savings.").format(round(amount, 2)))
+			target = "Savings"
 		if target == "Shares" and amount > 0:
 			price = flt(frappe.db.get_single_value("SACCO Settings", "default_share_price"))
 			buy = (amount // price) * price if price else 0
@@ -154,7 +160,7 @@ def allocate(txn_name, target=None, member=None, savings_account=None, loan=None
 			first_doc = first_doc or ("SACCO Registration Fee", rf.name)
 			amount -= fee
 			target = "Savings"
-		if target == "Savings" and amount > 0.5:
+		if target == "Savings" and amount > 0.005:
 			acc = savings_account or _primary_savings(member)
 			st = create_savings_transaction(acc, "Deposit", amount, posting_date, payment_account=gl,
 				mode_of_payment="M-Pesa", reference_no=receipt, reference=ref,
@@ -187,8 +193,9 @@ def allocate_job(txn_name):
 
 def retry_unallocated():
 	"""Hourly: try again for payments that arrived before the member/loan existed."""
+	# includes payments that matched a member but failed (e.g. no savings account yet)
 	for name in frappe.get_all("SACCO M-Pesa Transaction",
-			filters={"direction": "Inbound", "status": "Unallocated", "member": ["is", "not set"]},
+			filters={"direction": "Inbound", "status": "Unallocated", "allocated_by": ["is", "not set"]},
 			pluck="name", limit=200):
 		allocate(name)
 		frappe.db.commit()

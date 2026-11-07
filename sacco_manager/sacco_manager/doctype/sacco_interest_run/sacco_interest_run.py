@@ -56,7 +56,8 @@ class SACCOInterestRun(Document):
 			frappe.throw(_("Period End must be after Period Start."))
 		overlap = frappe.db.sql(
 			"""SELECT name FROM `tabSACCO Interest Run`
-			WHERE docstatus=1 AND name!=%(n)s AND IFNULL(account_type,'')=%(t)s
+			WHERE docstatus=1 AND name!=%(n)s
+			  AND (IFNULL(account_type,'')=%(t)s OR IFNULL(account_type,'')='' OR %(t)s='')
 			  AND period_start <= %(e)s AND period_end >= %(s)s LIMIT 1""",
 			{"n": self.name or "", "t": self.account_type or "", "s": self.period_start, "e": self.period_end},
 		)
@@ -66,7 +67,7 @@ class SACCOInterestRun(Document):
 			self.calculate()
 
 	def calculate(self):
-		filters = {"status": "Active"}
+		filters = {"status": ["in", ["Active", "Dormant"]]}
 		if self.account_type:
 			filters["account_type"] = self.account_type
 		accounts = frappe.get_all(
@@ -148,6 +149,7 @@ def cancel_linked_savings_transactions(doctype, name):
 	):
 		txn = frappe.get_doc("SACCO Savings Transaction", txn_name)
 		txn.flags.ignore_permissions = True
+		txn.flags.from_parent = True
 		txn.cancel()
 
 

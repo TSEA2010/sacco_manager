@@ -32,16 +32,12 @@ def execute(filters=None):
 		vals,
 		as_dict=True,
 	)
-	pledged = {
-		r.savings_account: flt(r.total)
-		for r in frappe.db.sql(
-			"""SELECT savings_account, SUM(pledge_value) AS total FROM `tabSACCO Loan Guarantor`
-			WHERE status != 'Declined' GROUP BY savings_account""",
-			as_dict=True,
-		)
-	}
+	from sacco_manager.utils import get_committed_pledges, get_multiplier
+
+	with_pledges = set(frappe.db.sql_list("SELECT DISTINCT savings_account FROM `tabSACCO Loan Guarantor` WHERE status != 'Declined'"))
+	mult = get_multiplier() or 1
 	for d in data:
-		d["locked_by_pledges"] = pledged.get(d.savings_account, 0)
+		d["locked_by_pledges"] = get_committed_pledges(d.savings_account) / mult if d.savings_account in with_pledges else 0
 	total = sum(flt(d.balance) for d in data)
 	acc = frappe.db.get_single_value("SACCO Settings", "savings_liability_account")
 	gl = 0
@@ -56,14 +52,13 @@ def execute(filters=None):
 	summary = [
 		{"label": _("Accounts"), "value": len(data), "datatype": "Int"},
 		{"label": _("Total savings (sub-ledger)"), "value": total, "datatype": "Currency"},
-		{"label": _("Members' Savings GL"), "value": gl, "datatype": "Currency"},
-		{
-			"label": _("Difference"),
-			"value": total - gl,
-			"datatype": "Currency",
-			"indicator": "Green" if abs(total - gl) < 1 else "Red",
-		},
 	]
+	if not (f.account_type or f.branch):  # the GL is company-wide; only compare an unfiltered total
+		summary += [
+			{"label": _("Members' Savings GL"), "value": gl, "datatype": "Currency"},
+			{"label": _("Difference"), "value": total - gl, "datatype": "Currency",
+				"indicator": "Green" if abs(total - gl) < 1 else "Red"},
+		]
 	return _columns(), data, None, None, summary
 
 
@@ -78,7 +73,7 @@ def _columns():
 		{"label": _("Type"), "fieldname": "account_type", "width": 120},
 		{"label": _("Status"), "fieldname": "status", "width": 80},
 		{"label": _("Balance"), "fieldname": "balance", "fieldtype": "Currency", "width": 130},
-		{"label": _("Pledged (guarantees)"), "fieldname": "locked_by_pledges", "fieldtype": "Currency", "width": 140},
+		{"label": _("Locked by Guarantees"), "fieldname": "locked_by_pledges", "fieldtype": "Currency", "width": 140},
 		{"label": _("Stored Balance (today)"), "fieldname": "stored_balance", "fieldtype": "Currency", "width": 140},
 		{"label": _("Last Transaction"), "fieldname": "last_txn", "fieldtype": "Date", "width": 110},
 	]

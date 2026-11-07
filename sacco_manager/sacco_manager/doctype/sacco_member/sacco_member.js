@@ -17,6 +17,7 @@ frappe.ui.form.on('SACCO Member', {
         toggle_user_id_field(frm);
         
         if (!frm.is_new()) {
+            sacco_statement_buttons(frm);
             // Ledger button
             frm.add_custom_button('Ledger', function () {
                 frappe.set_route('query-report', 'General Ledger', {
@@ -117,4 +118,50 @@ function make_full_name(frm) {
 function toggle_user_id_field(frm) {
     frm.set_df_property('user_id', 'hidden', !frm.doc.is_user);
     frm.set_df_property('user_id', 'reqd', !!frm.doc.is_user);
+}
+
+function sacco_statement_dialog(frm, action) {
+    const d = new frappe.ui.Dialog({
+        title: __("Member statement"),
+        fields: [
+            { fieldname: "from_date", label: __("From"), fieldtype: "Date", reqd: 1,
+              default: frappe.datetime.add_months(frappe.datetime.get_today(), -12) },
+            { fieldname: "to_date", label: __("To"), fieldtype: "Date", reqd: 1, default: frappe.datetime.get_today() },
+        ],
+        primary_action_label: action === "email" ? __("Email to member") : __("Download PDF"),
+        primary_action(v) {
+            const base = "sacco_manager.statements.";
+            if (action === "email") {
+                frappe.call({ method: base + "email_statement", args: { member: frm.doc.name, ...v }, freeze: true })
+                    .then((r) => frappe.show_alert({ message: r.message, indicator: "green" }));
+            } else {
+                window.open(`/api/method/${base}download_statement?member=${encodeURIComponent(frm.doc.name)}`
+                    + `&from_date=${v.from_date}&to_date=${v.to_date}`);
+            }
+            d.hide();
+        },
+    });
+    d.show();
+}
+
+function sacco_dp_buttons(frm) {
+    if (!frm.doc.consent_data_processing) {
+        frm.add_custom_button(__("Record consent"), () => {
+            frappe.prompt({ fieldname: "method", label: __("How was consent given?"), fieldtype: "Select", reqd: 1,
+                options: "Signed form\nEmail\nPortal\nVerbal (recorded)", default: "Signed form" }, (v) =>
+                frappe.call({ method: "sacco_manager.data_protection.record_consent", args: { member: frm.doc.name, method: v.method } })
+                    .then(() => frm.reload_doc()), __("Record data-processing consent"));
+        }, __("Data protection"));
+    }
+    frm.add_custom_button(__("Export member data (access request)"), () =>
+        window.open(`/api/method/sacco_manager.data_protection.export_member_data?member=${encodeURIComponent(frm.doc.name)}`),
+        __("Data protection"));
+}
+
+function sacco_statement_buttons(frm) {
+    sacco_dp_buttons(frm);
+    frm.add_custom_button(__("Download PDF"), () => sacco_statement_dialog(frm, "download"), __("Statement"));
+    if (frm.doc.email_id) {
+        frm.add_custom_button(__("Email to member"), () => sacco_statement_dialog(frm, "email"), __("Statement"));
+    }
 }

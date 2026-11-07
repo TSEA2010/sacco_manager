@@ -55,6 +55,11 @@ class SACCOSavingsTransaction(Document):
 		self.db_set("journal_entry", self._post_gl())
 		self.db_set("status", "Posted")
 
+	def before_cancel(self):
+		if self.reference_doctype and self.reference_name and not self.flags.from_parent:
+			frappe.throw(_("This transaction was created by {0} {1}. Cancel or reverse it from there.").format(
+				_(self.reference_doctype), self.reference_name), title=_("Cancel from the source document"))
+
 	def on_cancel(self):
 		self.ignore_linked_doctypes = ("Journal Entry", "GL Entry", "Payment Ledger Entry")
 		self._apply_balance(reverse=True)
@@ -66,6 +71,11 @@ class SACCOSavingsTransaction(Document):
 		current = flt(
 			frappe.db.get_value("SACCO Savings Account", self.savings_account, "balance", for_update=True)
 		)
+		if not reverse and self.transaction_type == "Withdrawal" and not self.flags.skip_withdrawable_check:
+			# re-check under the row lock so two withdrawals cannot both pass
+			available = get_withdrawable_balance(self.savings_account)
+			if flt(self.amount) > available + 0.005:
+				frappe.throw(_("Insufficient withdrawable balance. Available: {0}").format(available))
 		sign = 1 if self.transaction_type in CREDIT_TYPES else -1
 		if reverse:
 			sign = -sign
@@ -75,6 +85,8 @@ class SACCOSavingsTransaction(Document):
 				_("This would make Savings Account {0} negative ({1}).").format(self.savings_account, new_bal)
 			)
 		frappe.db.set_value("SACCO Savings Account", self.savings_account, "balance", new_bal)
+		if sign > 0 and frappe.db.get_value("SACCO Savings Account", self.savings_account, "status") == "Dormant":
+			frappe.db.set_value("SACCO Savings Account", self.savings_account, "status", "Active")
 		if not reverse:
 			self.db_set("balance_before", current)
 			self.db_set("balance_after", new_bal)
@@ -154,6 +166,7 @@ def create_savings_transaction(
 		txn.reference_doctype, txn.reference_name = reference
 	txn.remarks = remarks
 	txn.flags.skip_withdrawable_check = skip_withdrawable_check
+	txn.flags.from_parent = True
 	txn.flags.ignore_permissions = True
 	txn.insert()
 	if submit:

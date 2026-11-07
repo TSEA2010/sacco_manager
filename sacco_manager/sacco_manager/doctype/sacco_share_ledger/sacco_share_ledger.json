@@ -17,7 +17,9 @@
   "date",
   "journal_entry",
   "payment_account",
-  "reference_no"
+  "reference_no",
+  "transfer_member",
+  "transfer_entry"
  ],
  "fields": [
   {
@@ -90,12 +92,29 @@
    "fieldname": "payment_account",
    "fieldtype": "Link",
    "label": "Cash / Bank / Clearing Account",
-   "options": "Account"
+   "options": "Account",
+   "depends_on": "eval:!['Transfer In','Transfer Out'].includes(doc.transaction_type)"
   },
   {
    "fieldname": "reference_no",
    "fieldtype": "Data",
    "label": "Reference No"
+  },
+  {
+   "fieldname": "transfer_member",
+   "fieldtype": "Link",
+   "label": "Transfer To / From Member",
+   "options": "SACCO Member",
+   "depends_on": "eval:['Transfer In','Transfer Out'].includes(doc.transaction_type)",
+   "description": "Transfer Out: the member receiving the shares. A matching Transfer In is created automatically."
+  },
+  {
+   "fieldname": "transfer_entry",
+   "fieldtype": "Link",
+   "label": "Paired Transfer Entry",
+   "options": "SACCO Share Ledger",
+   "read_only": 1,
+   "no_copy": 1
   }
  ],
  "grid_page_length": 50,

@@ -12,7 +12,6 @@ import frappe
 from frappe.utils import flt
 
 
-
 def reverse_bogus_delinquency_demands(dry_run=True):
 	"""Cancel the 'Additional Interest' demands the old daily job created.
 

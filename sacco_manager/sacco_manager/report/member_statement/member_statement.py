@@ -63,21 +63,20 @@ def _shares(member, start, end):
 		fields=["name", "date", "transaction_type", "shares", "total_amount", "reference_no"], order_by="date asc, creation asc")
 	if not entries:
 		cap = flt(frappe.db.get_value("SACCO Member", member, "share_balance"))
-		return [{"section": "Shares", "date": end, "description": _("Share capital (no ledger entries)"), "balance": cap, "bold": 1}] if cap else []
-	bal = 0.0
-	opening_done = False
+		return [{"section": "Shares", "date": end, "description": _("Share capital brought forward (before share ledger)"),
+			"balance": cap, "bold": 1}] if cap else []
+	bal = sum((1 if e.transaction_type in ("Purchase", "Transfer In") else -1) * flt(e.total_amount)
+		for e in entries if getdate(e.date) < start)
+	out.append({"section": "Shares", "date": start, "description": _("Opening share capital"), "balance": bal, "bold": 1})
 	for e in entries:
-		sign = 1 if e.transaction_type in ("Purchase", "Transfer In") else -1
 		if getdate(e.date) < start:
-			bal += sign * flt(e.total_amount)
 			continue
-		if not opening_done:
-			out.append({"section": "Shares", "date": start, "description": _("Opening share capital"), "balance": bal, "bold": 1})
-			opening_done = True
+		sign = 1 if e.transaction_type in ("Purchase", "Transfer In") else -1
 		bal += sign * flt(e.total_amount)
 		out.append({"section": "Shares", "date": e.date, "description": f"{e.transaction_type} {e.shares} shares",
 			"reference": e.reference_no or e.name, "debit": flt(e.total_amount) if sign < 0 else 0,
 			"credit": flt(e.total_amount) if sign > 0 else 0, "balance": bal})
+	out.append({"section": "Shares", "date": end, "description": _("Closing share capital"), "balance": bal, "bold": 1})
 	return out
 
 
@@ -85,12 +84,14 @@ def _loans(customer, start, end):
 	from sacco_manager.lending_utils import loan_outstanding
 
 	out = []
-	for ln in frappe.get_all("Loan", filters={"applicant": customer, "docstatus": 1},
-			fields=["name", "loan_product", "disbursement_date", "disbursed_amount", "status"], order_by="disbursement_date"):
+	for ln in frappe.get_all("Loan", filters={"applicant": customer, "docstatus": 1, "disbursement_date": ["<=", end]},
+			fields=["name", "loan_product", "disbursement_date", "disbursed_amount", "status", "closure_date"], order_by="disbursement_date"):
+		if ln.closure_date and getdate(ln.closure_date) < start:
+			continue  # closed before the period
 		out.append({"section": "Loan", "date": ln.disbursement_date, "account": ln.name,
 			"description": f"{ln.loan_product} disbursed ({ln.status})", "debit": flt(ln.disbursed_amount), "bold": 1})
 		for rp in frappe.get_all("Loan Repayment", filters={"against_loan": ln.name, "docstatus": 1,
-				"posting_date": ["between", [start, end]]},
+				"posting_date": ["between", [f"{start} 00:00:00", f"{end} 23:59:59"]]},
 				fields=["name", "posting_date", "amount_paid", "principal_amount_paid", "total_interest_paid",
 					"total_penalty_paid", "reference_number"], order_by="posting_date asc"):
 			out.append({"section": "Loan", "date": rp.posting_date, "account": ln.name,

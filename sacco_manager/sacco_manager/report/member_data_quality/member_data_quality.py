@@ -8,13 +8,31 @@ from frappe import _
 from sacco_manager.utils import is_valid_kra_pin, normalize_ke_phone
 
 
+def in_scope_members():
+	"""Members worth cleaning up: anyone with a savings/share balance, an open loan, or activity in the last year.
+	Inactive former members with nothing outstanding are left alone (management decision, Nov 2026)."""
+	return set(frappe.db.sql_list(
+		"""SELECT m.name FROM `tabSACCO Member` m
+		WHERE IFNULL(m.share_balance, 0) != 0
+		   OR EXISTS (SELECT 1 FROM `tabSACCO Savings Account` a WHERE a.member = m.name AND ABS(a.balance) > 0.5)
+		   OR EXISTS (SELECT 1 FROM `tabLoan` l WHERE l.applicant = m.customer AND l.docstatus = 1
+				AND l.status IN ('Disbursed','Partially Disbursed','Active') AND l.disbursed_amount - l.total_principal_paid > 1)
+		   OR EXISTS (SELECT 1 FROM `tabSACCO Savings Transaction` t WHERE t.member = m.name AND t.docstatus = 1
+				AND t.posting_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH))"""
+	))
+
+
 def execute(filters=None):
+	filters = frappe._dict(filters or {})
 	members = frappe.get_all(
 		"SACCO Member",
 		fields=["name", "member_no", "full_name", "branch", "phone", "email_id", "id_number", "kra_pin",
-			"customer", "status", "date_of_birth", "contact_name"],
+			"customer", "status", "date_of_birth", "contact_name", "consent_data_processing"],
 		order_by="member_no",
 	)
+	if (filters.scope or "Current or with balance") != "All members":
+		keep = in_scope_members()
+		members = [m for m in members if m.name in keep]
 	dup_no = _dups(members, "member_no")
 	dup_id = _dups(members, "id_number")
 	dup_phone = _dups(members, "phone")
@@ -44,6 +62,11 @@ def execute(filters=None):
 			issues.append(_("no savings account"))
 		if not m.contact_name:
 			issues.append(_("no next of kin"))
+		if not m.consent_data_processing:
+			issues.append(_("no data-processing consent"))
+		if not m.id_number or len(str(m.id_number)) < 6:
+			if m.id_number:
+				issues.append(_("national ID looks invalid"))
 		if issues:
 			data.append({**m, "issues": "; ".join(issues), "issue_count": len(issues)})
 	cols = [

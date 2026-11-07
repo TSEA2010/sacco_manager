@@ -32,7 +32,18 @@ def execute(filters=None):
 	deposits = -_balance("a.name=%(sav)s", {**vals, "sav": s.savings_liability_account}) if s.savings_liability_account else 0
 	share_cap = -_balance("a.name=%(sh)s", {**vals, "sh": s.share_capital_account}) if s.share_capital_account else 0
 	share_in_liab = s.share_capital_account and frappe.get_cached_value("Account", s.share_capital_account, "root_type") == "Liability"
-	core = equity + pnl + (share_cap if share_in_liab else 0)
+	from sacco_manager.sacco_manager.report.loan_portfolio_at_risk.loan_portfolio_at_risk import (
+		execute as par,
+	)
+
+	par_summary = par({"as_at": f.as_at})[4]
+	provision = next((flt(s["value"]) for s in par_summary if s["label"] == "Required provision"), 0)
+	booked_provision = -_balance("a.name LIKE %(p)s", {**vals, "p": "%Provision%"})
+	provision_gap = max(0, provision - max(0, booked_provision))
+	core = equity + pnl + (share_cap if share_in_liab else 0) - provision_gap
+	institutional = equity + pnl - provision_gap  # excludes member share capital
+	short_term = -_balance("a.root_type='Liability' AND a.name NOT IN (%(sav)s, %(sh)s)",
+		{**vals, "sav": s.savings_liability_account or "-", "sh": s.share_capital_account or "-"})
 	loan_accounts = list({p.loan_account for p in frappe.get_all("Loan Product", fields=["loan_account"]) if p.loan_account})
 	loans = sum(_balance("a.name=%(la)s", {**vals, "la": la}) for la in loan_accounts)
 	interest_recv = sum(_balance("a.name=%(ia)s", {**vals, "ia": p.interest_receivable_account})
@@ -46,12 +57,18 @@ def execute(filters=None):
 		{"metric": _("Liquid assets (cash, bank, M-Pesa)"), "value": liquid},
 		{"metric": _("Members' savings / deposits"), "value": deposits},
 		{"metric": _("Share capital"), "value": share_cap},
-		{"metric": _("Core capital (equity + current result + share capital)"), "value": core},
+		{"metric": _("Required loan-loss provision (PAR report)"), "value": provision},
+		{"metric": _("Provision not yet booked (deducted from capital)"), "value": provision_gap},
+		{"metric": _("Core capital (equity + result + share capital - unbooked provision)"), "value": core},
+		{"metric": _("Institutional capital (excl. member shares)"), "value": institutional},
+		{"metric": _("Other liabilities (short-term)"), "value": short_term},
 		{"metric": _("Gross loans (principal ledger)"), "value": loans},
 		{"metric": _("Interest receivable"), "value": interest_recv},
 		{"metric": _("Core capital / total assets (%)"), "value": ratio(core, assets), "benchmark": ">= 10", "is_ratio": 1},
 		{"metric": _("Core capital / deposits (%)"), "value": ratio(core, deposits), "benchmark": ">= 8", "is_ratio": 1},
-		{"metric": _("Liquidity: liquid assets / deposits (%)"), "value": ratio(liquid, deposits), "benchmark": ">= 15", "is_ratio": 1},
+		{"metric": _("Liquidity: liquid assets / (deposits + short-term liabilities) (%)"),
+			"value": ratio(liquid, deposits + short_term), "benchmark": ">= 15", "is_ratio": 1},
+		{"metric": _("Institutional capital / total assets (%)"), "value": ratio(institutional, assets), "benchmark": ">= 8", "is_ratio": 1},
 		{"metric": _("Loans / deposits (%)"), "value": ratio(loans, deposits), "benchmark": "", "is_ratio": 1},
 	]
 	cols = [

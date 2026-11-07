@@ -83,6 +83,8 @@ class LoanTopUp(Document):
 			"monthly_repayment_amount": self.new_installment_amount if self.repayment_method == "Repay Fixed Amount per Period" else None,
 			"repayment_start_date": frappe.utils.add_months(getdate(self.top_up_date), 1),
 			"is_secured_loan": old.is_secured_loan,
+			# keep the original application so guarantors' pledges stay committed to the refinanced loan
+			"loan_application": old.loan_application,
 		})
 		new_loan.flags.ignore_permissions = True
 		new_loan.insert()

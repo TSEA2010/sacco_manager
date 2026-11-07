@@ -55,7 +55,7 @@ class SACCODividendRun(Document):
 			wht = round(gross * wht_rate / 100, 2)
 			sav = frappe.get_all(
 				"SACCO Savings Account",
-				filters={"member": r.member, "status": "Active"},
+				filters={"member": r.member, "status": ["in", ["Active", "Dormant"]]},
 				order_by="creation asc",
 				pluck="name",
 				limit=1,

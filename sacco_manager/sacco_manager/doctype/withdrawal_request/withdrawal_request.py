@@ -79,6 +79,7 @@ class WithdrawalRequest(Document):
 			txn = frappe.get_doc("SACCO Savings Transaction", self.savings_transaction)
 			if txn.docstatus == 1:
 				txn.flags.ignore_permissions = True
+				txn.flags.from_parent = True
 				txn.cancel()
 		self.db_set("status", "Rejected")
 

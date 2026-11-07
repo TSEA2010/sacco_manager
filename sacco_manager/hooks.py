@@ -24,6 +24,14 @@ doc_events = {
 	"Loan Application": {
 		"validate": "sacco_manager.overrides.loan_application.validate",
 	},
+	"Journal Entry": {"validate": "sacco_manager.accounting.guard_control_accounts"},
+	"Loan Write Off": {
+		"before_submit": "sacco_manager.sacco_manager.doctype.sacco_board_approval.sacco_board_approval.check_write_off",
+	},
+	# SMS notifications (only when enabled in SACCO Settings; queued, never block the posting)
+	"SACCO Savings Transaction": {"on_submit": "sacco_manager.notifications.on_savings_transaction_submit"},
+	"Loan Repayment": {"on_submit": "sacco_manager.notifications.on_loan_repayment_submit"},
+	"SACCO Loan Guarantor": {"after_insert": "sacco_manager.notifications.on_guarantor_insert"},
 }
 
 # The old daily "delinquency interest" job was removed: it charged 1% of the original loan to
@@ -32,6 +40,11 @@ doc_events = {
 scheduler_events = {
 	"hourly": ["sacco_manager.mobile_money.allocation.retry_unallocated"],
 	"daily": ["sacco_manager.tasks.mark_dormant_accounts"],
+	"weekly": ["sacco_manager.notifications.weekly_arrears_reminders"],
+	"cron": {
+		# 07:00 on the 5th: previous month's management pack to the recipients in SACCO Settings
+		"0 7 5 * *": ["sacco_manager.management_pack.monthly_job"],
+	},
 }
 
 website_route_rules = [

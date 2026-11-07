@@ -42,7 +42,13 @@
   "customer_details_tab",
   "customer",
   "column_break_xeqa",
-  "customer_group"
+  "customer_group",
+  "data_protection_section",
+  "consent_data_processing",
+  "consent_date",
+  "column_break_dp",
+  "consent_method",
+  "sms_opt_out"
  ],
  "fields": [
   {
@@ -261,6 +267,38 @@
    "fieldtype": "Link",
    "label": "Registration Fee JE",
    "options": "Journal Entry"
+  },
+  {
+   "fieldname": "data_protection_section",
+   "fieldtype": "Section Break",
+   "label": "Data protection (Kenya DPA 2019)"
+  },
+  {
+   "fieldname": "consent_data_processing",
+   "fieldtype": "Check",
+   "label": "Consented to data processing"
+  },
+  {
+   "fieldname": "consent_date",
+   "fieldtype": "Date",
+   "label": "Consent Date",
+   "depends_on": "consent_data_processing"
+  },
+  {
+   "fieldname": "column_break_dp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "consent_method",
+   "fieldtype": "Select",
+   "label": "Consent Method",
+   "options": "\nSigned form\nEmail\nPortal\nVerbal (recorded)",
+   "depends_on": "consent_data_processing"
+  },
+  {
+   "fieldname": "sms_opt_out",
+   "fieldtype": "Check",
+   "label": "Opted out of SMS"
   }
  ],
  "grid_page_length": 50,

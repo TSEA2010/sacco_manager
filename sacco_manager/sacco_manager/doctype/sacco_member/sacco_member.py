@@ -63,6 +63,8 @@ class SACCOMember(Document):
 				indicator="orange", alert=True)
 
 		self._validate_unique("member_no", _("Member No"))
+		if self.customer:
+			self._validate_unique("customer", _("Customer (loan account)"))
 		if self.id_number:
 			self._validate_unique("id_number", _("National ID"))
 

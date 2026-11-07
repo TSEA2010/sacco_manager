@@ -40,7 +40,23 @@
   "portal_enabled",
   "guarantor_link_validity_days",
   "column_break_portal",
-  "max_penalty_percent"
+  "max_penalty_percent",
+  "sms_section",
+  "sms_enabled",
+  "sms_on_savings",
+  "sms_on_repayment",
+  "column_break_sms",
+  "sms_on_guarantor",
+  "sms_arrears_reminder",
+  "sms_signature",
+  "reporting_section",
+  "statement_footer",
+  "management_pack_recipients",
+  "column_break_reporting",
+  "arrears_days_threshold",
+  "governance_section",
+  "board_approval_loan_limit",
+  "board_approval_for_write_off"
  ],
  "fields": [
   {
@@ -253,6 +269,97 @@
    "fieldtype": "Percent",
    "label": "Max Late-Remittance Penalty (% of expected)",
    "default": "10"
+  },
+  {
+   "fieldname": "sms_section",
+   "fieldtype": "Section Break",
+   "label": "SMS notifications"
+  },
+  {
+   "fieldname": "sms_enabled",
+   "fieldtype": "Check",
+   "label": "Send SMS to Members",
+   "default": "0",
+   "description": "Uses the gateway in SMS Settings (e.g. Africa's Talking). Messages are logged in SMS Log."
+  },
+  {
+   "fieldname": "sms_on_savings",
+   "fieldtype": "Check",
+   "label": "Deposits, withdrawals, interest, dividends",
+   "default": "1"
+  },
+  {
+   "fieldname": "sms_on_repayment",
+   "fieldtype": "Check",
+   "label": "Loan repayments received",
+   "default": "1"
+  },
+  {
+   "fieldname": "column_break_sms",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sms_on_guarantor",
+   "fieldtype": "Check",
+   "label": "Guarantor requests",
+   "default": "1"
+  },
+  {
+   "fieldname": "sms_arrears_reminder",
+   "fieldtype": "Check",
+   "label": "Weekly arrears reminder",
+   "default": "0",
+   "description": "Leave off until the loan book is rebuilt: legacy loans show false arrears."
+  },
+  {
+   "fieldname": "sms_signature",
+   "fieldtype": "Data",
+   "label": "SMS Signature",
+   "default": "Trident SACCO"
+  },
+  {
+   "fieldname": "reporting_section",
+   "fieldtype": "Section Break",
+   "label": "Statements and management reporting"
+  },
+  {
+   "fieldname": "statement_footer",
+   "fieldtype": "Small Text",
+   "label": "Statement Footer",
+   "default": "Please report any discrepancy to the SACCO office within 14 days of receiving this statement."
+  },
+  {
+   "fieldname": "management_pack_recipients",
+   "fieldtype": "Small Text",
+   "label": "Monthly Pack Recipients",
+   "description": "Email addresses, one per line. The pack for the previous month is emailed on the 5th."
+  },
+  {
+   "fieldname": "column_break_reporting",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "arrears_days_threshold",
+   "fieldtype": "Int",
+   "label": "Defaulter After (days in arrears)",
+   "default": "30"
+  },
+  {
+   "fieldname": "governance_section",
+   "fieldtype": "Section Break",
+   "label": "Governance"
+  },
+  {
+   "fieldname": "board_approval_loan_limit",
+   "fieldtype": "Currency",
+   "label": "Board Approval Needed for Loans Above",
+   "description": "0 = no limit. Loan applications above this amount need a submitted SACCO Board Approval before they can be approved."
+  },
+  {
+   "fieldname": "board_approval_for_write_off",
+   "fieldtype": "Check",
+   "label": "Board Approval Needed for Write-offs",
+   "default": "1"
   }
  ],
  "grid_page_length": 50,

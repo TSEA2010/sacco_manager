@@ -61,10 +61,32 @@ def make_journal_entry(lines, posting_date=None, remark=None, reference=None, su
 		je.append("accounts", row)
 
 	je.flags.ignore_permissions = True
-	je.insert()
-	if submit:
-		je.submit()
+	frappe.flags.sacco_posting = True
+	try:
+		je.insert()
+		if submit:
+			je.submit()
+	finally:
+		frappe.flags.sacco_posting = False
 	return je.name
+
+
+def guard_control_accounts(doc, method=None):
+	"""Journal Entry validate hook: members' savings, share capital and dividends payable may only be
+	changed by SACCO documents, so the member sub-ledgers always equal the GL. System Managers can
+	override (e.g. an auditor-approved correction); the override is recorded on the JE."""
+	if frappe.flags.sacco_posting or frappe.flags.in_import or frappe.flags.in_patch:
+		return
+	s = frappe.get_cached_doc("SACCO Settings")
+	control = {a for a in (s.savings_liability_account, s.share_capital_account, s.dividend_payable_account) if a}
+	hit = sorted({row.account for row in doc.accounts if row.account in control})
+	if not hit:
+		return
+	if "System Manager" in frappe.get_roles():
+		doc.user_remark = ((doc.user_remark or "") + f" [Manual entry to SACCO control account(s) {', '.join(hit)} by {frappe.session.user}]").strip()
+		return
+	frappe.throw(_("{0} can only be changed through SACCO transactions (savings, shares, dividends), so member balances stay equal to the ledger.").format(
+		", ".join(hit)), title=_("SACCO control account"))
 
 
 def cancel_journal_entry(name):

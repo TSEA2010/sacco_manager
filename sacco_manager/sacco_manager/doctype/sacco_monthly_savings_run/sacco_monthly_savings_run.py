@@ -11,10 +11,10 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, today
 
-from sacco_manager.utils import describe_error
 from sacco_manager.sacco_manager.doctype.sacco_savings_transaction.sacco_savings_transaction import (
 	create_savings_transaction,
 )
+from sacco_manager.utils import describe_error
 
 
 class SACCOMonthlySavingsRun(Document):
@@ -34,6 +34,21 @@ class SACCOMonthlySavingsRun(Document):
 		active = [r for r in self.members if r.status != "Skipped"]
 		self.total_members = len(active)
 		self.total_amount = sum(flt(r.amount) for r in active)
+
+	def before_submit(self):
+		dup = frappe.db.get_value("SACCO Monthly Savings Run", {"period_month": self.period_month,
+			"period_year": self.period_year, "docstatus": 1, "name": ["!=", self.name]}, "name")
+		if dup:
+			frappe.throw(_("A savings run for {0} {1} is already submitted: {2}").format(self.period_month, self.period_year, dup))
+		accounts = tuple(r.savings_account for r in self.members if r.status != "Skipped") or ("",)
+		rem = frappe.db.sql(
+			"SELECT DISTINCT p.name FROM `tabSACCO Branch Remittance` p "
+			"JOIN `tabSACCO Branch Remittance Member` c ON c.parent = p.name "
+			"WHERE p.docstatus = 1 AND p.period_month = %s AND p.period_year = %s AND c.received_savings > 0 "
+			"AND c.savings_account IN %s", (self.period_month, self.period_year, accounts))
+		if rem:
+			frappe.throw(_("Some of these members' savings for {0} {1} were already posted via remittance {2}.").format(
+				self.period_month, self.period_year, rem[0][0]))
 
 	def on_submit(self):
 		for row in self.members:
@@ -61,6 +76,7 @@ class SACCOMonthlySavingsRun(Document):
 				txn = frappe.get_doc("SACCO Savings Transaction", row.transaction_ref)
 				if txn.docstatus == 1:
 					txn.flags.ignore_permissions = True
+					txn.flags.from_parent = True
 					txn.cancel()
 				row.db_set({"status": "Pending", "transaction_ref": None})
 		self.db_set("status", "Draft")
@@ -77,7 +93,7 @@ class SACCOMonthlySavingsRun(Document):
 			frappe.throw(_("A submitted savings run already exists for {0} {1}: {2}").format(self.period_month, self.period_year, existing))
 		accounts = frappe.get_all(
 			"SACCO Savings Account",
-			filters={"status": "Active", "monthly_contribution": [">", 0]},
+			filters={"status": ["in", ["Active", "Dormant"]], "monthly_contribution": [">", 0]},
 			fields=["name", "member", "monthly_contribution"],
 			order_by="member asc",
 		)
