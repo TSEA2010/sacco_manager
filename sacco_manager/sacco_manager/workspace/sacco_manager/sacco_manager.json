@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"bxZY0PcWRF\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Sacco Manager</span>\",\"col\":12}},{\"id\":\"kRXoxC5YCL\",\"type\":\"card\",\"data\":{\"card_name\":\"Master\",\"col\":4}},{\"id\":\"D3buqMvjac\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}}]",
+ "content": "[{\"id\": \"hdr\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">Trident SACCO</span>\", \"col\": 12}}, {\"id\": \"sc0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Unallocated M-Pesa\", \"col\": 3}}, {\"id\": \"sc1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Withdrawals to approve\", \"col\": 3}}, {\"id\": \"sc2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Loan applications\", \"col\": 3}}, {\"id\": \"sc3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"New member\", \"col\": 3}}, {\"id\": \"sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"c0\", \"type\": \"card\", \"data\": {\"card_name\": \"Members\", \"col\": 4}}, {\"id\": \"c1\", \"type\": \"card\", \"data\": {\"card_name\": \"Savings\", \"col\": 4}}, {\"id\": \"c2\", \"type\": \"card\", \"data\": {\"card_name\": \"Loans\", \"col\": 4}}, {\"id\": \"c3\", \"type\": \"card\", \"data\": {\"card_name\": \"M-Pesa\", \"col\": 4}}, {\"id\": \"c4\", \"type\": \"card\", \"data\": {\"card_name\": \"Period-end\", \"col\": 4}}, {\"id\": \"c5\", \"type\": \"card\", \"data\": {\"card_name\": \"Reports\", \"col\": 4}}, {\"id\": \"c6\", \"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 4}}]",
  "creation": "2026-04-22 00:03:37.428373",
  "custom_blocks": [],
  "docstatus": 0,
@@ -16,110 +16,21 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Master",
-   "link_count": 6,
-   "link_type": "DocType",
+   "label": "Members",
+   "link_count": 4,
    "onboard": 0,
    "type": "Card Break"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Sacco Members",
+   "label": "SACCO Member",
    "link_count": 0,
    "link_to": "SACCO Member",
    "link_type": "DocType",
    "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Sacco Savings Account",
-   "link_count": 0,
-   "link_to": "SACCO Savings Account",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Sacco Transactions",
-   "link_count": 0,
-   "link_to": "SACCO Savings Transaction",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Sacco Share Ledger",
-   "link_count": 0,
-   "link_to": "SACCO Share Ledger",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "SACCO Interest Run",
-   "link_count": 0,
-   "link_to": "SACCO Interest Run",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "SACCO Monthly Savings Run",
-   "link_count": 0,
-   "link_to": "SACCO Monthly Savings Run",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Setup",
-   "link_count": 4,
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Sacco Settings",
-   "link_count": 0,
-   "link_to": "SACCO Settings",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Withdrawal Request",
-   "link_count": 0,
-   "link_to": "Withdrawal Request",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Sacco Remittance",
-   "link_count": 0,
-   "link_to": "SACCO Branch Remittance",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
+   "type": "Link",
+   "dependencies": ""
   },
   {
    "hidden": 0,
@@ -129,10 +40,433 @@
    "link_to": "SACCO Registration Fee",
    "link_type": "DocType",
    "onboard": 0,
-   "type": "Link"
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO Share Ledger",
+   "link_count": 0,
+   "link_to": "SACCO Share Ledger",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO Loan Guarantor",
+   "link_count": 0,
+   "link_to": "SACCO Loan Guarantor",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Savings",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO Savings Account",
+   "link_count": 0,
+   "link_to": "SACCO Savings Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO Savings Transaction",
+   "link_count": 0,
+   "link_to": "SACCO Savings Transaction",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Withdrawal Request",
+   "link_count": 0,
+   "link_to": "Withdrawal Request",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO Monthly Savings Run",
+   "link_count": 0,
+   "link_to": "SACCO Monthly Savings Run",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO Branch Remittance",
+   "link_count": 0,
+   "link_to": "SACCO Branch Remittance",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Loans",
+   "link_count": 6,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Loan Application",
+   "link_count": 0,
+   "link_to": "Loan Application",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Loan",
+   "link_count": 0,
+   "link_to": "Loan",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Loan Disbursement",
+   "link_count": 0,
+   "link_to": "Loan Disbursement",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Loan Repayment",
+   "link_count": 0,
+   "link_to": "Loan Repayment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Loan Top-Up",
+   "link_count": 0,
+   "link_to": "Loan Top-Up",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Loan Product",
+   "link_count": 0,
+   "link_to": "Loan Product",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "M-Pesa",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO M-Pesa Transaction",
+   "link_count": 0,
+   "link_to": "SACCO M-Pesa Transaction",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO M-Pesa Account",
+   "link_count": 0,
+   "link_to": "SACCO M-Pesa Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "M-Pesa Reconciliation",
+   "link_count": 0,
+   "link_to": "M-Pesa Reconciliation",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Period-end",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO Interest Run",
+   "link_count": 0,
+   "link_to": "SACCO Interest Run",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO Dividend Run",
+   "link_count": 0,
+   "link_to": "SACCO Dividend Run",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Journal Entry",
+   "link_count": 0,
+   "link_to": "Journal Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 10,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Member Statement",
+   "link_count": 0,
+   "link_to": "Member Statement",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Savings Balances",
+   "link_count": 0,
+   "link_to": "Savings Balances",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Loan Portfolio at Risk",
+   "link_count": 0,
+   "link_to": "Loan Portfolio at Risk",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Guarantor Exposure",
+   "link_count": 0,
+   "link_to": "Guarantor Exposure",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "SACCO Prudential Summary",
+   "link_count": 0,
+   "link_to": "SACCO Prudential Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Member Data Quality",
+   "link_count": 0,
+   "link_to": "Member Data Quality",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Member Overview",
+   "link_count": 0,
+   "link_to": "Member Overview",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Branch Remittance",
+   "link_count": 0,
+   "link_to": "Branch Remittance",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Trial Balance",
+   "link_count": 0,
+   "link_to": "Trial Balance",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "General Ledger",
+   "link_count": 0,
+   "link_to": "General Ledger",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Setup",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO Settings",
+   "link_count": 0,
+   "link_to": "SACCO Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SACCO Account Type",
+   "link_count": 0,
+   "link_to": "SACCO Account Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Branch",
+   "link_count": 0,
+   "link_to": "Branch",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Role Profile",
+   "link_count": 0,
+   "link_to": "Role Profile",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "User",
+   "link_count": 0,
+   "link_to": "User",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "dependencies": ""
   }
  ],
- "modified": "2026-06-20 13:39:14.200239",
+ "modified": "2026-11-07 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "Sacco Manager",
@@ -143,13 +477,59 @@
  "quick_lists": [],
  "roles": [
   {
-   "role": "System Manager"
+   "role": "SACCO Administrator"
   },
   {
-   "role": "Accounts Manager"
+   "role": "SACCO Manager"
+  },
+  {
+   "role": "SACCO Accountant"
+  },
+  {
+   "role": "SACCO Credit Officer"
+  },
+  {
+   "role": "SACCO Teller"
+  },
+  {
+   "role": "SACCO Auditor"
+  },
+  {
+   "role": "System Manager"
   }
  ],
  "sequence_id": 4.0,
- "shortcuts": [],
- "title": "Sacco Manager"
+ "shortcuts": [
+  {
+   "label": "Unallocated M-Pesa",
+   "link_to": "SACCO M-Pesa Transaction",
+   "type": "DocType",
+   "stats_filter": "[[\"SACCO M-Pesa Transaction\", \"status\", \"=\", \"Unallocated\"]]",
+   "color": "Orange",
+   "format": "{} Unallocated"
+  },
+  {
+   "label": "Withdrawals to approve",
+   "link_to": "Withdrawal Request",
+   "type": "DocType",
+   "stats_filter": "[[\"Withdrawal Request\", \"docstatus\", \"=\", 0]]",
+   "color": "Blue",
+   "format": "{} Pending"
+  },
+  {
+   "label": "Loan applications",
+   "link_to": "Loan Application",
+   "type": "DocType",
+   "stats_filter": "[[\"Loan Application\", \"status\", \"=\", \"Open\"]]",
+   "color": "Green",
+   "format": "{} Open"
+  },
+  {
+   "label": "New member",
+   "link_to": "SACCO Member",
+   "type": "DocType",
+   "doc_view": "New"
+  }
+ ],
+ "title": "Trident SACCO"
 }

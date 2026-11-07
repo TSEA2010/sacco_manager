@@ -109,3 +109,16 @@ def create_loan_repayment(loan, amount, posting_date, payment_account, reference
 	if submit:
 		rp.submit()
 	return rp
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def loan_query(doctype, txt, searchfield, start, page_len, filters):
+	"""Link query: active loans of one SACCO member (used on remittance rows)."""
+	customer = frappe.db.get_value("SACCO Member", (filters or {}).get("member"), "customer")
+	return frappe.db.sql(
+		"""SELECT name, loan_product, loan_amount FROM `tabLoan`
+		WHERE docstatus=1 AND applicant=%(c)s AND status IN ('Disbursed','Partially Disbursed','Active')
+		  AND name LIKE %(t)s ORDER BY disbursement_date LIMIT %(s)s, %(p)s""",
+		{"c": customer or "", "t": f"%{txt}%", "s": int(start), "p": int(page_len)},
+	)
