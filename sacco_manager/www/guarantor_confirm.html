@@ -1,0 +1,173 @@
+{% extends "templates/web.html" %}
+{% block title %}Loan Guarantee Confirmation{% endblock %}
+
+{% block head_include %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#f4f2ee;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#fff;border:1px solid #e5e0d8;border-radius:18px;padding:36px;max-width:500px;width:100%;text-align:center}
+.icon{width:64px;height:64px;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:28px}
+.icon-pending{background:#f0f7f4;color:#1a3c2e}
+.icon-confirm{background:#dcfce7;color:#15803d}
+.icon-decline{background:#fee2e2;color:#dc2626}
+h1{font-size:20px;font-weight:600;color:#1a1a1a;margin-bottom:8px;letter-spacing:-.02em}
+p{font-size:14px;color:#555;line-height:1.55;margin-bottom:12px}
+.detail-table{width:100%;border-collapse:collapse;margin:16px 0 24px;text-align:left}
+.detail-table td{padding:9px 0;font-size:13px;border-bottom:1px solid #f0ece6}
+.detail-table tr:last-child td{border-bottom:none}
+.detail-table td:first-child{color:#aaa;width:55%}
+.detail-table td:last-child{font-weight:500;color:#1a1a1a;font-family:'DM Mono',monospace}
+.info-box{background:#f0f7f4;border:1px solid #a8d5b5;border-radius:10px;padding:12px 14px;font-size:12px;color:#1a3c2e;text-align:left;margin-bottom:20px;line-height:1.5}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 28px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;text-decoration:none;transition:all .15s}
+.btn-confirm{background:#1a3c2e;color:#fff}
+.btn-confirm:hover{background:#122b21}
+.btn-confirm:disabled{background:#aaa;cursor:not-allowed}
+.btn-decline{background:#fee2e2;color:#dc2626}
+.btn-decline:hover{background:#fecaca}
+.btn-decline:disabled{opacity:.5;cursor:not-allowed}
+.btn-row{display:flex;flex-direction:column;align-items:center;gap:10px}
+.alert{border-radius:10px;padding:14px 16px;font-size:13px;margin-bottom:16px;text-align:left}
+.alert-success{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.alert-error{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.muted{font-size:12px;color:#aaa;margin-top:20px}
+.loader{display:inline-block;width:20px;height:20px;border:2px solid #a8d5b5;border-top-color:#1a3c2e;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="card" id="gc-root">
+  <div class="icon icon-pending">🛡️</div>
+  <h1>Loading&hellip;</h1>
+  <p><span class="loader"></span> Fetching application details&hellip;</p>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var esc = function(s){ return frappe.utils.escape_html(String(s||"")); };
+var fmt_kes = function(n){ return "KES " + Number(n||0).toLocaleString("en-KE",{minimumFractionDigits:0,maximumFractionDigits:0}); };
+
+function getParam(k){ return new URLSearchParams(window.location.search).get(k)||""; }
+
+var root    = document.getElementById("gc-root");
+var app     = getParam("app");
+var member  = getParam("member");
+var token   = getParam("token");
+var action  = getParam("action") || "confirm";
+
+if(!app||!member||!token){
+  root.innerHTML = '<div class="icon icon-decline">\u274C</div><h1>Invalid link</h1><p>This confirmation link is invalid or incomplete. Please contact the SACCO office.</p>';
+  return;
+}
+
+frappe.ready(function(){
+  frappe.call({
+    method: "sacco_manager.api.sacco_portal.get_application_for_guarantor",
+    args: { app: app, member: member, token: token },
+    callback: function(r){
+      if(r.exc || !r.message){
+        root.innerHTML = '<div class="icon icon-decline">\u274C</div><h1>Error loading details</h1><p>'+esc(r.exc||"Could not load application details. The link may have expired.")+'</p>';
+        return;
+      }
+      var d = r.message;
+
+      if(d.already_responded){
+        var ic = d.status==="Confirmed"?"icon-confirm":"icon-decline";
+        var ig = d.status==="Confirmed"?"\u2713":"\u2717";
+        root.innerHTML = [
+          '<div class="icon '+ic+'">'+ig+'</div>',
+          '<h1>Already responded</h1>',
+          '<p>You have already <strong>'+esc(d.status).toLowerCase()+'</strong> this guarantee request.</p>',
+          '<p class="muted">Application: '+esc(app)+'<br>If you believe this is an error, please contact the SACCO office.</p>',
+        ].join("");
+        return;
+      }
+
+      root.innerHTML = [
+        '<div class="icon icon-pending">\uD83D\uDEE1\uFE0F</div>',
+        '<h1>Loan Guarantee Request</h1>',
+        '<p><strong>'+esc(d.applicant_name)+'</strong> has requested your SACCO Savings Account as security for a loan.</p>',
+        '<div id="gc-alert"></div>',
+        '<table class="detail-table">',
+          '<tr><td>Application</td><td>'+esc(app)+'</td></tr>',
+          '<tr><td>Loan product</td><td style="font-family:\'DM Sans\',sans-serif">'+esc(d.loan_product)+'</td></tr>',
+          '<tr><td>Loan amount</td><td>'+fmt_kes(d.loan_amount)+'</td></tr>',
+          '<tr><td>Your savings account</td><td style="font-family:\'DM Sans\',sans-serif">'+esc(d.savings_account)+'</td></tr>',
+          '<tr><td>Your savings balance</td><td>'+fmt_kes(d.savings_balance)+'</td></tr>',
+          '<tr><td>Security value ('+esc(d.multiplier)+'× savings)</td><td>'+fmt_kes(d.pledge_value)+'</td></tr>',
+          '<tr><td>Your pledge towards this loan</td><td style="color:#1a3c2e">'+fmt_kes(d.pledge_value)+'</td></tr>',
+        '</table>',
+        '<div class="info-box">',
+          '<strong>What does confirming mean?</strong><br>',
+          'Your savings account <strong>'+esc(d.savings_account)+'</strong> (value: '+fmt_kes(d.pledge_value)+') ',
+          'will be pledged as security against this loan. Your funds are <strong>not deducted</strong> — a security hold is created. ',
+          'The hold is released when the loan is fully repaid. If the borrower defaults, the SACCO may draw against your savings.',
+        '</div>',
+        '<div class="btn-row">',
+          '<button class="btn btn-confirm" id="gc-confirm" onclick="gcRespond(\'confirm\')">&#10003; Confirm Guarantee</button>',
+          '<button class="btn btn-decline" id="gc-decline" onclick="gcRespond(\'decline\')">&#10007; Decline</button>',
+        '</div>',
+        '<p class="muted">Member: '+esc(member)+' &nbsp;&middot;&nbsp; Application: '+esc(app)+'</p>',
+      ].join("");
+
+      /* Pre-fire decline if action param set in URL */
+      if(action === "decline"){
+        setTimeout(function(){ gcRespond("decline"); }, 400);
+      }
+    },
+    error: function(e){
+      root.innerHTML = '<div class="icon icon-decline">\u274C</div><h1>Error</h1><p>'+esc(String(e||"Unknown error"))+'</p>';
+    }
+  });
+});
+
+window.gcRespond = function(act){
+  var alertEl = document.getElementById("gc-alert");
+  var cBtn    = document.getElementById("gc-confirm");
+  var dBtn    = document.getElementById("gc-decline");
+  if(cBtn){ cBtn.disabled=true; cBtn.innerHTML='<span class="loader"></span> Processing…'; }
+  if(dBtn){ dBtn.disabled=true; }
+
+  frappe.call({
+    method: "sacco_manager.api.sacco_portal.confirm_guarantor",
+    args: { app: app, member: member, token: token, action: act },
+    callback: function(r){
+      if(r.exc){
+        if(alertEl) alertEl.innerHTML = '<div class="alert alert-error">'+esc(r.exc)+'</div>';
+        if(cBtn){ cBtn.disabled=false; cBtn.innerHTML='&#10003; Confirm Guarantee'; }
+        if(dBtn){ dBtn.disabled=false; }
+        return;
+      }
+      var status = r.message && r.message.status;
+      if(status === "Confirmed"){
+        root.innerHTML = [
+          '<div class="icon icon-confirm">\u2713</div>',
+          '<h1>Guarantee confirmed</h1>',
+          '<p>Thank you. Your savings account has been pledged as security for application <strong>'+esc(app)+'</strong>. A Loan Security record has been created.</p>',
+          '<p class="muted">You will be notified when the loan is approved and when the security hold is released upon full repayment.</p>',
+          '<p class="muted">You may close this page.</p>',
+        ].join("");
+      } else {
+        root.innerHTML = [
+          '<div class="icon icon-decline">\u2717</div>',
+          '<h1>Guarantee declined</h1>',
+          '<p>You have declined to guarantee application <strong>'+esc(app)+'</strong>. The applicant will be notified to arrange an alternative guarantor.</p>',
+          '<p class="muted">No changes have been made to your savings account.</p>',
+          '<p class="muted">You may close this page.</p>',
+        ].join("");
+      }
+    },
+    error: function(){
+      if(alertEl) alertEl.innerHTML = '<div class="alert alert-error">An error occurred. Please try again or contact the SACCO office.</div>';
+      if(cBtn){ cBtn.disabled=false; cBtn.innerHTML='&#10003; Confirm Guarantee'; }
+      if(dBtn){ dBtn.disabled=false; }
+    }
+  });
+};
+
+})();
+</script>
+{% endblock %}

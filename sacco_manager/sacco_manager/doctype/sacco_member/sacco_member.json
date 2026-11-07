@@ -1,0 +1,322 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "SCC-.####",
+ "creation": "2026-04-21 11:21:45.417935",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "member_details_section",
+  "member_no",
+  "first_name",
+  "middle_name",
+  "last_name",
+  "id_number",
+  "phone",
+  "email_id",
+  "branch",
+  "member_type",
+  "column_break_phvr",
+  "joining_date",
+  "status",
+  "kra_pin",
+  "marital_status",
+  "date_of_birth",
+  "gender",
+  "full_name",
+  "salutation",
+  "is_user",
+  "portal_user_created",
+  "user_id",
+  "shares_section",
+  "total_shares",
+  "registration_fee_je",
+  "column_break_ogrp",
+  "share_balance",
+  "next_of_kin_section",
+  "contact_name",
+  "contact_email",
+  "column_break_ixxz",
+  "contact_phone",
+  "relation",
+  "customer_details_tab",
+  "customer",
+  "column_break_xeqa",
+  "customer_group"
+ ],
+ "fields": [
+  {
+   "fieldname": "member_details_section",
+   "fieldtype": "Section Break",
+   "label": "Member Details"
+  },
+  {
+   "fieldname": "member_no",
+   "fieldtype": "Autocomplete",
+   "label": "Member Number"
+  },
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "Full Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "id_number",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "ID Number",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Phone",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_phvr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "joining_date",
+   "fieldtype": "Date",
+   "label": "Joining Date"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nActive\nInactive\nWithdrawn"
+  },
+  {
+   "fieldname": "total_shares",
+   "fieldtype": "Int",
+   "label": "Total Shares",
+   "read_only": 1
+  },
+  {
+   "fieldname": "email_id",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email",
+   "unique": 1
+  },
+  {
+   "fieldname": "share_balance",
+   "fieldtype": "Currency",
+   "label": "Share Balance",
+   "read_only": 1
+  },
+  {
+   "fieldname": "next_of_kin_section",
+   "fieldtype": "Section Break",
+   "label": "Next of Kin"
+  },
+  {
+   "fieldname": "contact_name",
+   "fieldtype": "Data",
+   "label": "Contact Name"
+  },
+  {
+   "fieldname": "contact_email",
+   "fieldtype": "Data",
+   "label": "Contact Email"
+  },
+  {
+   "fieldname": "column_break_ixxz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contact_phone",
+   "fieldtype": "Int",
+   "label": "Contact Phone"
+  },
+  {
+   "fieldname": "relation",
+   "fieldtype": "Data",
+   "label": "Relation"
+  },
+  {
+   "fieldname": "date_of_birth",
+   "fieldtype": "Date",
+   "label": "Date Of Birth"
+  },
+  {
+   "fieldname": "kra_pin",
+   "fieldtype": "Data",
+   "label": "KRA Pin",
+   "reqd": 1
+  },
+  {
+   "fieldname": "marital_status",
+   "fieldtype": "Select",
+   "label": "Marital Status",
+   "options": "\nSingle\nMarried\nDivorced\nWindowed"
+  },
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "First Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "middle_name",
+   "fieldtype": "Data",
+   "label": "Middle Name"
+  },
+  {
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Last Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "gender",
+   "fieldtype": "Select",
+   "label": "Gender",
+   "options": "\nMale\nFemale\nPrefer Not to Say\nAll"
+  },
+  {
+   "fieldname": "shares_section",
+   "fieldtype": "Section Break",
+   "label": "Shares"
+  },
+  {
+   "fieldname": "column_break_ogrp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Branch"
+  },
+  {
+   "default": "Ordinary",
+   "fieldname": "member_type",
+   "fieldtype": "Select",
+   "label": "Member Type",
+   "options": "\nOrdinary"
+  },
+  {
+   "fieldname": "salutation",
+   "fieldtype": "Select",
+   "label": "Salutation"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_user",
+   "fieldtype": "Check",
+   "label": "Is User"
+  },
+  {
+   "depends_on": "is_user",
+   "fieldname": "user_id",
+   "fieldtype": "Data",
+   "label": "User",
+   "options": "User"
+  },
+  {
+   "default": "0",
+   "fieldname": "portal_user_created",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Portal User"
+  },
+  {
+   "fieldname": "customer_details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Customer Details"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "column_break_xeqa",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "customer.customer_group",
+   "fieldname": "customer_group",
+   "fieldtype": "Link",
+   "label": "Customer Group",
+   "options": "Customer Group"
+  },
+  {
+   "fieldname": "registration_fee_je",
+   "fieldtype": "Link",
+   "label": "Registration Fee JE",
+   "options": "Journal Entry"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "link_doctype": "SACCO Savings Account",
+   "link_fieldname": "member"
+  },
+  {
+   "link_doctype": "SACCO Savings Transaction",
+   "link_fieldname": "member"
+  },
+  {
+   "link_doctype": "SACCO Share Ledger",
+   "link_fieldname": "member"
+  },
+  {
+   "link_doctype": "Withdrawal Request",
+   "link_fieldname": "member"
+  }
+ ],
+ "modified": "2026-06-03 08:45:43.354920",
+ "modified_by": "Administrator",
+ "module": "Sacco Manager",
+ "name": "SACCO Member",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Academics User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "full_name",
+ "translated_doctype": 1
+}

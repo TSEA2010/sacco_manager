@@ -1,0 +1,171 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-04-21 15:54:35.307564",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "savings_liability_account",
+  "share_capital_account",
+  "cash_account",
+  "sacco_loan_security_type",
+  "savings_multiplier",
+  "column_break_qndu",
+  "income_account",
+  "interest_account",
+  "default_share_price",
+  "naming_code",
+  "remittance_section",
+  "remittance_due_day",
+  "penalty_rate",
+  "column_break_mxqo",
+  "penalty_income_account",
+  "branch_receivable_account",
+  "registration_fee_section",
+  "registration_fee_amount",
+  "column_break_gytk",
+  "registration_fee_income_account"
+ ],
+ "fields": [
+  {
+   "fieldname": "savings_liability_account",
+   "fieldtype": "Link",
+   "label": "Saving Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "share_capital_account",
+   "fieldtype": "Link",
+   "label": "Share Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "column_break_qndu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "income_account",
+   "fieldtype": "Link",
+   "label": "Income Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "default_share_price",
+   "fieldtype": "Currency",
+   "label": "Share Price"
+  },
+  {
+   "fieldname": "cash_account",
+   "fieldtype": "Link",
+   "label": "Cash Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "interest_account",
+   "fieldtype": "Link",
+   "label": "Interest Account",
+   "options": "Account"
+  },
+  {
+   "description": "example TSEA, TS, WHK",
+   "fieldname": "naming_code",
+   "fieldtype": "Data",
+   "label": "Naming Code"
+  },
+  {
+   "description": "The Loan Security Type used when auto-creating security from SACCO savings",
+   "fieldname": "sacco_loan_security_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "SACCO Loan Security Type",
+   "options": "Loan Security Type",
+   "reqd": 1
+  },
+  {
+   "default": "3",
+   "description": "Loan security value = savings balance \u00d7 this multiplier (e.g. 4 = members can borrow 4\u00d7 their savings)",
+   "fieldname": "savings_multiplier",
+   "fieldtype": "Float",
+   "label": "Savings Multiplier"
+  },
+  {
+   "fieldname": "remittance_section",
+   "fieldtype": "Section Break",
+   "label": "Check-off Remittance"
+  },
+  {
+   "default": "5",
+   "description": "Day of month by which branches must remit (default 5th)",
+   "fieldname": "remittance_due_day",
+   "fieldtype": "Int",
+   "label": "Remittance Due Day"
+  },
+  {
+   "fieldname": "penalty_rate",
+   "fieldtype": "Percent",
+   "label": "Late Penalty Rate (% per month)"
+  },
+  {
+   "fieldname": "column_break_mxqo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "penalty_income_account",
+   "fieldtype": "Link",
+   "label": "Penalty Income Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "registration_fee_section",
+   "fieldtype": "Section Break",
+   "label": "Registration Fee"
+  },
+  {
+   "fieldname": "registration_fee_amount",
+   "fieldtype": "Currency",
+   "label": "Registration Fee Amount"
+  },
+  {
+   "fieldname": "column_break_gytk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "registration_fee_income_account",
+   "fieldtype": "Link",
+   "label": "Registration Fee Income Account",
+   "options": "Account"
+  },
+  {
+   "description": "Receivable account used to track branch remittances",
+   "fieldname": "branch_receivable_account",
+   "fieldtype": "Link",
+   "label": "Branch Receivable Account",
+   "options": "Account"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-07-13 19:14:22.119060",
+ "modified_by": "Administrator",
+ "module": "Sacco Manager",
+ "name": "SACCO Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

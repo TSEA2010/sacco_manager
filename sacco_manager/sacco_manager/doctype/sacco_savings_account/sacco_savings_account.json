@@ -1,0 +1,127 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "SSA-.####",
+ "creation": "2026-04-21 12:09:55.376318",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "account_no",
+  "member",
+  "account_type",
+  "loan_security",
+  "column_break_araf",
+  "interest_rate",
+  "balance",
+  "status",
+  "monthly_contribution"
+ ],
+ "fields": [
+  {
+   "fieldname": "account_no",
+   "fieldtype": "Data",
+   "label": "Account Number"
+  },
+  {
+   "fieldname": "member",
+   "fieldtype": "Link",
+   "label": "Member",
+   "options": "SACCO Member",
+   "search_index": 1
+  },
+  {
+   "fieldname": "account_type",
+   "fieldtype": "Link",
+   "label": "Account Type",
+   "options": "SACCO Account Type"
+  },
+  {
+   "fieldname": "column_break_araf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "interest_rate",
+   "fieldtype": "Percent",
+   "label": "Interest Rate"
+  },
+  {
+   "fieldname": "balance",
+   "fieldtype": "Currency",
+   "label": "Balance",
+   "read_only": 1
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nActive\nOpen"
+  },
+  {
+   "fieldname": "loan_security",
+   "fieldtype": "Link",
+   "label": "Loan Security",
+   "options": "Loan Security"
+  },
+  {
+   "description": "Pledged monthly savings amount",
+   "fieldname": "monthly_contribution",
+   "fieldtype": "Currency",
+   "label": "Monthly Contribution"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-21 00:25:28.924939",
+ "modified_by": "Administrator",
+ "module": "Sacco Manager",
+ "name": "SACCO Savings Account",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Academics User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "member",
+ "translated_doctype": 1
+}

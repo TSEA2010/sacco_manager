@@ -1,0 +1,161 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "SST-.YYYY.-.####",
+ "creation": "2026-04-21 12:17:48.695289",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_ukm7",
+  "amended_from",
+  "savings_account",
+  "member",
+  "transaction_type",
+  "amount",
+  "column_break_oebz",
+  "balance_before",
+  "balance_after",
+  "status",
+  "posting_date",
+  "journal_entry"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_ukm7",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "SACCO Savings Transaction",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "savings_account.member",
+   "fieldname": "member",
+   "fieldtype": "Link",
+   "label": "Member",
+   "options": "SACCO Member",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "transaction_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Transaction Type",
+   "options": "\nDeposit\nWithdrawal\nInterest",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount"
+  },
+  {
+   "fieldname": "column_break_oebz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "balance_before",
+   "fieldtype": "Currency",
+   "label": "Balance Before"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "balance_after",
+   "fieldtype": "Currency",
+   "label": "Balance After",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Status",
+   "options": "\nPending\nApproved\nRejected",
+   "read_only": 1
+  },
+  {
+   "fieldname": "savings_account",
+   "fieldtype": "Link",
+   "label": "Savings Account",
+   "options": "SACCO Savings Account",
+   "reqd": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "journal_entry",
+   "fieldtype": "Link",
+   "label": "Journal Entry",
+   "options": "Journal Entry"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-05-25 22:48:19.870403",
+ "modified_by": "Administrator",
+ "module": "Sacco Manager",
+ "name": "SACCO Savings Transaction",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Academics User",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "member",
+ "translated_doctype": 1
+}

@@ -1,0 +1,974 @@
+{% extends "templates/web.html" %}
+{% block title %}SACCO Member Portal{% endblock %}
+
+{% block head_include %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+#sacco-portal-root{font-family:'DM Sans',sans-serif;font-size:14px;color:#1a1a1a;background:#f4f2ee;min-height:100vh;padding-bottom:60px}
+.sp-navbar{background:#fff;border-bottom:1px solid #e5e0d8;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
+.sp-brand{display:flex;align-items:center;gap:10px}
+.sp-brand-icon{width:34px;height:34px;background:#1a3c2e;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-brand-icon svg{width:18px;height:18px;fill:#a8d5b5}
+.sp-brand-name{font-size:15px;font-weight:600;color:#1a1a1a;letter-spacing:-.02em}
+.sp-brand-sub{font-size:11px;color:#888;letter-spacing:.02em;text-transform:uppercase}
+.sp-user-pill{display:flex;align-items:center;gap:10px;background:#f4f2ee;border:1px solid #e5e0d8;border-radius:40px;padding:5px 14px 5px 5px}
+.sp-avatar{width:30px;height:30px;border-radius:50%;background:#1a3c2e;color:#a8d5b5;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-user-name{font-size:13px;font-weight:500;color:#1a1a1a}
+.sp-user-id{font-size:11px;color:#888}
+.sp-status-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0}
+.sp-layout{display:flex;max-width:1100px;margin:0 auto;padding:28px 24px;gap:24px}
+.sp-sidebar{width:196px;flex-shrink:0}
+.sp-main{flex:1;min-width:0}
+.sp-sidenav{background:#fff;border:1px solid #e5e0d8;border-radius:14px;overflow:hidden;position:sticky;top:84px}
+.sp-sidenav-section{padding:10px 8px;border-bottom:1px solid #f0ece6}
+.sp-sidenav-section:last-child{border-bottom:none}
+.sp-sidenav-label{font-size:10px;font-weight:600;color:#aaa;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px 8px}
+.sp-nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:#555;font-size:13px;font-weight:500;transition:background .12s,color .12s;border:none;background:none;width:100%;text-align:left}
+.sp-nav-item:hover{background:#f4f2ee;color:#1a1a1a}
+.sp-nav-item.active{background:#1a3c2e;color:#a8d5b5}
+.sp-nav-item svg{width:16px;height:16px;flex-shrink:0;color:#aaa}
+.sp-nav-item.active svg{color:#a8d5b5}
+.sp-section{display:none}
+.sp-section.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.sp-section-header{margin-bottom:20px}
+.sp-section-title{font-size:20px;font-weight:600;color:#1a1a1a;letter-spacing:-.03em;margin-bottom:2px}
+.sp-section-sub{font-size:13px;color:#888}
+.sp-hero{background:#fff;border:1px solid #e5e0d8;border-radius:16px;padding:22px 24px;display:flex;gap:20px;align-items:flex-start;margin-bottom:16px}
+.sp-hero-avatar{width:56px;height:56px;border-radius:50%;background:#1a3c2e;color:#a8d5b5;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-hero-info{flex:1}
+.sp-hero-name{font-size:19px;font-weight:600;color:#1a1a1a;letter-spacing:-.025em;margin-bottom:4px}
+.sp-hero-meta{font-size:12px;color:#888;margin-bottom:10px}
+.sp-hero-badges{display:flex;gap:7px;flex-wrap:wrap}
+.sp-hero-score{text-align:right;flex-shrink:0}
+.sp-hero-score-label{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#aaa;margin-bottom:4px}
+.sp-hero-score-val{font-size:26px;font-weight:600;color:#1a3c2e;letter-spacing:-.03em;line-height:1}
+.sp-hero-score-max{font-size:12px;color:#aaa;font-weight:400}
+.sp-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.sp-metric{background:#fff;border:1px solid #e5e0d8;border-radius:12px;padding:16px}
+.sp-metric.accent{background:#1a3c2e;border-color:#1a3c2e}
+.sp-metric-label{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#aaa;margin-bottom:8px}
+.sp-metric.accent .sp-metric-label{color:#5a9972}
+.sp-metric-value{font-size:21px;font-weight:600;color:#1a1a1a;letter-spacing:-.03em;line-height:1.1}
+.sp-metric.accent .sp-metric-value{color:#fff}
+.sp-metric-sub{font-size:11px;color:#aaa;margin-top:5px}
+.sp-metric.accent .sp-metric-sub{color:#5a9972}
+.sp-panels{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.sp-card{background:#fff;border:1px solid #e5e0d8;border-radius:14px;padding:20px;margin-bottom:16px}
+.sp-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sp-card-title{font-size:13px;font-weight:600;color:#1a1a1a;display:flex;align-items:center;gap:8px}
+.sp-card-title svg{width:15px;height:15px;color:#aaa}
+.sp-card-action{font-size:12px;color:#1a3c2e;font-weight:500;cursor:pointer;background:none;border:none;padding:0}
+.sp-card-action:hover{text-decoration:underline}
+.sp-gauge-track{height:10px;background:#f0ece6;border-radius:6px;overflow:hidden;margin:10px 0 5px}
+.sp-gauge-fill{height:100%;border-radius:6px;transition:width .6s}
+.sp-gauge-labels{display:flex;justify-content:space-between;font-size:11px;color:#aaa}
+.sp-repay-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f7f5f2}
+.sp-repay-item:last-child{border-bottom:none}
+.sp-repay-date{text-align:center;min-width:36px}
+.sp-repay-day{font-size:19px;font-weight:600;color:#1a3c2e;line-height:1}
+.sp-repay-mon{font-size:10px;color:#aaa;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.sp-repay-label{font-size:13px;font-weight:500;margin-bottom:2px}
+.sp-repay-sub{font-size:11px;color:#aaa}
+.sp-repay-amt{font-size:14px;font-weight:600;font-family:'DM Mono',monospace;color:#1a1a1a;white-space:nowrap}
+.sp-loan-mini{border:1px solid #f0ece6;border-radius:10px;padding:13px;margin-bottom:10px}
+.sp-loan-mini:last-child{margin-bottom:0}
+.sp-loan-mini-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px}
+.sp-loan-mini-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.sp-loan-mini-meta{font-size:11px;color:#aaa}
+.sp-loan-mini-bar{height:5px;background:#f0ece6;border-radius:3px;overflow:hidden;margin:7px 0 5px}
+.sp-loan-mini-fill{height:100%;border-radius:3px;background:#1a3c2e}
+.sp-loan-mini-pct{font-size:11px;color:#aaa}
+.sp-acct-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f7f5f2}
+.sp-acct-row:last-child{border-bottom:none}
+.sp-acct-icon{width:34px;height:34px;border-radius:9px;background:#f0f7f4;color:#1a3c2e;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-acct-icon svg{width:16px;height:16px}
+.sp-acct-name{font-size:13px;font-weight:600;color:#1a1a1a}
+.sp-acct-sub{font-size:11px;color:#aaa;font-family:'DM Mono',monospace}
+.sp-acct-bal{font-size:14px;font-weight:600;font-family:'DM Mono',monospace;color:#1a1a1a;white-space:nowrap;margin-left:auto}
+.sp-acct-total{display:flex;justify-content:space-between;align-items:center;padding-top:12px;margin-top:2px;border-top:1.5px solid #1a3c2e10}
+.sp-acct-total-label{font-size:12px;font-weight:600;color:#1a3c2e;text-transform:uppercase;letter-spacing:.04em}
+.sp-acct-total-val{font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#1a3c2e}
+.sp-act-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f7f5f2}
+.sp-act-item:last-child{border-bottom:none;padding-bottom:0}
+.sp-act-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
+.sp-act-text{font-size:13px;line-height:1.45;color:#1a1a1a}
+.sp-act-time{font-size:11px;color:#aaa;margin-top:2px}
+.sp-table-wrap{overflow-x:auto}
+table.sp-table{width:100%;border-collapse:collapse;font-size:13px}
+.sp-table th{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#aaa;padding:0 0 10px;border-bottom:1px solid #f0ece6;white-space:nowrap}
+.sp-table th:not(:first-child){padding-left:16px}
+.sp-table td{padding:11px 0;border-bottom:1px solid #f7f5f2;color:#1a1a1a;vertical-align:middle}
+.sp-table td:not(:first-child){padding-left:16px}
+.sp-table tr:last-child td{border-bottom:none}
+.sp-table .num{font-family:'DM Mono',monospace;font-size:12px;text-align:right}
+.sp-table th.num{text-align:right}
+.cr{color:#16a34a;font-weight:500}
+.dr{color:#dc2626;font-weight:500}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;letter-spacing:.02em}
+.pill-green{background:#dcfce7;color:#15803d}
+.pill-amber{background:#fef9c3;color:#92400e}
+.pill-red{background:#fee2e2;color:#991b1b}
+.pill-blue{background:#dbeafe;color:#1e40af}
+.pill-gray{background:#f3f4f6;color:#4b5563}
+.pill-purple{background:#f3e8ff;color:#6b21a8}
+.sp-loan-card{border:1px solid #e5e0d8;border-radius:12px;padding:18px;margin-bottom:12px;background:#fff;transition:border-color .15s}
+.sp-loan-card:hover{border-color:#1a3c2e}
+.sp-loan-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.sp-loan-name{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:3px}
+.sp-loan-meta{font-size:12px;color:#aaa}
+.sp-loan-bar-labels{display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:6px}
+.sp-loan-bar{height:7px;background:#f0ece6;border-radius:4px;overflow:hidden}
+.sp-loan-bar-fill{height:100%;background:#1a3c2e;border-radius:4px;transition:width .6s}
+.sp-loan-bar-fill.late{background:#dc2626}
+.sp-loan-stats{display:flex;gap:20px;font-size:12px;color:#555;margin-top:10px}
+.sp-loan-stat span{display:block;font-size:10px;color:#aaa;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px}
+.sp-loan-stat strong{font-family:'DM Mono',monospace;font-size:13px;color:#1a1a1a}
+.sp-loan-schedule-toggle{display:flex;align-items:center;gap:6px;font-size:12px;color:#1a3c2e;font-weight:500;cursor:pointer;background:none;border:none;padding:0;margin-top:12px}
+.sp-loan-schedule-wrap{display:none;margin-top:12px;border-top:1px solid #f0ece6;padding-top:12px}
+.sp-loan-schedule-wrap.open{display:block}
+
+/* ── FORM FIELDS (modern) ── */
+.sp-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:600px){.sp-form-grid{grid-template-columns:1fr}}
+.sp-form-group{display:flex;flex-direction:column;gap:6px}
+.sp-form-group label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#888}
+.sp-form-group input,
+.sp-form-group select,
+.sp-form-group textarea{
+  padding:11px 14px;
+  border:1.5px solid #e5e0d8;
+  border-radius:10px;
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  color:#1a1a1a;
+  background:#fafaf9;
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  width:100%;
+}
+.sp-form-group input:focus,
+.sp-form-group select:focus,
+.sp-form-group textarea:focus{
+  border-color:#1a3c2e;
+  box-shadow:0 0 0 3px rgba(26,60,46,.08);
+  background:#fff;
+}
+.sp-form-group input[readonly],
+.sp-form-group input[readonly]:focus{
+  background:#f0f7f4;
+  border-color:#c8e6c9;
+  box-shadow:none;
+  cursor:default;
+}
+.sp-form-group textarea{resize:vertical;height:88px;border-radius:10px}
+.sp-form-group select{appearance:none;-webkit-appearance:none}
+.sp-form-hint{font-size:11px;color:#aaa;margin-top:1px}
+.sp-form-actions{display:flex;justify-content:flex-end;gap:10px;padding-top:18px;border-top:1px solid #f0ece6;margin-top:8px}
+
+/* ── kill native browser chrome so every field matches the design system ── */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23bbb' stroke-width='1.6'%3E%3Cpath d='M5 7.5 10 12.5 15 7.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:14px}
+input[type=month]{color-scheme:light}
+
+/* ── FIELD PREFIX/SUFFIX wrapper ── */
+.sp-field-wrap{position:relative}
+.sp-field-wrap input,.sp-field-wrap select{width:100%}
+.sp-field-pre{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:#bbb;letter-spacing:.05em;pointer-events:none;z-index:1}
+.sp-field-suf{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600;color:#bbb;letter-spacing:.04em;pointer-events:none;z-index:1}
+.sp-field-wrap input.has-pre,.sp-field-wrap select.has-pre{padding-left:44px}
+.sp-field-wrap input.has-suf,.sp-field-wrap select.has-suf{padding-right:52px}
+.sp-field-chevron{position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:#bbb;display:flex;width:16px;height:16px}
+
+/* ── GUARANTOR ── */
+.sp-guarantor-card{border:1.5px solid #e5e0d8;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;transition:border-color .15s,box-shadow .15s;background:#fff}
+.sp-guarantor-card:hover{border-color:#1a3c2e;box-shadow:0 2px 8px rgba(26,60,46,.06)}
+.sp-g-avatar{width:38px;height:38px;border-radius:50%;background:#e8f5e9;color:#1a3c2e;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-g-info{flex:1;min-width:0}
+.sp-g-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.sp-g-sub{font-size:11px;color:#aaa}
+.sp-g-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.sp-g-shares-input{padding:8px 10px;border:1.5px solid #e5e0d8;border-radius:8px;font-size:13px;font-family:'DM Mono',monospace;color:#1a1a1a;background:#fafaf9;outline:none;transition:border-color .15s}
+.sp-g-shares-input:focus{border-color:#1a3c2e;background:#fff}
+.sp-g-remove{background:none;border:none;cursor:pointer;color:#ccc;padding:5px;border-radius:7px;transition:color .12s,background .12s;display:flex;align-items:center}
+.sp-g-remove:hover{color:#dc2626;background:#fee2e2}
+.sp-g-remove svg{width:14px;height:14px}
+.sp-guarantor-summary{background:#f0f7f4;border:1px solid #a8d5b5;border-radius:10px;padding:12px 16px;font-size:12px;color:#1a3c2e;display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.sp-add-guarantor-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1.5px dashed #d0c8c0;background:none;color:#888;transition:all .15s;margin-top:4px}
+.sp-add-guarantor-btn:hover{border-color:#1a3c2e;color:#1a3c2e;background:#f0f7f4}
+
+/* ── MEMBER SEARCH ── */
+.sp-member-search-wrap{position:relative;margin-bottom:12px}
+.sp-member-search-input{width:100%;padding:11px 14px 11px 38px;border:1.5px solid #e5e0d8;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1a1a1a;background:#fafaf9;outline:none;transition:border-color .15s}
+.sp-member-search-input:focus{border-color:#1a3c2e;background:#fff;box-shadow:0 0 0 3px rgba(26,60,46,.08)}
+.sp-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#bbb;display:flex;pointer-events:none}
+.sp-member-dropdown{position:absolute;top:calc(100% + 5px);left:0;right:0;background:#fff;border:1.5px solid #e5e0d8;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:200;max-height:240px;overflow-y:auto;display:none}
+.sp-member-dropdown.open{display:block}
+.sp-member-option{padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .12s}
+.sp-member-option:hover{background:#f4f2ee}
+.sp-member-option:not(:last-child){border-bottom:1px solid #f7f5f2}
+.sp-member-opt-avatar{width:30px;height:30px;border-radius:50%;background:#e8f5e9;color:#1a3c2e;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-member-opt-name{font-size:13px;font-weight:500;color:#1a1a1a}
+.sp-member-opt-sub{font-size:11px;color:#aaa}
+
+/* ── PLEDGE PROGRESS ── */
+.sp-pledge-progress{margin:14px 0}
+.sp-pledge-bar{height:7px;background:#f0ece6;border-radius:4px;overflow:hidden;margin-bottom:6px}
+.sp-pledge-fill{height:100%;border-radius:4px;background:#1a3c2e;transition:width .5s}
+.sp-pledge-fill.over{background:#22c55e}
+.sp-pledge-fill.under{background:#d97706}
+
+/* ── BUTTONS ── */
+.sp-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;border:1.5px solid transparent}
+.sp-btn-primary{background:#1a3c2e;color:#fff;border-color:#1a3c2e}
+.sp-btn-primary:hover{background:#122b21}
+.sp-btn-primary:disabled{background:#aaa;border-color:#aaa;cursor:not-allowed}
+.sp-btn-ghost{background:#fff;color:#1a1a1a;border-color:#e5e0d8}
+.sp-btn-ghost:hover{background:#f4f2ee}
+.sp-btn svg{width:15px;height:15px}
+
+/* ── ALERTS ── */
+.sp-info-box{background:#f0f7f4;border:1px solid #a8d5b5;border-radius:10px;padding:12px 16px;font-size:13px;color:#1a3c2e;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px}
+.sp-info-box svg{width:16px;height:16px;flex-shrink:0;margin-top:1px}
+.sp-alert{border-radius:10px;padding:14px 16px;font-size:13px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px}
+.sp-alert-success{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.sp-alert-error{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.sp-alert svg{width:16px;height:16px;flex-shrink:0;margin-top:1px}
+
+/* ── SKELETON ── */
+.sp-skeleton{background:linear-gradient(90deg,#f0ece6 25%,#e8e4df 50%,#f0ece6 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sp-skel-metric{height:82px;border-radius:12px;margin-bottom:4px}
+.sp-skel-row{height:40px;border-radius:6px;margin-bottom:8px}
+
+/* ── MISC ── */
+.sp-empty{text-align:center;padding:48px 24px;color:#aaa}
+.sp-empty svg{width:40px;height:40px;margin:0 auto 12px;display:block;opacity:.4}
+.sp-empty p{font-size:13px}
+.sp-filter-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.sp-filter-row select,.sp-filter-row input[type=month]{padding:9px 32px 9px 13px;border:1.5px solid #e5e0d8;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1a1a1a;background-color:#fafaf9;outline:none;transition:border-color .15s,box-shadow .15s}
+.sp-filter-row input[type=month]{padding-right:13px}
+.sp-filter-row select:focus,.sp-filter-row input[type=month]:focus{border-color:#1a3c2e;box-shadow:0 0 0 3px rgba(26,60,46,.08);background-color:#fff}
+.sp-app-card{border:1px solid #e5e0d8;border-radius:12px;padding:16px 18px;margin-bottom:10px;background:#fff}
+.sp-app-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.sp-app-name{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:2px}
+.sp-app-meta{font-size:12px;color:#aaa}
+.sp-app-guarantors{margin-top:10px;padding-top:10px;border-top:1px solid #f0ece6}
+.sp-app-guarantors-label{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#aaa;margin-bottom:8px}
+.sp-guarantor-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sp-guarantor-row:last-child{margin-bottom:0}
+@media(max-width:700px){
+  .sp-layout{flex-direction:column;padding:16px}
+  .sp-sidebar{width:100%}
+  .sp-sidenav{position:static}
+  .sp-panels{grid-template-columns:1fr}
+  .sp-hero{flex-wrap:wrap}
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div id="sacco-portal-root">
+  <div style="display:flex;align-items:center;justify-content:center;height:80vh;flex-direction:column;gap:12px">
+    <div class="sp-skeleton" style="width:200px;height:20px"></div>
+    <div class="sp-skeleton" style="width:140px;height:14px;margin-top:4px"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var fmt_kes=function(n){return "KES "+Number(n||0).toLocaleString("en-KE",{minimumFractionDigits:0,maximumFractionDigits:0});};
+var fmt_date=function(d){if(!d)return "--";var dt=new Date(d);return isNaN(dt)?d:dt.toLocaleDateString("en-KE",{day:"2-digit",month:"short",year:"numeric"});};
+var esc=function(s){return frappe.utils.escape_html(String(s||""));};
+var initials=function(name){return (name||"??").split(" ").slice(0,2).map(function(w){return w[0]||"";}).join("").toUpperCase();};
+var flt=function(v){return parseFloat(v||0)||0;};
+var day_of=function(d){if(!d)return "--";var dt=new Date(d);return isNaN(dt)?"--":dt.getDate();};
+var mon_of=function(d){if(!d)return "--";var dt=new Date(d);return isNaN(dt)?"--":dt.toLocaleString("en-KE",{month:"short"});};
+
+var I={
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  piggy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9a7 7 0 10-12.4 4.5L6 21h8l-.4-5A7 7 0 0019 9z"/><line x1="12" y1="2" x2="12" y2="4"/><path d="M19.5 12H21a1 1 0 010 2h-1.5"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+  credit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  chevdown:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
+  logout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  sacco:'<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+};
+
+var api=function(method,args){
+  return new Promise(function(resolve,reject){
+    frappe.call({
+      method:"sacco_manager.api.sacco_portal."+method,
+      args:args||{},
+      callback:function(r){if(r.exc){reject(r.exc);}else{resolve(r.message);}},
+      error:function(e){reject(e);}
+    });
+  });
+};
+
+var S={tab:"overview",summary:null,savings_tx:null,shares:null,loan_types:null,applications:null};
+var root=document.getElementById("sacco-portal-root");
+
+/* ── SHELL ── */
+function renderShell(s){
+  var m=s.member;
+  var full=m.full_name||((m.first_name||"")+" "+(m.last_name||"")).trim();
+  root.innerHTML=[
+    '<nav class="sp-navbar">',
+      '<div class="sp-brand">',
+        '<div class="sp-brand-icon">',I.sacco,'</div>',
+        '<div><div class="sp-brand-name">SACCO Portal</div><div class="sp-brand-sub">Member self-service</div></div>',
+      '</div>',
+      '<div class="sp-user-pill">',
+        '<div class="sp-avatar">',initials(full),'</div>',
+        '<div><div class="sp-user-name">',esc(full),'</div><div class="sp-user-id">',esc(m.member_no||m.name),' &middot; ',esc(m.branch||"--"),'</div></div>',
+        '<div class="sp-status-dot"></div>',
+      '</div>',
+    '</nav>',
+    '<div class="sp-layout">',
+      '<aside class="sp-sidebar">',
+        '<nav class="sp-sidenav">',
+          '<div class="sp-sidenav-section">',
+            '<div class="sp-sidenav-label">Menu</div>',
+            navBtn("overview","Overview",I.home),
+            navBtn("savings","Savings",I.piggy),
+            navBtn("shares","Shares",I.chart),
+            navBtn("transactions","Transactions",I.list),
+            navBtn("loans","Loans",I.credit),
+            navBtn("applications","Applications",I.clock),
+          '</div>',
+          '<div class="sp-sidenav-section">',
+            '<div class="sp-sidenav-label">Actions</div>',
+            navBtn("apply","Apply for loan",I.plus),
+          '</div>',
+          '<div class="sp-sidenav-section">',
+            '<button class="sp-nav-item" onclick="window.location.href=\'/login\'" style="color:#888">',I.logout,' Sign out</button>',
+          '</div>',
+        '</nav>',
+      '</aside>',
+      '<main class="sp-main" id="sp-main"></main>',
+    '</div>',
+  ].join("");
+  document.querySelectorAll(".sp-nav-item[data-tab]").forEach(function(b){
+    b.addEventListener("click",function(){showTab(b.dataset.tab);});
+  });
+  showTab("overview");
+}
+function navBtn(tab,label,icon){return '<button class="sp-nav-item'+(tab===S.tab?" active":"")+'" data-tab="'+tab+'">'+icon+" "+label+"</button>";}
+function setNav(tab){document.querySelectorAll(".sp-nav-item[data-tab]").forEach(function(b){b.classList.toggle("active",b.dataset.tab===tab);});}
+function showTab(tab){
+  S.tab=tab;setNav(tab);
+  var main=document.getElementById("sp-main");
+  if(!main)return;
+  if(tab==="overview")         main.innerHTML=renderOverview(S.summary);
+  else if(tab==="savings")     renderSavingsTab(main);
+  else if(tab==="shares")      renderSharesTab(main);
+  else if(tab==="transactions")renderTxTab(main);
+  else if(tab==="loans")       renderLoansTab(main);
+  else if(tab==="applications")renderApplicationsTab(main);
+  else if(tab==="apply")       renderApplyTab(main);
+}
+window.spTab=function(t){showTab(t);};
+
+/* ── OVERVIEW ── */
+function renderOverview(s){
+  var m=s.member;
+  var full=m.full_name||((m.first_name||"")+" "+(m.last_name||"")).trim();
+  var loans=s.active_loans||[];
+  var outstanding=flt(s.outstanding_loans);
+  var limit=flt(s.loan_limit);
+  var avail=Math.max(0,limit-outstanding);
+  var used_pct=limit>0?Math.min(100,(outstanding/limit*100)):0;
+  var h=new Date().getHours();
+  var greet=h<12?"morning":h<17?"afternoon":"evening";
+  var fname=full.split(" ")[0];
+  var score=100;
+  if(used_pct>80)score-=20;else if(used_pct>60)score-=10;
+  if(s.savings_balance<5000)score-=10;
+  score=Math.max(50,Math.min(100,score));
+  var upcoming=[];
+  loans.forEach(function(l){if(l.next_payment_date&&l.monthly_repayment_amount)upcoming.push({date:l.next_payment_date,label:l.loan_type||l.name,ref:l.name,amount:l.monthly_repayment_amount});});
+  upcoming.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+  upcoming=upcoming.slice(0,3);
+  var gaugeColor=used_pct>85?"#dc2626":used_pct>65?"#d97706":"#1a3c2e";
+  var gaugeLabel=used_pct>85?"High risk":used_pct>65?"Moderate":"Healthy";
+  var gaugeLabelColor=used_pct>85?"#dc2626":used_pct>65?"#d97706":"#16a34a";
+  var pendingApps=(s.pending_applications||0);
+  var h_badges=[
+    '<span class="pill pill-green">'+esc(m.status||"Active")+'</span>',
+    loans.length?'<span class="pill pill-blue">'+loans.length+' active loan'+(loans.length>1?"s":"")+'</span>':"",
+    pendingApps?'<span class="pill pill-amber">'+pendingApps+' pending</span>':"",
+  ].filter(Boolean).join(" ");
+  return [
+    '<div class="sp-section active">',
+    '<div class="sp-hero">',
+      '<div class="sp-hero-avatar">',initials(full),'</div>',
+      '<div class="sp-hero-info">',
+        '<div class="sp-hero-name">Good '+greet+', '+esc(fname)+' \u{1F44B}</div>',
+        '<div class="sp-hero-meta">',esc(m.member_no||m.name),' &middot; ',esc(m.branch||"--"),' &middot; Since ',fmt_date(m.joining_date),'</div>',
+        '<div class="sp-hero-badges">',h_badges,'</div>',
+      '</div>',
+      '<div class="sp-hero-score"><div class="sp-hero-score-label">Score</div><div class="sp-hero-score-val">',score,' <span class="sp-hero-score-max">/ 100</span></div></div>',
+    '</div>',
+    '<div class="sp-metrics">',
+      metric("accent","Savings balance",fmt_kes(s.savings_balance),(s.savings_accounts||[]).length+" account"+((s.savings_accounts||[]).length!==1?"s":"")),
+      metric("","Share capital",(s.total_shares||0).toLocaleString()+" shares",fmt_kes(s.share_value)+" value"),
+      metric("","Total outstanding",fmt_kes(outstanding),loans.length+" loan"+(loans.length!==1?"s":"")+" active"),
+      metric("","Available credit",fmt_kes(avail),"of "+fmt_kes(limit)+" limit"),
+    '</div>',
+    savingsAccountsCard(s.savings_accounts,s.savings_balance,true),
+    '<div class="sp-panels">',
+      '<div class="sp-card" style="margin-bottom:0">',
+        '<div class="sp-card-header"><div class="sp-card-title">',I.shield,' Credit health</div><span style="font-size:12px;color:'+gaugeLabelColor+';font-weight:600">',gaugeLabel,'</span></div>',
+        '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px"><span style="font-size:26px;font-weight:600;letter-spacing:-.03em">',used_pct.toFixed(0),'%</span><span style="font-size:12px;color:#aaa">of limit used</span></div>',
+        '<div class="sp-gauge-track"><div class="sp-gauge-fill" style="width:'+used_pct.toFixed(0)+'%;background:'+gaugeColor+'"></div></div>',
+        '<div class="sp-gauge-labels"><span>KES 0</span><span style="color:'+gaugeLabelColor+'">',used_pct.toFixed(0)+'% used</span><span>',fmt_kes(limit),'</span></div>',
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px">',miniStat("Outstanding",fmt_kes(outstanding)),miniStat("Limit",fmt_kes(limit)),miniStat("Available",fmt_kes(avail)),'</div>',
+      '</div>',
+      '<div class="sp-card" style="margin-bottom:0">',
+        '<div class="sp-card-header"><div class="sp-card-title">',I.clock,' Upcoming repayments</div></div>',
+        upcoming.length?upcoming.map(function(u){return '<div class="sp-repay-item"><div class="sp-repay-date"><div class="sp-repay-day">'+day_of(u.date)+'</div><div class="sp-repay-mon">'+mon_of(u.date)+'</div></div><div style="flex:1"><div class="sp-repay-label">'+esc(u.label)+'</div><div class="sp-repay-sub">'+esc(u.ref)+'</div></div><div class="sp-repay-amt">'+fmt_kes(u.amount)+'</div></div>';}).join(""):
+        '<div style="text-align:center;padding:24px 0;color:#aaa;font-size:13px">No upcoming repayments.</div>',
+      '</div>',
+    '</div>',
+    '<div class="sp-panels">',
+      '<div class="sp-card" style="margin-bottom:0">',
+        '<div class="sp-card-header"><div class="sp-card-title">',I.credit,' Loan progress</div>',loans.length?'<button class="sp-card-action" onclick="spTab(\'loans\')">View all &rarr;</button>':"","</div>",
+        loans.length?loans.slice(0,3).map(function(l){var pct=flt(l.loan_amount)>0?Math.min(100,(flt(l.total_amount_paid)/flt(l.loan_amount)*100)):0;return '<div class="sp-loan-mini"><div class="sp-loan-mini-top"><div><div class="sp-loan-mini-name">'+esc(l.loan_type||l.name)+'</div><div class="sp-loan-mini-meta">'+esc(l.name)+' &middot; '+esc(l.repayment_periods||"--")+' mo</div></div><span class="pill '+((l.status||"").toLowerCase().indexOf("overdue")!==-1?"pill-red":"pill-green")+'">'+esc(l.status||"Active")+'</span></div><div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa"><span>Repaid: '+fmt_kes(l.total_amount_paid)+'</span><span>Balance: '+fmt_kes(l.outstanding_amount)+'</span></div><div class="sp-loan-mini-bar"><div class="sp-loan-mini-fill" style="width:'+pct.toFixed(0)+'%"></div></div><div class="sp-loan-mini-pct">'+pct.toFixed(0)+'% repaid</div></div>';}).join(""):
+        '<div style="text-align:center;padding:24px 0;color:#aaa;font-size:13px">No active loans. <button class="sp-card-action" onclick="spTab(\'apply\')">Apply &rarr;</button></div>',
+      '</div>',
+      '<div class="sp-card" style="margin-bottom:0">',
+        '<div class="sp-card-header"><div class="sp-card-title">',I.list,' Recent activity</div></div>',
+        (s.recent_activity&&s.recent_activity.length)?s.recent_activity.map(function(a){var dotCls=a.type==="deposit"?"background:#dcfce7;color:#16a34a":a.type==="withdrawal"?"background:#fee2e2;color:#dc2626":"background:#dbeafe;color:#2563eb";var icon=a.type==="deposit"?"↓":a.type==="withdrawal"?"↑":"✦";return '<div class="sp-act-item"><div class="sp-act-dot" style="'+dotCls+'">'+icon+'</div><div><div class="sp-act-text">'+esc(a.description)+'</div><div class="sp-act-time">'+fmt_date(a.date)+'</div></div></div>';}).join(""):activityFromLoans(s),
+      '</div>',
+    '</div>',
+    '</div>',
+  ].join("");
+}
+function activityFromLoans(s){var items=[];(s.active_loans||[]).forEach(function(l){items.push('<div class="sp-act-item"><div class="sp-act-dot" style="background:#fef9c3;color:#d97706">₤</div><div><div class="sp-act-text">Loan disbursed — <strong>'+fmt_kes(l.loan_amount)+'</strong> ('+esc(l.loan_type||l.name)+')</div><div class="sp-act-time">'+fmt_date(l.repayment_start_date)+'</div></div></div>');});if(!items.length)return '<div style="text-align:center;padding:24px 0;color:#aaa;font-size:13px">No recent activity.</div>';return items.slice(0,4).join("");}
+function metric(cls,label,value,sub){return['<div class="sp-metric'+(cls?" "+cls:"")+'">','<div class="sp-metric-label">',label,'</div>','<div class="sp-metric-value">',value,'</div>',sub?'<div class="sp-metric-sub">'+sub+'</div>':"","</div>"].join("");}
+function savingsAccountsCard(accounts,total,showLink){
+  accounts=accounts||[];
+  if(!accounts.length)return "";
+  var rows=accounts.map(function(a){
+    return['<div class="sp-acct-row">',
+      '<div class="sp-acct-icon">',I.piggy,'</div>',
+      '<div><div class="sp-acct-name">',esc(a.account_type||"Savings"),'</div>',
+      '<div class="sp-acct-sub">',esc(a.account_no||a.name),' &middot; ',esc(a.status||"Active"),'</div></div>',
+      '<div class="sp-acct-bal">',fmt_kes(a.balance),'</div>',
+    '</div>'].join("");
+  }).join("");
+  return[
+    '<div class="sp-card">',
+      '<div class="sp-card-header"><div class="sp-card-title">',I.piggy,' Savings accounts</div>',showLink?'<button class="sp-card-action" onclick="spTab(\'savings\')">View all &rarr;</button>':"","</div>",
+      rows,
+      accounts.length>1?['<div class="sp-acct-total"><span class="sp-acct-total-label">Total across ',accounts.length,' accounts</span><span class="sp-acct-total-val">',fmt_kes(total),'</span></div>'].join(""):"",
+    '</div>',
+  ].join("");
+}
+function miniStat(label,val){return '<div style="text-align:center"><div style="font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#aaa;margin-bottom:3px">'+esc(label)+'</div><div style="font-size:12px;font-weight:600;color:#1a1a1a;font-family:\'DM Mono\',monospace">'+esc(val)+'</div></div>';}
+
+/* ── SAVINGS ── */
+function renderSavingsTab(main){
+  main.innerHTML=skeleton("Savings account");
+  api("get_savings_transactions",{limit:200,offset:0}).then(function(txs){
+    S.savings_tx=txs||[];
+    var s=S.summary;
+    var dep=S.savings_tx.filter(function(t){return t.transaction_type==="Deposit";}).reduce(function(a,t){return a+flt(t.amount);},0);
+    var wdr=S.savings_tx.filter(function(t){return t.transaction_type==="Withdrawal";}).reduce(function(a,t){return a+flt(t.amount);},0);
+    var intr=S.savings_tx.filter(function(t){return t.transaction_type==="Interest";}).reduce(function(a,t){return a+flt(t.amount);},0);
+    var accounts=s.savings_accounts||[];
+    main.innerHTML=[
+      '<div class="sp-section active">',
+      '<div class="sp-section-header"><div class="sp-section-title">Savings accounts</div><div class="sp-section-sub">',accounts.length,' account'+(accounts.length!==1?"s":""),'</div></div>',
+      '<div class="sp-metrics">',metric("accent","Total balance",fmt_kes(s.savings_balance),accounts.length+" account"+(accounts.length!==1?"s":"")),metric("","Total deposited",fmt_kes(dep),"All time"),metric("","Total withdrawn",fmt_kes(wdr),"All time"),metric("","Interest earned",fmt_kes(intr),"All time"),'</div>',
+      savingsAccountsCard(accounts,s.savings_balance,false),
+      '<div class="sp-card"><div class="sp-card-header"><div class="sp-card-title">',I.list,' Savings transactions</div></div><div class="sp-table-wrap">',
+      S.savings_tx.length?['<table class="sp-table"><thead><tr><th>Date</th><th>Account</th><th>Type</th><th>Reference</th><th>Remarks</th><th class="num">Amount</th><th class="num">Balance</th></tr></thead><tbody>',S.savings_tx.map(function(t){var isWdr=t.transaction_type==="Withdrawal";return '<tr><td style="white-space:nowrap">'+fmt_date(t.transaction_date)+'</td><td style="font-family:\'DM Mono\',monospace;font-size:12px;color:#888">'+esc(t.savings_account||"--")+'</td><td>'+txPill(t.transaction_type)+'</td><td style="font-family:\'DM Mono\',monospace;font-size:12px">'+esc(t.reference_name||"--")+'</td><td style="color:#888;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.remarks||"")+'</td><td class="num '+(isWdr?"dr":"cr")+'">'+(isWdr?"−":"+")+Number(t.amount||0).toLocaleString()+'</td><td class="num">'+Number(t.running_balance||0).toLocaleString()+'</td></tr>';}).join(""),'</tbody></table>'].join(""):emptyState("No savings transactions found."),
+      '</div></div></div>',
+    ].join("");
+  }).catch(function(e){main.innerHTML=errState(e);});
+}
+
+/* ── SHARES ── */
+function renderSharesTab(main){
+  main.innerHTML=skeleton("Share capital");
+  api("get_share_ledger",{limit:200,offset:0}).then(function(entries){
+    S.shares=entries||[];
+    var s=S.summary;
+    main.innerHTML=[
+      '<div class="sp-section active">',
+      '<div class="sp-section-header"><div class="sp-section-title">Share capital</div><div class="sp-section-sub">Your equity ownership</div></div>',
+      '<div class="sp-metrics">',metric("accent","Shares held",(s.total_shares||0).toLocaleString()+" shares",""),metric("","Share value",fmt_kes(s.share_value),"At KES "+flt(s.share_price).toLocaleString()+" per share"),'</div>',
+      '<div class="sp-card"><div class="sp-card-header"><div class="sp-card-title">',I.list,' Share ledger</div></div><div class="sp-table-wrap">',
+      S.shares.length?['<table class="sp-table"><thead><tr><th>Date</th><th>Type</th><th class="num">Shares</th><th class="num">Running total</th><th>Remarks</th></tr></thead><tbody>',S.shares.map(function(e){var isPurch=e.entry_type==="Purchase";return '<tr><td style="white-space:nowrap">'+fmt_date(e.posting_date)+'</td><td><span class="pill '+(isPurch?"pill-green":"pill-red")+'">'+esc(e.entry_type||"--")+'</span></td><td class="num '+(isPurch?"cr":"dr")+'">'+(isPurch?"+":"−")+Number(e.shares_quantity||0).toLocaleString()+'</td><td class="num">'+Number(e.running_total||0).toLocaleString()+'</td><td style="color:#888">'+esc(e.remarks||"")+'</td></tr>';}).join(""),'</tbody></table>'].join(""):emptyState("No share ledger entries."),
+      '</div></div></div>',
+    ].join("");
+  }).catch(function(e){main.innerHTML=errState(e);});
+}
+
+/* ── TRANSACTIONS ── */
+function renderTxTab(main){
+  main.innerHTML=skeleton("All transactions");
+  var p1=S.savings_tx?Promise.resolve(S.savings_tx):api("get_savings_transactions",{limit:200,offset:0});
+  var p2=S.shares?Promise.resolve(S.shares):api("get_share_ledger",{limit:200,offset:0});
+  Promise.all([p1,p2]).then(function(res){
+    S.savings_tx=res[0]||[];S.shares=res[1]||[];
+    var combined=[];
+    S.savings_tx.forEach(function(t){combined.push({date:t.transaction_date,cat:"Savings",type:t.transaction_type,ref:t.reference_name,remarks:t.remarks,amount:t.amount,cr:t.transaction_type!=="Withdrawal"});});
+    S.shares.forEach(function(t){combined.push({date:t.posting_date,cat:"Shares",type:t.entry_type,ref:t.name,remarks:t.remarks,amount:t.shares_quantity,cr:t.entry_type==="Purchase"});});
+    (S.summary.active_loans||[]).forEach(function(l){combined.push({date:l.repayment_start_date,cat:"Loan",type:"Disbursement",ref:l.name,remarks:l.loan_type,amount:l.loan_amount,cr:true});});
+    combined.sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+    window._spTxAll=combined;
+    main.innerHTML=[
+      '<div class="sp-section active">',
+      '<div class="sp-section-header"><div class="sp-section-title">All transactions</div><div class="sp-section-sub">Savings, shares &amp; loans combined</div></div>',
+      '<div class="sp-filter-row"><select id="tx-cat" onchange="spFilterTx()"><option value="">All categories</option><option>Savings</option><option>Shares</option><option>Loan</option></select><input type="month" id="tx-mon" value="'+new Date().toISOString().slice(0,7)+'" onchange="spFilterTx()"></div>',
+      '<div class="sp-card"><div id="tx-body" class="sp-table-wrap">',txTable(combined),'</div></div></div>',
+    ].join("");
+    window.spFilterTx=function(){var cat=document.getElementById("tx-cat").value;var mon=document.getElementById("tx-mon").value;var f=window._spTxAll.filter(function(t){return(!cat||t.cat===cat)&&(!mon||(t.date||"").startsWith(mon));});document.getElementById("tx-body").innerHTML=txTable(f);};
+  }).catch(function(e){main.innerHTML=errState(e);});
+}
+function txTable(rows){
+  if(!rows.length)return emptyState("No transactions match.");
+  var catPill=function(c){var m={Savings:"pill-green",Shares:"pill-blue",Loan:"pill-amber"};return '<span class="pill '+(m[c]||"pill-gray")+'">'+c+'</span>';};
+  return['<table class="sp-table"><thead><tr><th>Date</th><th>Category</th><th>Type</th><th>Reference</th><th>Remarks</th><th class="num">Amount</th></tr></thead><tbody>',rows.map(function(t){return'<tr><td style="white-space:nowrap">'+fmt_date(t.date)+'</td><td>'+catPill(t.cat)+'</td><td style="color:#555">'+esc(t.type||"--")+'</td><td style="font-family:\'DM Mono\',monospace;font-size:12px">'+esc(t.ref||"--")+'</td><td style="color:#888;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.remarks||"")+'</td><td class="num '+(t.cr?"cr":"dr")+'">'+(t.cr?"+":"−")+Number(t.amount||0).toLocaleString()+'</td></tr>';}).join(""),'</tbody></table>'].join("");
+}
+
+/* ── LOANS ── */
+function renderLoansTab(main){
+  var loans=S.summary.active_loans||[];
+  var paid=loans.reduce(function(a,l){return a+flt(l.total_amount_paid);},0);
+  main.innerHTML=[
+    '<div class="sp-section active">',
+    '<div class="sp-section-header"><div class="sp-section-title">Loans</div><div class="sp-section-sub">Your loan portfolio</div></div>',
+    '<div class="sp-metrics">',metric("","Active loans",loans.length,""),metric("accent","Total outstanding",fmt_kes(S.summary.outstanding_loans),""),metric("","Total repaid",fmt_kes(paid),""),'</div>',
+    loans.length?loans.map(function(l){return'<div class="sp-loan-card" id="lc-'+esc(l.name)+'">'+loanCardHTML(l,true)+'</div>';}).join(""):
+    '<div class="sp-card"><div class="sp-empty">'+I.credit+'<p>No active loans. <button class="sp-card-action" onclick="spTab(\'apply\')">Apply &rarr;</button></p></div></div>',
+    '<div style="text-align:right;margin-top:8px"><button class="sp-btn sp-btn-primary" onclick="spTab(\'apply\')">'+I.plus+' Apply for another loan</button></div>',
+    '</div>',
+  ].join("");
+  loans.forEach(function(l){
+    var tb=document.getElementById("st-"+l.name),w=document.getElementById("sw-"+l.name);
+    if(tb&&w){tb.addEventListener("click",function(){if(w.classList.contains("open")){w.classList.remove("open");tb.innerHTML=I.chevdown+" View repayment schedule";}else{w.innerHTML='<div style="text-align:center;padding:16px;color:#aaa;font-size:13px">Loading…</div>';w.classList.add("open");tb.innerHTML=I.chevdown+" Hide schedule";api("get_loan_schedule",{loan_name:l.name}).then(function(rows){w.innerHTML=scheduleTable(rows||[]);}).catch(function(){w.innerHTML=emptyState("Could not load schedule.");});}});}
+  });
+}
+function loanCardHTML(l,withSchedule){
+  var pct=flt(l.loan_amount)>0?Math.min(100,(flt(l.total_amount_paid)/flt(l.loan_amount)*100)):0;
+  var late=(l.status||"").toLowerCase().indexOf("overdue")!==-1;
+  return['<div class="sp-loan-top"><div><div class="sp-loan-name">',esc(l.loan_type||l.name),'</div><div class="sp-loan-meta">',esc(l.name),' &middot; ',esc(l.repayment_periods||"--"),' months &middot; from ',fmt_date(l.repayment_start_date),'</div></div><span class="pill '+(late?"pill-red":"pill-green")+'">',esc(l.status||"Active"),'</span></div>','<div class="sp-loan-bar-labels"><span>Repaid: ',fmt_kes(l.total_amount_paid),'</span><span>Outstanding: ',fmt_kes(l.outstanding_amount),'</span></div>','<div class="sp-loan-bar"><div class="sp-loan-bar-fill'+(late?" late":"")+'" style="width:'+pct.toFixed(0)+'%"></div></div>','<div class="sp-loan-stats"><div class="sp-loan-stat"><span>Loan amount</span><strong>',fmt_kes(l.loan_amount),'</strong></div><div class="sp-loan-stat"><span>Rate</span><strong>',flt(l.rate_of_interest),'% p.a.</strong></div><div class="sp-loan-stat"><span>Repaid</span><strong>',pct.toFixed(0),'%</strong></div></div>',withSchedule?'<button class="sp-loan-schedule-toggle" id="st-'+esc(l.name)+'">'+I.chevdown+' View repayment schedule</button><div class="sp-loan-schedule-wrap" id="sw-'+esc(l.name)+'"></div>':""].join("");
+}
+function scheduleTable(rows){
+  if(!rows||!rows.length)return emptyState("No schedule available.");
+  return['<div class="sp-table-wrap"><table class="sp-table" style="font-size:12px"><thead><tr><th>#</th><th>Due date</th><th class="num">Principal</th><th class="num">Interest</th><th class="num">Total</th><th class="num">Balance</th><th>Status</th></tr></thead><tbody>',rows.map(function(r,i){var sc=r.status==="Paid"?"pill-green":r.status==="Partially Paid"?"pill-amber":"pill-gray";return'<tr><td style="color:#aaa">'+(i+1)+'</td><td style="white-space:nowrap">'+fmt_date(r.payment_date)+'</td><td class="num">'+Number(r.principal_amount||0).toLocaleString()+'</td><td class="num">'+Number(r.interest_amount||0).toLocaleString()+'</td><td class="num" style="font-weight:500">'+Number(r.total_payment||0).toLocaleString()+'</td><td class="num">'+Number(r.balance_loan_amount||0).toLocaleString()+'</td><td><span class="pill '+sc+'">'+esc(r.status||"Pending")+'</span></td></tr>';}).join(""),'</tbody></table></div>'].join("");
+}
+
+/* ── APPLICATIONS ── */
+function renderApplicationsTab(main){
+  main.innerHTML=skeleton("Loan applications");
+  api("get_loan_applications").then(function(apps){
+    S.applications=apps||[];
+    main.innerHTML=[
+      '<div class="sp-section active">',
+      '<div class="sp-section-header"><div class="sp-section-title">Loan applications</div><div class="sp-section-sub">Track status and guarantors</div></div>',
+      '<div style="text-align:right;margin-bottom:14px"><button class="sp-btn sp-btn-primary" onclick="spTab(\'apply\')">'+I.plus+' New application</button></div>',
+      apps.length?apps.map(function(a){return appCardHTML(a);}).join(""):
+      '<div class="sp-card"><div class="sp-empty">'+I.credit+'<p>No applications yet. <button class="sp-card-action" onclick="spTab(\'apply\')">Apply now &rarr;</button></p></div></div>',
+      '</div>',
+    ].join("");
+  }).catch(function(e){main.innerHTML=errState(e);});
+}
+function appCardHTML(a){
+  var sp=a.status==="Approved"?"pill-green":a.status==="Rejected"?"pill-red":a.status==="Open"?"pill-amber":"pill-gray";
+  var guarantors=a.guarantors||[];
+  var allConfirmed=guarantors.length&&guarantors.every(function(g){return g.status==="Confirmed";});
+  return['<div class="sp-app-card">','<div class="sp-app-top"><div><div class="sp-app-name">',esc(a.loan_product||a.name),'</div><div class="sp-app-meta">',esc(a.name),' &middot; Applied ',fmt_date(a.posting_date),'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span class="pill '+sp+'">',esc(a.status||"Open"),'</span><span style="font-size:13px;font-weight:600;font-family:\'DM Mono\',monospace">',fmt_kes(a.loan_amount),'</span></div></div>',
+  '<div style="font-size:12px;color:#aaa">',esc(a.repayment_periods||"--"),' months &middot; ',flt(a.rate_of_interest),'% p.a.</div>',
+  guarantors.length?['<div class="sp-app-guarantors"><div class="sp-app-guarantors-label">Guarantors &amp; pledges</div>',guarantors.map(function(g){var gp=g.status==="Confirmed"?"pill-green":g.status==="Declined"?"pill-red":"pill-amber";var gl=g.status==="Confirmed"?"\u2713 Confirmed":g.status==="Declined"?"\u2717 Declined":"\u23F3 Pending";return'<div class="sp-guarantor-row"><div class="sp-g-avatar" style="width:26px;height:26px;font-size:10px">'+initials(g.guarantor_name||g.guarantor)+'</div><div style="flex:1;font-size:13px">'+esc(g.guarantor_name||g.guarantor)+'<span style="font-size:11px;color:#aaa;margin-left:6px">'+fmt_kes(g.pledge_value||0)+'</span></div><span class="pill '+gp+'">'+gl+'</span></div>';}).join(""),allConfirmed?'<div style="margin-top:8px;font-size:12px;color:#16a34a;display:flex;align-items:center;gap:5px">'+I.check+' All confirmed &mdash; ready for review</div>':"","</div>"].join(""):"",
+  '</div>'].join("");
+}
+
+/* ================================================================
+   APPLY — Modern form with guarantor pledges
+   KEY FIXES:
+   1. No max= cap on amount input
+   2. No frontend credit-limit block — total pledge coverage is the gate
+================================================================ */
+function renderApplyTab(main){
+  main.innerHTML=skeleton("Apply for a loan");
+  var p=S.loan_types?Promise.resolve(S.loan_types):api("get_loan_types");
+  p.then(function(lt){
+    S.loan_types=lt||[];
+    var s=S.summary;
+    var avail=Math.max(0,flt(s.loan_limit)-flt(s.outstanding_loans));
+    window._spAvail=avail;
+
+    var selfMax=flt(s.savings_balance)*flt(s.loan_multiplier);
+    window._spGuarantors=[{
+      member:          s.member.name,
+      member_name:     s.member.full_name||(s.member.first_name||""),
+      member_no:       s.member.member_no||s.member.name,
+      savings_account: s.savings_account||"",
+      savings_balance: flt(s.savings_balance),
+      pledge_value:    selfMax,
+      pledge_max:      selfMax,
+      is_self:         true,
+      status:          "Self",
+    }];
+
+    main.innerHTML=[
+      '<div class="sp-section active">',
+      '<div class="sp-section-header"><div class="sp-section-title">Apply for a loan</div><div class="sp-section-sub">Submit a new secured loan application</div></div>',
+
+      '<div class="sp-info-box">',I.info,
+        '<div>Your own borrowing limit is <strong>',fmt_kes(s.loan_limit),'</strong> (',flt(s.loan_multiplier),'&times; savings of ',fmt_kes(s.savings_balance),').',
+        ' Outstanding: <strong>',fmt_kes(s.outstanding_loans),'</strong>.',
+        ' <strong style="color:#1a3c2e">Add guarantors below to borrow above your own limit</strong> — their savings pledges count toward the total coverage.</div>',
+      '</div>',
+      '<div id="la-alert"></div>',
+
+      /* ── Loan details card ── */
+      '<div class="sp-card" style="padding:0;overflow:hidden">',
+        '<div style="background:#1a3c2e;padding:14px 22px;display:flex;align-items:center;gap:10px">',
+          '<div style="color:#a8d5b5;display:flex;width:18px;height:18px">',I.credit,'</div>',
+          '<span style="color:#fff;font-size:14px;font-weight:600;letter-spacing:-.01em">Loan details</span>',
+        '</div>',
+        '<div style="padding:24px">',
+
+          /* Product + Amount */
+          '<div class="sp-form-grid">',
+            '<div class="sp-form-group">',
+              '<label>Loan product <span style="color:#dc2626">*</span></label>',
+              '<div class="sp-field-wrap">',
+                '<select id="la-type" class="has-suf" onchange="spApplyRate()" style="appearance:none;-webkit-appearance:none">',
+                  '<option value="">Select a loan product…</option>',
+                  S.loan_types.map(function(lt){return'<option value="'+esc(lt.name)+'" data-rate="'+flt(lt.rate_of_interest)+'">'+esc(lt.name)+' — '+flt(lt.rate_of_interest)+'% p.a.</option>';}).join(""),
+                '</select>',
+                '<span class="sp-field-chevron">',I.chevdown,'</span>',
+              '</div>',
+            '</div>',
+            '<div class="sp-form-group">',
+              '<label>Amount (KES) <span style="color:#dc2626">*</span></label>',
+              '<div class="sp-field-wrap">',
+                '<span class="sp-field-pre">KES</span>',
+                /* NO max= attribute — guarantors can cover above own limit */
+                '<input type="number" id="la-amt" class="has-pre" min="1000" step="1000" placeholder="0" oninput="spApplyBar()">',
+              '</div>',
+              '<div class="sp-form-hint" id="la-amt-hint">Own credit: <strong>',fmt_kes(avail),'</strong> — guarantors can top up the rest</div>',
+            '</div>',
+          '</div>',
+
+          /* Coverage bar */
+          '<div style="margin:-4px 0 20px">',
+            '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px">',
+              '<span id="la-bar-lbl" style="color:#888;font-weight:500">Enter amount above</span>',
+              '<span style="color:#aaa">Own limit: ',fmt_kes(avail),'</span>',
+            '</div>',
+            '<div style="height:5px;background:#f0ece6;border-radius:3px;overflow:hidden">',
+              '<div id="la-bar" style="height:100%;border-radius:3px;background:#1a3c2e;width:0%;transition:width .4s"></div>',
+            '</div>',
+          '</div>',
+
+          /* Period + Instalment */
+          '<div class="sp-form-grid">',
+            '<div class="sp-form-group">',
+              '<label>Repayment period <span style="color:#dc2626">*</span></label>',
+              '<div class="sp-field-wrap">',
+                '<input type="number" id="la-mo" class="has-suf" min="1" max="60" placeholder="12" oninput="spApplyCalc()">',
+                '<span class="sp-field-suf">MOS</span>',
+              '</div>',
+            '</div>',
+            '<div class="sp-form-group">',
+              '<label>Est. monthly instalment</label>',
+              '<div class="sp-field-wrap">',
+                '<span class="sp-field-pre">KES</span>',
+                '<input type="text" id="la-inst" class="has-pre" readonly placeholder="— auto-calculated">',
+              '</div>',
+            '</div>',
+          '</div>',
+
+          /* Purpose + Rate */
+          '<div class="sp-form-grid">',
+            '<div class="sp-form-group">',
+              '<label>Loan purpose <span style="color:#dc2626">*</span></label>',
+              '<div class="sp-field-wrap">',
+                '<select id="la-purpose" class="has-suf" style="appearance:none;-webkit-appearance:none">',
+                  '<option value="">Select purpose…</option>',
+                  '<option>Business</option><option>Education / school fees</option><option>Medical</option><option>Home improvement</option><option>Agriculture</option><option>Emergency</option><option>Other</option>',
+                '</select>',
+                '<span class="sp-field-chevron">',I.chevdown,'</span>',
+              '</div>',
+            '</div>',
+            '<div class="sp-form-group">',
+              '<label>Interest rate</label>',
+              '<div class="sp-field-wrap">',
+                '<input type="text" id="la-rate" class="has-suf" readonly placeholder="— set by product">',
+                '<span class="sp-field-suf">% PA</span>',
+              '</div>',
+            '</div>',
+          '</div>',
+
+          /* Notes */
+          '<div class="sp-form-group">',
+            '<label>Additional notes <span style="font-size:11px;color:#bbb;font-weight:400;text-transform:none">(optional)</span></label>',
+            '<textarea id="la-notes" placeholder="Any supporting details for the loan officer…"></textarea>',
+          '</div>',
+
+        '</div>',
+      '</div>',
+
+      /* ── Guarantors card ── */
+      '<div class="sp-card" style="padding:0;overflow:hidden">',
+        '<div style="background:#1a3c2e;padding:14px 22px;display:flex;align-items:center;gap:10px">',
+          '<div style="color:#a8d5b5;display:flex;width:18px;height:18px">',I.shield,'</div>',
+          '<span style="color:#fff;font-size:14px;font-weight:600;letter-spacing:-.01em">Guarantors &amp; pledges</span>',
+        '</div>',
+        '<div style="padding:24px">',
+
+          '<div class="sp-info-box" style="margin-bottom:20px">',I.info,
+            '<div>Every loan must be secured by SACCO Savings Account pledges. Your own account is pledged first. Add other members as guarantors — their savings × multiplier counts toward coverage. <strong>Total pledged must equal or exceed the loan amount.</strong></div>',
+          '</div>',
+
+          /* Search */
+          '<div style="margin-bottom:16px">',
+            '<label style="font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#888;display:block;margin-bottom:7px">Search member to add as guarantor</label>',
+            '<div class="sp-member-search-wrap">',
+              '<span class="sp-search-icon">',I.search,'</span>',
+              '<input type="text" class="sp-member-search-input" id="g-search" placeholder="Type name or member number…" autocomplete="off" oninput="spSearchMembers(this.value)">',
+              '<div class="sp-member-dropdown" id="g-dropdown"></div>',
+            '</div>',
+          '</div>',
+
+          '<div id="g-list"></div>',
+          '<div id="pledge-progress"></div>',
+
+        '</div>',
+      '</div>',
+
+      '<div class="sp-form-actions">',
+        '<button class="sp-btn sp-btn-ghost" onclick="spTab(\'loans\')">Cancel</button>',
+        '<button class="sp-btn sp-btn-primary" id="la-sub" onclick="spApplySubmit()">',I.plus,' Submit application</button>',
+      '</div>',
+      '</div>',
+    ].join("");
+
+    /* Rate/bar/calc helpers */
+    window.spApplyRate=function(){
+      var sel=document.getElementById("la-type");
+      var opt=sel.options[sel.selectedIndex];
+      document.getElementById("la-rate").value=opt&&opt.dataset.rate?opt.dataset.rate:"";
+      spApplyCalc();
+    };
+    window.spApplyBar=function(){
+      var amt=parseFloat(document.getElementById("la-amt").value)||0;
+      /* Bar shows coverage against own limit for reference only — not a hard gate */
+      var pct=window._spAvail>0?Math.min(130,(amt/window._spAvail*100)):0;
+      var bar=document.getElementById("la-bar");
+      bar.style.width=Math.min(100,pct)+"%";
+      bar.style.background=pct>100?"#d97706":"#1a3c2e";
+      document.getElementById("la-bar-lbl").textContent=amt?fmt_kes(amt)+" requested":"Enter amount above";
+      spApplyCalc();
+      spRenderGuarantors();
+    };
+    window.spApplyCalc=function(){
+      var amt=parseFloat(document.getElementById("la-amt").value)||0;
+      var mo=parseInt(document.getElementById("la-mo").value)||0;
+      var sel=document.getElementById("la-type");
+      var opt=sel.options[sel.selectedIndex];
+      var r=parseFloat(opt&&opt.dataset.rate?opt.dataset.rate:0)||0;
+      var inst="";
+      if(amt>0&&mo>0){var mr=r/100/12;inst=mr===0?fmt_kes((amt/mo).toFixed(0)):fmt_kes(((amt*mr*Math.pow(1+mr,mo))/(Math.pow(1+mr,mo)-1)).toFixed(0));}
+      document.getElementById("la-inst").value=inst;
+    };
+
+    /* Member search */
+    var searchTimer=null;
+    window.spSearchMembers=function(q){
+      clearTimeout(searchTimer);
+      var dd=document.getElementById("g-dropdown");
+      if(!q||q.length<2){dd.classList.remove("open");return;}
+      searchTimer=setTimeout(function(){
+        api("search_members",{query:q,exclude:window._spGuarantors.map(function(g){return g.member;}).join(",")}).then(function(members){
+          if(!members||!members.length){dd.innerHTML='<div style="padding:12px 14px;font-size:13px;color:#aaa">No members found.</div>';dd.classList.add("open");return;}
+          dd.innerHTML=members.map(function(m){
+            var sa=m.savings_account||"";
+            var sb=m.savings_balance||0;
+            return'<div class="sp-member-option" onclick="spAddGuarantor(\''+esc(m.name)+'\',\''+esc(m.full_name||m.name)+'\',\''+esc(m.member_no||m.name)+'\',\''+esc(sa)+'\','+sb+')"><div class="sp-member-opt-avatar">'+initials(m.full_name||m.name)+'</div><div><div class="sp-member-opt-name">'+esc(m.full_name||m.name)+'</div><div class="sp-member-opt-sub">'+esc(m.member_no||m.name)+' &middot; Savings: '+fmt_kes(sb)+'</div></div></div>';
+          }).join("");
+          dd.classList.add("open");
+        }).catch(function(){});
+      },320);
+    };
+    document.addEventListener("click",function(e){var dd=document.getElementById("g-dropdown");if(dd&&!dd.contains(e.target)&&e.target.id!=="g-search")dd.classList.remove("open");});
+
+    window.spAddGuarantor=function(member,name,member_no,savings_account,savings_balance){
+      var dd=document.getElementById("g-dropdown");if(dd)dd.classList.remove("open");
+      var inp=document.getElementById("g-search");if(inp)inp.value="";
+      if(window._spGuarantors.find(function(g){return g.member===member;})){frappe.msgprint(__("Already added."));return;}
+      if(!savings_account){frappe.msgprint(__("This member has no Savings Account."));return;}
+      var mult=flt(S.summary.loan_multiplier)||3;
+      var maxPledge=flt(savings_balance)*mult;
+      window._spGuarantors.push({member:member,member_name:name,member_no:member_no,savings_account:savings_account,savings_balance:flt(savings_balance),pledge_value:0,pledge_max:maxPledge,is_self:false,status:"Pending"});
+      spRenderGuarantors();
+    };
+    window.spRemoveGuarantor=function(idx){window._spGuarantors.splice(idx,1);spRenderGuarantors();};
+    window.spGuarantorPledgeChanged=function(idx,val){
+      var g=window._spGuarantors[idx];
+      var v=flt(val);
+      if(g.pledge_max&&v>g.pledge_max)v=g.pledge_max;
+      g.pledge_value=v;
+      spRenderGuarantors();
+    };
+
+    spRenderGuarantors();
+  }).catch(function(e){main.innerHTML=errState(e);});
+}
+
+function spRenderGuarantors(){
+  var list=document.getElementById("g-list");
+  var prog=document.getElementById("pledge-progress");
+  if(!list||!prog)return;
+  var gs=window._spGuarantors||[];
+  var loanAmt=parseFloat((document.getElementById("la-amt")||{}).value)||0;
+  var mult=flt(S.summary.loan_multiplier)||3;
+  var totalPledge=gs.reduce(function(a,g){return a+flt(g.pledge_value);},0);
+  var covered=totalPledge>=loanAmt&&loanAmt>0;
+  var pct=loanAmt>0?Math.min(100,(totalPledge/loanAmt*100)):0;
+
+  list.innerHTML=gs.map(function(g,i){
+    var pledgeMax=flt(g.pledge_max)||(flt(g.savings_balance)*mult);
+    var statusPill=g.is_self?'<span class="pill pill-blue">Self (You)</span>':
+      g.status==="Confirmed"?'<span class="pill pill-green">\u2713 Confirmed</span>':
+      g.status==="Pending"?'<span class="pill pill-amber">\u23F3 Pending email</span>':
+      '<span class="pill pill-red">\u2717 Declined</span>';
+    return[
+      '<div class="sp-guarantor-card">',
+        '<div class="sp-g-avatar">',initials(g.member_name),'</div>',
+        '<div class="sp-g-info">',
+          '<div class="sp-g-name">',esc(g.member_name),g.is_self?' <span style="font-size:11px;color:#aaa">(You)</span>':"","</div>",
+          '<div class="sp-g-sub">',esc(g.member_no),' &middot; Account: ',esc(g.savings_account||"—"),'</div>',
+        '</div>',
+        '<div class="sp-g-actions">',
+          '<div style="text-align:right">',
+            '<div style="font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#aaa;margin-bottom:5px">Pledge amount</div>',
+            '<div style="display:flex;align-items:center;gap:8px">',
+              '<div class="sp-field-wrap" style="width:150px">',
+                '<span class="sp-field-pre">KES</span>',
+                '<input type="number" class="sp-g-shares-input has-pre" min="0" max="'+pledgeMax+'" step="1000" value="'+flt(g.pledge_value).toFixed(0)+'" onchange="spGuarantorPledgeChanged('+i+',this.value)" oninput="spGuarantorPledgeChanged('+i+',this.value)">',
+              '</div>',
+              '<span style="font-size:10px;color:#aaa;white-space:nowrap">max: '+fmt_kes(pledgeMax)+'</span>',
+            '</div>',
+          '</div>',
+          statusPill,
+          !g.is_self?'<button class="sp-g-remove" onclick="spRemoveGuarantor('+i+')" title="Remove">'+I.trash+'</button>':"",
+        '</div>',
+      '</div>',
+    ].join("");
+  }).join("");
+
+  prog.innerHTML=[
+    '<div class="sp-guarantor-summary">',
+      '<div>Total pledged: <strong>',fmt_kes(totalPledge),'</strong>',
+        loanAmt>0?' &nbsp;&middot;&nbsp; Loan: <strong>'+fmt_kes(loanAmt)+'</strong>':"",
+        loanAmt>0?' &nbsp;&middot;&nbsp; Shortfall: <strong style="color:'+(covered?"#16a34a":"#dc2626")+'">'+fmt_kes(Math.max(0,loanAmt-totalPledge))+'</strong>':"",
+      '</div>',
+      covered?'<span class="pill pill-green">'+I.check+' Covered</span>':'<span class="pill pill-amber">\u26A0 Insufficient</span>',
+    '</div>',
+    loanAmt>0?['<div style="margin-top:8px">','<div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:4px"><span>Pledge coverage</span><span>',pct.toFixed(0),'%</span></div>','<div class="sp-pledge-bar"><div class="sp-pledge-fill'+(covered?" over":"")+'" style="width:'+Math.min(100,pct).toFixed(0)+'%"></div></div>','</div>'].join(""):"",
+  ].join("");
+}
+
+window.spApplySubmit=function(){
+  var type    =document.getElementById("la-type").value;
+  var amount  =parseFloat(document.getElementById("la-amt").value);
+  var months  =parseInt(document.getElementById("la-mo").value);
+  var purpose =document.getElementById("la-purpose").value;
+  var notes   =document.getElementById("la-notes").value;
+  var alertEl =document.getElementById("la-alert");
+  alertEl.innerHTML="";
+
+  if(!type||!amount||!months||!purpose){
+    alertEl.innerHTML=alertHTML("error","Please fill in all required fields.");
+    alertEl.scrollIntoView({behavior:"smooth"});return;
+  }
+  /* ── NO credit-limit block here — guarantors cover amounts above own limit ── */
+
+  var gs=window._spGuarantors||[];
+  if(!gs.length){alertEl.innerHTML=alertHTML("error","At least one guarantor is required.");return;}
+
+  var missingAcct=gs.find(function(g){return !g.savings_account;});
+  if(missingAcct){alertEl.innerHTML=alertHTML("error",esc(missingAcct.member_name)+" has no linked Savings Account.");alertEl.scrollIntoView({behavior:"smooth"});return;}
+
+  var zeroPledge=gs.find(function(g){return flt(g.pledge_value)<=0;});
+  if(zeroPledge){alertEl.innerHTML=alertHTML("error","All guarantors must have a pledge value greater than zero. "+esc(zeroPledge.member_name)+" has KES 0.");alertEl.scrollIntoView({behavior:"smooth"});return;}
+
+  var totalPledgedValue=gs.reduce(function(a,g){return a+flt(g.pledge_value);},0);
+  if(totalPledgedValue<amount){
+    alertEl.innerHTML=alertHTML("error","Total pledged ("+fmt_kes(totalPledgedValue)+") does not cover loan amount ("+fmt_kes(amount)+"). Add more guarantors or increase pledges.");
+    alertEl.scrollIntoView({behavior:"smooth"});return;
+  }
+
+  var btn=document.getElementById("la-sub");
+  btn.disabled=true;btn.textContent="Submitting…";
+
+  var guarantorsData=gs.map(function(g){return{member:g.member,member_name:g.member_name,savings_account:g.savings_account||"",pledge_value:flt(g.pledge_value),is_self:g.is_self||false};});
+
+  api("submit_loan_application_v2",{
+    loan_product:type,loan_amount:amount,repayment_periods:months,
+    purpose:purpose,description:notes,guarantors:JSON.stringify(guarantorsData),
+  }).then(function(res){
+    alertEl.innerHTML=alertHTML("success","Application <strong>"+esc(res.application)+"</strong> submitted successfully. "+(res.emails_sent>0?"Notification email(s) sent to "+res.emails_sent+" guarantor"+(res.emails_sent>1?"s":"")+".":" Self-pledge recorded."));
+    var _selfMax=flt(S.summary.savings_balance)*flt(S.summary.loan_multiplier);
+    window._spGuarantors=[{member:S.summary.member.name,member_name:S.summary.member.full_name||(S.summary.member.first_name||""),member_no:S.summary.member.member_no||S.summary.member.name,savings_account:S.summary.savings_account||"",savings_balance:flt(S.summary.savings_balance),pledge_value:_selfMax,pledge_max:_selfMax,is_self:true,status:"Self"}];
+    ["la-type","la-amt","la-mo","la-purpose","la-notes"].forEach(function(id){var el=document.getElementById(id);if(el)el.value="";});
+    document.getElementById("la-bar").style.width="0%";
+    document.getElementById("la-inst").value="";
+    document.getElementById("la-rate").value="";
+    spRenderGuarantors();
+    alertEl.scrollIntoView({behavior:"smooth"});
+    S.applications=null;
+  }).catch(function(e){
+    var msg=typeof e==="string"?e:(e.message||"Submission failed. Please try again.");
+    alertEl.innerHTML=alertHTML("error",msg);
+    alertEl.scrollIntoView({behavior:"smooth"});
+  }).finally(function(){btn.disabled=false;btn.innerHTML=I.plus+" Submit application";});
+};
+
+/* ── HELPERS ── */
+function txPill(type){var m={Deposit:"pill-green",Withdrawal:"pill-red",Interest:"pill-blue"};return'<span class="pill '+(m[type]||"pill-gray")+'">'+esc(type||"--")+'</span>';}
+function alertHTML(type,msg){var cls=type==="success"?"sp-alert-success":"sp-alert-error";var icon=type==="success"?I.check:I.x;return'<div class="sp-alert '+cls+'">'+icon+'<span>'+msg+'</span></div>';}
+function skeleton(title){return'<div class="sp-section active"><div class="sp-section-header"><div class="sp-section-title">'+title+'</div></div><div class="sp-metrics">'+[1,2,3,4].map(function(){return'<div class="sp-skeleton sp-skel-metric"></div>';}).join("")+'</div><div class="sp-card">'+[1,2,3,4,5].map(function(){return'<div class="sp-skeleton sp-skel-row"></div>';}).join("")+'</div></div>';}
+function emptyState(msg){return'<div class="sp-empty">'+I.list+'<p>'+esc(msg)+'</p></div>';}
+function errState(e){var msg=typeof e==="string"?e:"An error occurred.";return'<div class="sp-card"><div class="sp-empty">'+I.x+'<p style="color:#dc2626">'+esc(msg)+'</p></div></div>';}
+
+/* ── BOOT ── */
+frappe.ready(function(){
+  if(frappe.session.user==="Guest"){window.location.href="/login?redirect-to=/sacco-portal";return;}
+  Promise.all([api("get_portal_summary"),api("get_loan_types")]).then(function(res){
+    S.summary=res[0];S.loan_types=res[1]||[];
+    renderShell(S.summary);
+  }).catch(function(e){
+    var msg=typeof e==="string"?e:"No SACCO Member account linked to your login. Contact the SACCO office.";
+    root.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:80vh"><div style="text-align:center;max-width:360px"><div style="font-size:32px;margin-bottom:12px">⚠️</div><div style="font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px">Unable to load portal</div><div style="font-size:13px;color:#888;margin-bottom:20px">'+esc(msg)+'</div><a href="/login" style="color:#1a3c2e;font-weight:500;font-size:13px">← Back to login</a></div></div>';
+  });
+});
+
+})();
+</script>
+{% endblock %}

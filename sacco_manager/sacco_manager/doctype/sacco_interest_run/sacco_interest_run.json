@@ -1,0 +1,121 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "SIR-.YYYY.-.####",
+ "creation": "2026-04-21 15:00:27.429384",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_cpw1",
+  "amended_from",
+  "period_start",
+  "period_end",
+  "interest_rate",
+  "column_break_gogm",
+  "account_type",
+  "total_interest",
+  "section_break_wgfc",
+  "details"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_cpw1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "SACCO Interest Run",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "period_start",
+   "fieldtype": "Date",
+   "label": "Period Start"
+  },
+  {
+   "fieldname": "period_end",
+   "fieldtype": "Date",
+   "label": "Period End"
+  },
+  {
+   "fieldname": "interest_rate",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Interest Rate (%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_gogm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "account_type",
+   "fieldtype": "Link",
+   "label": "Account Type",
+   "options": "SACCO Account Type"
+  },
+  {
+   "fieldname": "total_interest",
+   "fieldtype": "Currency",
+   "label": "Total Interest Posted",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_wgfc",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "details",
+   "fieldtype": "Table",
+   "label": "Details",
+   "options": "SACCO Interest Run Detail"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-05-06 11:40:17.078969",
+ "modified_by": "Administrator",
+ "module": "Sacco Manager",
+ "name": "SACCO Interest Run",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
