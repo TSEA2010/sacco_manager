@@ -1,6 +1,7 @@
 MIT License
 
-Copyright (c) [year] [fullname]
+Copyright (c) 2026 Trident Savings and Credit Co-operative Society
+Portions copyright (c) 2026 TSEA (original sacco_manager code, MIT licensed)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

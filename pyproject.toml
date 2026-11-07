@@ -1,9 +1,9 @@
 [project]
 name = "sacco_manager"
 authors = [
-    { name = "TSEA", email = "josphat.musomba@tsea.co.ke"}
+    { name = "Trident Savings and Credit Co-operative Society", email = "finance@astralind.com" }
 ]
-description = "TSEA sacco manager account"
+description = "SACCO membership, savings, shares, loans and M-Pesa collections on ERPNext + Lending"
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]

@@ -1,8 +1,8 @@
 app_name = "sacco_manager"
-app_title = "Sacco Manager"
-app_publisher = "TSEA"
-app_description = "TSEA sacco manager account"
-app_email = "josphat.musomba@tsea.co.ke"
+app_title = "Trident SACCO"
+app_publisher = "Trident Savings and Credit Co-operative Society"
+app_description = "SACCO membership, savings, shares, loans and M-Pesa collections on ERPNext + Lending"
+app_email = "finance@astralind.com"
 app_license = "mit"
 
 # Apps
