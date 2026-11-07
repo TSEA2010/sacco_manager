@@ -11,6 +11,13 @@
   "savings_account",
   "column_break_bsdl",
   "expected_amount",
+  "loan",
+  "expected_loan_repayment",
+  "share_amount",
+  "received_savings",
+  "received_loan_repayment",
+  "loan_repayment",
+  "share_entry",
   "status",
   "transaction_ref"
  ],
@@ -49,7 +56,7 @@
    "fieldname": "expected_amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Expected Amount",
+   "label": "Expected Savings",
    "read_only": 1
   },
   {
@@ -58,7 +65,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
-   "options": "\nPending\nPosted",
+   "options": "Pending\nPosted\nSkipped",
    "read_only": 1
   },
   {
@@ -67,13 +74,55 @@
    "label": "Transaction",
    "options": "SACCO Savings Transaction",
    "read_only": 1
+  },
+  {
+   "fieldname": "loan",
+   "fieldtype": "Link",
+   "label": "Loan",
+   "options": "Loan"
+  },
+  {
+   "fieldname": "expected_loan_repayment",
+   "fieldtype": "Currency",
+   "label": "Expected Loan Repayment"
+  },
+  {
+   "fieldname": "share_amount",
+   "fieldtype": "Currency",
+   "label": "Share Contribution"
+  },
+  {
+   "fieldname": "received_savings",
+   "fieldtype": "Currency",
+   "label": "Received Savings",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "received_loan_repayment",
+   "fieldtype": "Currency",
+   "label": "Received Loan Repayment",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "loan_repayment",
+   "fieldtype": "Link",
+   "label": "Loan Repayment",
+   "options": "Loan Repayment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "share_entry",
+   "fieldtype": "Link",
+   "label": "Share Entry",
+   "options": "SACCO Share Ledger",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-23 12:42:01.108120",
+ "modified": "2026-11-07 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Branch Remittance Member",

@@ -1,0 +1,212 @@
+{
+ "actions": [],
+ "creation": "2026-11-07 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "module": "Sacco Manager",
+ "owner": "Administrator",
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "delete": 1
+  },
+  {
+   "role": "SACCO Administrator",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "delete": 0
+  },
+  {
+   "role": "SACCO Manager",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 1,
+   "create": 0,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "delete": 0
+  },
+  {
+   "role": "SACCO Accountant",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  },
+  {
+   "role": "SACCO Auditor",
+   "permlevel": 0,
+   "print": 1,
+   "email": 0,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  }
+ ],
+ "name": "SACCO Dividend Run",
+ "autoname": "DIV-.YYYY.-.####",
+ "naming_rule": "Expression (old style)",
+ "is_submittable": 1,
+ "fields": [
+  {
+   "fieldname": "financial_year",
+   "fieldtype": "Link",
+   "label": "Financial Year",
+   "options": "Fiscal Year",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "as_at_date",
+   "fieldtype": "Date",
+   "label": "Share Capital As At",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dividend_rate",
+   "fieldtype": "Percent",
+   "label": "Dividend Rate (%)",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1,
+   "default": "Today"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payout_method",
+   "fieldtype": "Select",
+   "label": "Payout",
+   "options": "Credit to Savings\nHold in Dividends Payable",
+   "default": "Credit to Savings"
+  },
+  {
+   "fieldname": "agm_resolution",
+   "fieldtype": "Data",
+   "label": "AGM Resolution Ref",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_gross",
+   "fieldtype": "Currency",
+   "label": "Total Gross",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_wht",
+   "fieldtype": "Currency",
+   "label": "Total WHT",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_net",
+   "fieldtype": "Currency",
+   "label": "Total Net",
+   "read_only": 1
+  },
+  {
+   "fieldname": "journal_entry",
+   "fieldtype": "Link",
+   "label": "Declaration JE",
+   "options": "Journal Entry",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Members"
+  },
+  {
+   "fieldname": "details",
+   "fieldtype": "Table",
+   "label": "Details",
+   "options": "SACCO Dividend Run Detail"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "SACCO Dividend Run",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "field_order": [
+  "financial_year",
+  "as_at_date",
+  "dividend_rate",
+  "posting_date",
+  "cb1",
+  "payout_method",
+  "agm_resolution",
+  "total_gross",
+  "total_wht",
+  "total_net",
+  "journal_entry",
+  "details_section",
+  "details",
+  "amended_from"
+ ],
+ "modified": "2026-11-07 18:00:00.000000",
+ "modified_by": "Administrator"
+}

@@ -356,6 +356,7 @@ function renderShell(s){
           '<div class="sp-sidenav-section">',
             '<div class="sp-sidenav-label">Actions</div>',
             navBtn("apply","Apply for loan",I.plus),
+            (s.mpesa&&s.mpesa.enabled)?navBtn("mpesa","Pay with M-Pesa",I.credit):"",
           '</div>',
           '<div class="sp-sidenav-section">',
             '<button class="sp-nav-item" onclick="window.location.href=\'/login\'" style="color:#888">',I.logout,' Sign out</button>',
@@ -383,6 +384,7 @@ function showTab(tab){
   else if(tab==="loans")       renderLoansTab(main);
   else if(tab==="applications")renderApplicationsTab(main);
   else if(tab==="apply")       renderApplyTab(main);
+  else if(tab==="mpesa")       renderMpesaTab(main);
 }
 window.spTab=function(t){showTab(t);};
 
@@ -619,7 +621,7 @@ function renderApplyTab(main){
     var avail=Math.max(0,flt(s.loan_limit)-flt(s.outstanding_loans));
     window._spAvail=avail;
 
-    var selfMax=flt(s.savings_balance)*flt(s.loan_multiplier);
+    var selfMax=flt(s.loan_limit);
     window._spGuarantors=[{
       member:          s.member.name,
       member_name:     s.member.full_name||(s.member.first_name||""),
@@ -658,7 +660,7 @@ function renderApplyTab(main){
               '<div class="sp-field-wrap">',
                 '<select id="la-type" class="has-suf" onchange="spApplyRate()" style="appearance:none;-webkit-appearance:none">',
                   '<option value="">Select a loan product…</option>',
-                  S.loan_types.map(function(lt){return'<option value="'+esc(lt.name)+'" data-rate="'+flt(lt.rate_of_interest)+'">'+esc(lt.name)+' — '+flt(lt.rate_of_interest)+'% p.a.</option>';}).join(""),
+                  S.loan_types.map(function(lt){return'<option value="'+esc(lt.name)+'" data-rate="'+flt(lt.rate_of_interest)+'">'+esc(lt.label||lt.name)+' — '+flt(lt.rate_of_interest)+'% p.a.</option>';}).join(""),
                 '</select>',
                 '<span class="sp-field-chevron">',I.chevdown,'</span>',
               '</div>',
@@ -742,7 +744,7 @@ function renderApplyTab(main){
         '<div style="padding:24px">',
 
           '<div class="sp-info-box" style="margin-bottom:20px">',I.info,
-            '<div>Every loan must be secured by SACCO Savings Account pledges. Your own account is pledged first. Add other members as guarantors — their savings × multiplier counts toward coverage. <strong>Total pledged must equal or exceed the loan amount.</strong></div>',
+            '<div>Every loan must be secured by savings pledges. Your own savings are pledged first. Add other members as guarantors; each confirms by email and their capacity is checked privately. <strong>Total pledged must equal or exceed the loan amount.</strong></div>',
           '</div>',
 
           /* Search */
@@ -809,7 +811,7 @@ function renderApplyTab(main){
           dd.innerHTML=members.map(function(m){
             var sa=m.savings_account||"";
             var sb=m.savings_balance||0;
-            return'<div class="sp-member-option" onclick="spAddGuarantor(\''+esc(m.name)+'\',\''+esc(m.full_name||m.name)+'\',\''+esc(m.member_no||m.name)+'\',\''+esc(sa)+'\','+sb+')"><div class="sp-member-opt-avatar">'+initials(m.full_name||m.name)+'</div><div><div class="sp-member-opt-name">'+esc(m.full_name||m.name)+'</div><div class="sp-member-opt-sub">'+esc(m.member_no||m.name)+' &middot; Savings: '+fmt_kes(sb)+'</div></div></div>';
+            return'<div class="sp-member-option" onclick="spAddGuarantor(\''+esc(m.name)+'\',\''+esc(m.full_name||m.name)+'\',\''+esc(m.member_no||m.name)+'\',\''+esc(sa)+'\','+sb+')"><div class="sp-member-opt-avatar">'+initials(m.full_name||m.name)+'</div><div><div class="sp-member-opt-name">'+esc(m.full_name||m.name)+'</div><div class="sp-member-opt-sub">'+esc(m.member_no||m.name)+' &middot; '+esc(m.branch||'')+'</div></div></div>';
           }).join("");
           dd.classList.add("open");
         }).catch(function(){});
@@ -823,7 +825,7 @@ function renderApplyTab(main){
       if(window._spGuarantors.find(function(g){return g.member===member;})){frappe.msgprint(__("Already added."));return;}
       if(!savings_account){frappe.msgprint(__("This member has no Savings Account."));return;}
       var mult=flt(S.summary.loan_multiplier)||3;
-      var maxPledge=flt(savings_balance)*mult;
+      var maxPledge=0; /* capacity is checked on the server; other members' balances are private */
       window._spGuarantors.push({member:member,member_name:name,member_no:member_no,savings_account:savings_account,savings_balance:flt(savings_balance),pledge_value:0,pledge_max:maxPledge,is_self:false,status:"Pending"});
       spRenderGuarantors();
     };
@@ -852,7 +854,7 @@ function spRenderGuarantors(){
   var pct=loanAmt>0?Math.min(100,(totalPledge/loanAmt*100)):0;
 
   list.innerHTML=gs.map(function(g,i){
-    var pledgeMax=flt(g.pledge_max)||(flt(g.savings_balance)*mult);
+    var pledgeMax=flt(g.pledge_max);
     var statusPill=g.is_self?'<span class="pill pill-blue">Self (You)</span>':
       g.status==="Confirmed"?'<span class="pill pill-green">\u2713 Confirmed</span>':
       g.status==="Pending"?'<span class="pill pill-amber">\u23F3 Pending email</span>':
@@ -870,9 +872,9 @@ function spRenderGuarantors(){
             '<div style="display:flex;align-items:center;gap:8px">',
               '<div class="sp-field-wrap" style="width:150px">',
                 '<span class="sp-field-pre">KES</span>',
-                '<input type="number" class="sp-g-shares-input has-pre" min="0" max="'+pledgeMax+'" step="1000" value="'+flt(g.pledge_value).toFixed(0)+'" onchange="spGuarantorPledgeChanged('+i+',this.value)" oninput="spGuarantorPledgeChanged('+i+',this.value)">',
+                '<input type="number" class="sp-g-shares-input has-pre" min="0"'+(pledgeMax?' max="'+pledgeMax+'"':'')+' step="1000" value="'+flt(g.pledge_value).toFixed(0)+'" onchange="spGuarantorPledgeChanged('+i+',this.value)" oninput="spGuarantorPledgeChanged('+i+',this.value)">',
               '</div>',
-              '<span style="font-size:10px;color:#aaa;white-space:nowrap">max: '+fmt_kes(pledgeMax)+'</span>',
+              '<span style="font-size:10px;color:#aaa;white-space:nowrap">'+(pledgeMax?'max: '+fmt_kes(pledgeMax):'checked on submit')+'</span>',
             '</div>',
           '</div>',
           statusPill,
@@ -934,7 +936,7 @@ window.spApplySubmit=function(){
     purpose:purpose,description:notes,guarantors:JSON.stringify(guarantorsData),
   }).then(function(res){
     alertEl.innerHTML=alertHTML("success","Application <strong>"+esc(res.application)+"</strong> submitted successfully. "+(res.emails_sent>0?"Notification email(s) sent to "+res.emails_sent+" guarantor"+(res.emails_sent>1?"s":"")+".":" Self-pledge recorded."));
-    var _selfMax=flt(S.summary.savings_balance)*flt(S.summary.loan_multiplier);
+    var _selfMax=flt(S.summary.loan_limit);
     window._spGuarantors=[{member:S.summary.member.name,member_name:S.summary.member.full_name||(S.summary.member.first_name||""),member_no:S.summary.member.member_no||S.summary.member.name,savings_account:S.summary.savings_account||"",savings_balance:flt(S.summary.savings_balance),pledge_value:_selfMax,pledge_max:_selfMax,is_self:true,status:"Self"}];
     ["la-type","la-amt","la-mo","la-purpose","la-notes"].forEach(function(id){var el=document.getElementById(id);if(el)el.value="";});
     document.getElementById("la-bar").style.width="0%";
@@ -948,6 +950,45 @@ window.spApplySubmit=function(){
     alertEl.innerHTML=alertHTML("error",msg);
     alertEl.scrollIntoView({behavior:"smooth"});
   }).finally(function(){btn.disabled=false;btn.innerHTML=I.plus+" Submit application";});
+};
+
+/* ── M-PESA ── */
+function renderMpesaTab(main){
+  var s=S.summary,m=s.mpesa||{};
+  var loans=s.active_loans||[];
+  var row=function(label,acc){return '<tr><td>'+label+'</td><td style="font-family:\'DM Mono\',monospace;font-weight:600">'+esc(acc)+'</td></tr>';};
+  main.innerHTML=[
+    '<div class="sp-section active">',
+    '<div class="sp-section-header"><div class="sp-section-title">Pay with M-Pesa</div><div class="sp-section-sub">Savings, loan repayments and shares</div></div>',
+    '<div class="sp-card"><div class="sp-card-header"><div class="sp-card-title">',I.info,' Paybill ',esc(m.paybill||""),'</div></div>',
+      '<table class="sp-table"><thead><tr><th>To pay</th><th>Account number</th></tr></thead><tbody>',
+      row("Savings deposit",m.account_savings),row("Loan repayment",m.account_loan),row("Share capital",m.account_shares),
+      '</tbody></table></div>',
+    m.stk_enabled?[
+    '<div class="sp-card"><div class="sp-card-header"><div class="sp-card-title">',I.plus,' Send a payment request to my phone</div></div>',
+      '<div id="mp-alert"></div>',
+      '<div class="sp-form-grid">',
+        '<div class="sp-form-group"><label>Pay towards</label><select id="mp-purpose">',
+          '<option value="Savings">Savings deposit</option>',
+          loans.map(function(l){return '<option value="Loan:'+esc(l.name)+'">Loan '+esc(l.name)+' (instalment '+fmt_kes(l.monthly_repayment_amount)+')</option>';}).join(""),
+          '<option value="Shares">Share capital</option>',
+        '</select></div>',
+        '<div class="sp-form-group"><label>Amount (KES)</label><input type="number" id="mp-amt" min="1" step="1"></div>',
+      '</div>',
+      '<div class="sp-form-group"><label>M-Pesa phone (blank = your registered number)</label><input type="tel" id="mp-phone" placeholder="07XX XXX XXX"></div>',
+      '<div class="sp-form-actions"><button class="sp-btn sp-btn-primary" id="mp-go" onclick="spStkPush()">Send request</button></div>',
+    '</div>'].join(""):"",
+    '</div>'].join("");
+}
+window.spStkPush=function(){
+  var purpose=document.getElementById("mp-purpose").value,amt=parseFloat(document.getElementById("mp-amt").value),phone=document.getElementById("mp-phone").value;
+  var al=document.getElementById("mp-alert");al.innerHTML="";
+  if(!amt||amt<1){al.innerHTML=alertHTML("error","Enter an amount.");return;}
+  var btn=document.getElementById("mp-go");btn.disabled=true;btn.textContent="Sending…";
+  frappe.call({method:"sacco_manager.mobile_money.api.member_stk_push",args:{purpose:purpose,amount:amt,phone:phone},
+    callback:function(r){if(r.message){al.innerHTML=alertHTML("success",esc(r.message.message));}},
+    error:function(){al.innerHTML=alertHTML("error","Could not start the payment. Try again or pay via Paybill.");},
+    always:function(){btn.disabled=false;btn.textContent="Send request";}});
 };
 
 /* ── HELPERS ── */

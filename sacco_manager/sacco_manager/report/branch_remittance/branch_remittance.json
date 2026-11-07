@@ -9,9 +9,8 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "letter_head": "NASE Letter Head",
  "letterhead": null,
- "modified": "2026-07-24 14:03:46.151217",
+ "modified": "2026-11-07 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "Branch Remittance",
@@ -22,13 +21,19 @@
  "report_type": "Script Report",
  "roles": [
   {
+   "role": "SACCO Administrator"
+  },
+  {
+   "role": "SACCO Manager"
+  },
+  {
+   "role": "SACCO Accountant"
+  },
+  {
+   "role": "SACCO Auditor"
+  },
+  {
    "role": "System Manager"
-  },
-  {
-   "role": "Accounts Manager"
-  },
-  {
-   "role": "SACCO Member"
   }
  ],
  "timeout": 0

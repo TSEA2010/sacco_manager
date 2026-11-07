@@ -1,0 +1,274 @@
+{
+ "actions": [],
+ "creation": "2026-11-07 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "module": "Sacco Manager",
+ "owner": "Administrator",
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 1
+  },
+  {
+   "role": "SACCO Administrator",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 1
+  },
+  {
+   "role": "SACCO Manager",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  },
+  {
+   "role": "SACCO Accountant",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  },
+  {
+   "role": "SACCO Auditor",
+   "permlevel": 0,
+   "print": 1,
+   "email": 0,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  }
+ ],
+ "name": "SACCO M-Pesa Account",
+ "autoname": "field:business_shortcode",
+ "naming_rule": "By fieldname",
+ "title_field": "title",
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "environment",
+   "fieldtype": "Select",
+   "label": "Environment",
+   "options": "Sandbox\nProduction",
+   "default": "Sandbox",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "shortcode_type",
+   "fieldtype": "Select",
+   "label": "Shortcode Type",
+   "options": "Paybill\nTill (Buy Goods)",
+   "default": "Paybill",
+   "reqd": 1
+  },
+  {
+   "fieldname": "business_shortcode",
+   "fieldtype": "Data",
+   "label": "Business Shortcode (Paybill / Store No)",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "till_number",
+   "fieldtype": "Data",
+   "label": "Till Number",
+   "depends_on": "eval:doc.shortcode_type=='Till (Buy Goods)'"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "gl_account",
+   "fieldtype": "Link",
+   "label": "M-Pesa Clearing Account (GL)",
+   "options": "Account",
+   "reqd": 1,
+   "description": "Bank-type ledger that represents money sitting in this M-Pesa shortcode."
+  },
+  {
+   "fieldname": "charges_account",
+   "fieldtype": "Link",
+   "label": "M-Pesa Charges (Expense)",
+   "options": "Account"
+  },
+  {
+   "fieldname": "default_c2b_target",
+   "fieldtype": "Select",
+   "label": "Unreferenced Payments Go To",
+   "options": "Hold as Unallocated\nSavings",
+   "default": "Hold as Unallocated"
+  },
+  {
+   "fieldname": "daraja_section",
+   "fieldtype": "Section Break",
+   "label": "Daraja API credentials"
+  },
+  {
+   "fieldname": "consumer_key",
+   "fieldtype": "Password",
+   "label": "Consumer Key",
+   "reqd": 1
+  },
+  {
+   "fieldname": "consumer_secret",
+   "fieldtype": "Password",
+   "label": "Consumer Secret",
+   "reqd": 1
+  },
+  {
+   "fieldname": "passkey",
+   "fieldtype": "Password",
+   "label": "Lipa na M-Pesa Passkey (STK)"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "initiator_name",
+   "fieldtype": "Data",
+   "label": "B2C Initiator Name"
+  },
+  {
+   "fieldname": "security_credential",
+   "fieldtype": "Password",
+   "label": "B2C Security Credential (encrypted)"
+  },
+  {
+   "fieldname": "b2c_shortcode",
+   "fieldtype": "Data",
+   "label": "B2C Shortcode (if different)"
+  },
+  {
+   "fieldname": "callback_section",
+   "fieldtype": "Section Break",
+   "label": "Callbacks"
+  },
+  {
+   "fieldname": "callback_token",
+   "fieldtype": "Password",
+   "label": "Callback Token",
+   "description": "Random secret appended to every callback URL. Generated automatically."
+  },
+  {
+   "fieldname": "allowed_callback_ips",
+   "fieldtype": "Small Text",
+   "label": "Allowed Callback IPs",
+   "description": "One per line. Leave empty to accept any IP (token is still required)."
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "urls_registered_on",
+   "fieldtype": "Datetime",
+   "label": "C2B URLs Registered On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "callback_base_url",
+   "fieldtype": "Data",
+   "label": "Public Site URL",
+   "description": "e.g. https://tridentsacco.m.frappe.cloud"
+  }
+ ],
+ "field_order": [
+  "title",
+  "enabled",
+  "environment",
+  "shortcode_type",
+  "business_shortcode",
+  "till_number",
+  "cb1",
+  "gl_account",
+  "charges_account",
+  "default_c2b_target",
+  "daraja_section",
+  "consumer_key",
+  "consumer_secret",
+  "passkey",
+  "cb2",
+  "initiator_name",
+  "security_credential",
+  "b2c_shortcode",
+  "callback_section",
+  "callback_token",
+  "allowed_callback_ips",
+  "cb3",
+  "urls_registered_on",
+  "callback_base_url"
+ ],
+ "modified": "2026-11-07 18:00:00.000000",
+ "modified_by": "Administrator"
+}

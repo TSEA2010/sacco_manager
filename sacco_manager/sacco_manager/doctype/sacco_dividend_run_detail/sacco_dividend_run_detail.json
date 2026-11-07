@@ -1,0 +1,77 @@
+{
+ "actions": [],
+ "creation": "2026-11-07 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "module": "Sacco Manager",
+ "owner": "Administrator",
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0,
+ "permissions": [],
+ "name": "SACCO Dividend Run Detail",
+ "istable": 1,
+ "editable_grid": 1,
+ "fields": [
+  {
+   "fieldname": "member",
+   "fieldtype": "Link",
+   "label": "Member",
+   "options": "SACCO Member",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "eligible_share_capital",
+   "fieldtype": "Currency",
+   "label": "Eligible Share Capital",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "gross_dividend",
+   "fieldtype": "Currency",
+   "label": "Gross Dividend",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "wht_amount",
+   "fieldtype": "Currency",
+   "label": "WHT",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "net_dividend",
+   "fieldtype": "Currency",
+   "label": "Net",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "savings_account",
+   "fieldtype": "Link",
+   "label": "Credit to Savings Account",
+   "options": "SACCO Savings Account"
+  },
+  {
+   "fieldname": "savings_transaction",
+   "fieldtype": "Link",
+   "label": "Savings Transaction",
+   "options": "SACCO Savings Transaction",
+   "read_only": 1
+  }
+ ],
+ "field_order": [
+  "member",
+  "eligible_share_capital",
+  "gross_dividend",
+  "wht_amount",
+  "net_dividend",
+  "savings_account",
+  "savings_transaction"
+ ],
+ "modified": "2026-11-07 18:00:00.000000",
+ "modified_by": "Administrator"
+}
