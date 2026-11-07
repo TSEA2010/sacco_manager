@@ -30,7 +30,7 @@ GUARDS = [
 DEFAULT_ACCOUNTS = {
 	"interest_expense_account": ("Interest on Members' Deposits", "Expense", None),
 	"withholding_tax_account": ("Withholding Tax Payable", "Liability", "Tax"),
-	"branch_receivable_account": ("Employer Remittance Clearing", "Asset", "Receivable"),
+	"branch_receivable_account": ("Employer Remittance Clearing", "Asset", None),
 	"loan_topup_clearing_account": ("Loan Top-Up Clearing", "Asset", None),
 	"share_capital_account": ("Members' Share Capital", "Equity", None),
 	"dividend_appropriation_account": ("Dividend Appropriation", "Equity", None),

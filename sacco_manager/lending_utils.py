@@ -31,13 +31,14 @@ def get_active_loans(member):
 	)
 
 
-def loan_outstanding(loan, posting_date=None):
-	"""Payable amount (principal + interest + penalty) per Lending, falling back to principal."""
+def loan_outstanding(loan, posting_date=None, payment_type=None):
+	"""Payable amount (principal + interest + penalty) per Lending, falling back to principal.
+	payment_type="Loan Closure" returns the full payoff (includes unaccrued interest)."""
 	posting_date = getdate(posting_date or today())
 	try:
 		from lending.loan_management.doctype.loan_repayment.loan_repayment import calculate_amounts
 
-		amounts = calculate_amounts(loan, posting_date)
+		amounts = calculate_amounts(loan, posting_date, payment_type=payment_type)
 		payable = flt(amounts.get("payable_amount")) or (
 			flt(amounts.get("pending_principal_amount")) + flt(amounts.get("interest_amount")) + flt(amounts.get("penalty_amount"))
 		)
@@ -55,7 +56,7 @@ def loan_outstanding(loan, posting_date=None):
 
 
 def create_loan_repayment(loan, amount, posting_date, payment_account, reference_number=None, remarks=None,
-		mode_of_payment=None, submit=True):
+		mode_of_payment=None, submit=True, repayment_type="Normal Repayment"):
 	"""Normal repayment against a disbursed loan, paid into `payment_account`."""
 	if flt(amount) <= 0:
 		frappe.throw(_("Repayment amount must be greater than zero."))
@@ -71,7 +72,28 @@ def create_loan_repayment(loan, amount, posting_date, payment_account, reference
 	if rp.meta.has_field("value_date"):
 		rp.value_date = rp.posting_date
 	rp.amount_paid = flt(amount)
-	rp.repayment_type = "Normal Repayment"
+	rp.repayment_type = repayment_type
+	if repayment_type == "Loan Closure":
+		# use Lending's own payoff (it accrues interest up to the value date at save time)
+		from lending.loan_management.doctype.loan_repayment.loan_repayment import calculate_amounts
+
+		payoff = flt(calculate_amounts(loan, rp.value_date or rp.posting_date, payment_type="Loan Closure",
+			for_update=True).get("payable_amount"))
+		# Lending compares unrounded floats (e.g. 487436.57000000007), so round the payoff UP to the cent
+		cents = round(payoff, 2)
+		if cents < payoff:
+			limit, write_off = frappe.db.get_value("Loan Product", frappe.db.get_value("Loan", loan, "loan_product"),
+				["excess_amount_acceptance_limit", "write_off_amount"])
+			if flt(write_off) >= 0.01:
+				pass  # Lending accepts payable - auto write-off, so the exact cents close the loan
+			elif flt(limit) >= 0.01:
+				cents = round(cents + 0.01, 2)
+			else:
+				frappe.throw(_(
+					"Set a small 'Excess Amount Acceptance Limit' (e.g. 10) or 'Auto Write Off Amount' on Loan Product {0} "
+					"so Lending can close loans paid off to the cent."
+				).format(frappe.db.get_value("Loan", loan, "loan_product")), title=_("Loan Product setting needed"))
+		rp.amount_paid = max(flt(amount), cents)
 	rp.reference_number = (reference_number or "")[:140] or None
 	rp.reference_date = rp.posting_date
 	if rp.meta.has_field("manual_remarks"):

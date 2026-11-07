@@ -27,7 +27,7 @@ from sacco_manager.sacco_manager.doctype.sacco_savings_transaction.sacco_savings
 	create_savings_transaction,
 )
 from sacco_manager.sacco_manager.doctype.sacco_share_ledger.sacco_share_ledger import create_share_entry
-from sacco_manager.utils import enforce_maker_checker, get_settings, require_setting
+from sacco_manager.utils import describe_error, enforce_maker_checker, get_settings, require_setting
 
 
 class SACCOBranchRemittance(Document):
@@ -149,7 +149,7 @@ class SACCOBranchRemittance(Document):
 					r.db_set("share_entry", sh.name)
 				r.db_set("status", "Posted")
 			except Exception as e:
-				frappe.throw(_("Row {0} ({1}): {2}").format(r.idx, r.member_name or r.member, e))
+				frappe.throw(_("Row {0} ({1}): {2}").format(r.idx, r.member_name or r.member, describe_error(e)))
 
 		if self.is_late and flt(self.penalty_amount) > 0:
 			income = require_setting("penalty_income_account", "Penalty Income")

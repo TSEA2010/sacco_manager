@@ -24,8 +24,11 @@ def _payload():
 
 
 def _account():
-	sc = frappe.form_dict.get("sc")
-	token = frappe.form_dict.get("t") or ""
+	# Safaricom posts JSON; Frappe then builds form_dict from the body only, so read the
+	# shortcode and token from the query string explicitly.
+	args = frappe.request.args if getattr(frappe, "request", None) else {}
+	sc = args.get("sc") or frappe.form_dict.get("sc")
+	token = args.get("t") or frappe.form_dict.get("t") or ""
 	if not sc or not frappe.db.exists("SACCO M-Pesa Account", sc):
 		frappe.throw("Unknown shortcode", frappe.PermissionError)
 	acc = frappe.get_doc("SACCO M-Pesa Account", sc)

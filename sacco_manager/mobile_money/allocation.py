@@ -25,7 +25,7 @@ from sacco_manager.sacco_manager.doctype.sacco_savings_transaction.sacco_savings
 	create_savings_transaction,
 )
 from sacco_manager.sacco_manager.doctype.sacco_share_ledger.sacco_share_ledger import create_share_entry
-from sacco_manager.utils import normalize_ke_phone
+from sacco_manager.utils import describe_error, normalize_ke_phone
 
 SUFFIX_TARGET = {"L": "Loan Repayment", "S": "Shares", "R": "Registration Fee"}
 
@@ -116,6 +116,7 @@ def allocate(txn_name, target=None, member=None, savings_account=None, loan=None
 	notes = []
 	first_doc = None
 
+	frappe.db.savepoint("sacco_mpesa_alloc")
 	try:
 		if target == "Loan Repayment":
 			if not loan:
@@ -160,10 +161,10 @@ def allocate(txn_name, target=None, member=None, savings_account=None, loan=None
 				remarks=f"M-Pesa from {txn.payer_name or txn.msisdn or ''}".strip())
 			first_doc = first_doc or ("SACCO Savings Transaction", st.name)
 	except Exception as e:
-		frappe.db.rollback()
+		frappe.db.rollback(save_point="sacco_mpesa_alloc")
 		frappe.log_error(title=f"M-Pesa allocation failed {txn_name}", message=frappe.get_traceback())
 		frappe.db.set_value("SACCO M-Pesa Transaction", txn_name, {
-			"status": "Unallocated", "member": member, "allocation_note": _("Auto-allocation failed: {0}").format(str(e)[:300])})
+			"status": "Unallocated", "member": member, "allocation_note": _("Auto-allocation failed: {0}").format(describe_error(e))})
 		return "Unallocated"
 
 	txn.db_set({
