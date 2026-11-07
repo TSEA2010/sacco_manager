@@ -61,7 +61,9 @@
   "group_company_lending_section",
   "group_company_customer_group",
   "column_break_gcl",
-  "group_company_exposure_limit"
+  "group_company_exposure_limit",
+  "housekeeping_section",
+  "dpd_log_keep_days"
  ],
  "fields": [
   {
@@ -394,6 +396,20 @@
    "fieldtype": "Percent",
    "label": "Maximum Lent to Group Companies (% of Members' Savings)",
    "description": "0 = no cap. Approval of a group-company loan is refused if total group-company loans would exceed this share of members' savings."
+  },
+  {
+   "fieldname": "housekeeping_section",
+   "fieldtype": "Section Break",
+   "label": "Database Housekeeping",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "dpd_log_keep_days",
+   "fieldtype": "Int",
+   "default": "90",
+   "non_negative": 1,
+   "label": "Keep Daily Arrears Log For (days)",
+   "description": "Lending writes a days-past-due row for every loan every day. Each week rows older than this are removed, except month-end rows and each loan's latest row. 0 = keep everything."
   }
  ],
  "grid_page_length": 50,

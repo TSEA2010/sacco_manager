@@ -40,7 +40,7 @@ doc_events = {
 scheduler_events = {
 	"hourly": ["sacco_manager.mobile_money.allocation.retry_unallocated"],
 	"daily": ["sacco_manager.tasks.mark_dormant_accounts"],
-	"weekly": ["sacco_manager.notifications.weekly_arrears_reminders"],
+	"weekly": ["sacco_manager.notifications.weekly_arrears_reminders", "sacco_manager.housekeeping.weekly"],
 	"cron": {
 		# 07:00 on the 5th: previous month's management pack to the recipients in SACCO Settings
 		"0 7 5 * *": ["sacco_manager.management_pack.monthly_job"],

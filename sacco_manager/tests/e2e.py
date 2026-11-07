@@ -604,6 +604,17 @@ def t_analytics():
 	return f"{len(b['now']['ratios'])} ratios (liquidity {r.get('liquidity')}%, PAR30 {r.get('par30')}%), AGM surplus {g['surplus']:,.0f}"
 
 
+@check("housekeeping: arrears-log pruning preview and version tracking off")
+def t_housekeeping():
+	from sacco_manager import housekeeping
+
+	pv = housekeeping.dpd_prune_preview()
+	assert pv["enabled"] and pv["removable"] <= pv["rows"], pv
+	assert not frappe.get_meta("Loan Interest Accrual").track_changes, "accrual versions still tracked"
+	r = housekeeping.storage_report()
+	return f"{pv['removable']:,} of {pv['rows']:,} arrears-log rows removable; {r['cancelled_gl_rows']:,} cancelled GL rows"
+
+
 @check("reports run")
 def t_reports():
 	from frappe.desk.query_report import run
@@ -636,7 +647,7 @@ def run():
 	try:
 		for t in [t_setup, t_settings_guard, t_member, t_deposit, t_withdrawal, t_auditor, t_portal, t_token,
 				t_approval, t_mpesa, t_interest, t_dividend, t_remittance, t_topup, t_system_manager, t_reporting, t_misc_features,
-				t_board_approval, t_sms, t_audit_fixes, t_print_formats, t_group_company_loans, t_analytics, t_reports]:
+				t_board_approval, t_sms, t_audit_fixes, t_print_formats, t_group_company_loans, t_analytics, t_housekeeping, t_reports]:
 			t()
 	finally:
 		frappe.db.rollback()

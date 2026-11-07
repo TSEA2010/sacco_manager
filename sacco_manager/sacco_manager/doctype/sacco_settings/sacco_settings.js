@@ -49,6 +49,22 @@ frappe.ui.form.on("SACCO Settings", {
 			} });
 			d.show();
 		}, __("Reports"));
+		frm.add_custom_button(__("Database size"), () =>
+			frappe.call("sacco_manager.housekeeping.storage_report").then((r) => {
+				const d = r.message, dp = d.dpd || {};
+				const rows = d.tables.map((x) => `<tr><td>${frappe.utils.escape_html(x.table)}</td><td class="text-right">${format_number(x.rows, null, 0)}</td>
+					<td class="text-right">${x.mb}</td></tr>`).join("");
+				const note = dp.enabled ? __("Daily arrears log: {0} rows, {1} can be removed (older than {2} days, not month-end).",
+					[format_number(dp.rows, null, 0), format_number(dp.removable, null, 0), dp.keep_days]) : __("Arrears log pruning is off.");
+				const dlg = frappe.msgprint({ title: __("Database size"), wide: true, message: `<p>${note}<br>${__("Cancelled GL rows")}:
+					${format_number(d.cancelled_gl_rows, null, 0)} ${__("of")} ${format_number(d.gl_rows, null, 0)}</p>
+					<table class="table table-sm"><tr><th>${__("Table")}</th><th class="text-right">${__("Rows")}</th><th class="text-right">MB</th></tr>${rows}</table>`,
+					primary_action: dp.enabled && dp.removable ? { label: __("Prune arrears log now"), action: () =>
+						frappe.call("sacco_manager.housekeeping.run_now").then(() => {
+							dlg.hide();
+							frappe.show_alert({ message: __("Pruning started in the background"), indicator: "green" });
+						}) } : null });
+			}), __("Tools"));
 		frm.add_custom_button(__("Sync members to customers"), () =>
 			frappe.call({ method: "sacco_manager.sacco_manager.doctype.sacco_member.sacco_member.bulk_sync_members_to_customers", freeze: true })
 				.then((r) => frappe.msgprint(__("Synced {0} of {1}.", [r.message.success, r.message.total])))

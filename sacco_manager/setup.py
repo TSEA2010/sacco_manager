@@ -125,6 +125,9 @@ def after_migrate():
 	ensure_report_roles()
 	create_custom_fields(CUSTOM_FIELDS, ignore_validate=True, update=True)
 	link_customers_to_members()
+	from sacco_manager.housekeeping import disable_version_tracking
+
+	disable_version_tracking()
 	frappe.clear_cache()
 
 

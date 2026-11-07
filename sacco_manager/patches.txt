@@ -11,3 +11,4 @@ sacco_manager.patches.v1_0.disable_conflicting_client_scripts
 sacco_manager.patches.v1_1.set_settings_defaults
 sacco_manager.patches.v1_1.customer_default_print_format
 sacco_manager.patches.v1_1.group_company_lending
+sacco_manager.patches.v1_1.set_settings_defaults #2026-11-07 housekeeping and lending fields
