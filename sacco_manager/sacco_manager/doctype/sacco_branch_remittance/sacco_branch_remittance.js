@@ -20,7 +20,7 @@ frappe.ui.form.on("SACCO Branch Remittance", {
         // Status indicator
         const colors = {
             "Draft": "grey", "Pending": "orange",
-            "Paid": "green", "Overdue": "red"
+            "Paid": "green", "Overdue": "red", "Cancelled": "grey"
         };
         if (frm.doc.status) {
             frm.dashboard.add_indicator(
@@ -43,14 +43,11 @@ frappe.ui.form.on("SACCO Branch Remittance", {
         }
     },
 
-    received_date(frm) {
-        // Trigger penalty recalculation on save
-        frm.save();
-    },
-
-    received_amount(frm) {
-        if (frm.doc.received_amount >= frm.doc.expected_amount) {
-            frm.set_value("status", "Paid");
-        }
+    setup(frm) {
+        frm.set_query("payment_account", () => ({ filters: { account_type: ["in", ["Bank", "Cash"]], is_group: 0 } }));
+        frm.set_query("loan", "members", (doc, cdt, cdn) => {
+            const row = locals[cdt][cdn];
+            return { query: "sacco_manager.lending_utils.loan_query", filters: { member: row.member } };
+        });
     }
 });

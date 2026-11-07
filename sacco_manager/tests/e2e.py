@@ -515,3 +515,27 @@ def show_http_txns():
 			fields=["name", "status", "member", "allocation_note"]):
 		print(t)
 		print(frappe.get_all("SACCO Savings Account", filters={"member": t.member}, fields=["name", "status"]))
+
+
+def data_snapshot():
+	"""Post-migration data facts for the report (read-only)."""
+	m = frappe.get_all("SACCO Member", fields=["phone", "id_number", "email_id", "branch"])
+	from sacco_manager.utils import normalize_ke_phone
+
+	print("members", len(m), "valid KE mobile", sum(1 for r in m if normalize_ke_phone(r.phone) == r.phone),
+		"no email", sum(1 for r in m if not r.email_id), "no branch", sum(1 for r in m if not r.branch))
+	print("settings", {k: frappe.db.get_single_value("SACCO Settings", k) for k in (
+		"company", "branch_receivable_account", "enforce_maker_checker", "interest_expense_account", "share_capital_account")})
+	print("custom perms on SACCO doctypes", frappe.db.count("Custom DocPerm", {"parent": ["like", "SACCO%"]}))
+	print("withdrawals", frappe.get_all("Withdrawal Request", fields=["name", "status", "docstatus"]))
+	print("bogus demands still submitted", frappe.db.count("Loan Demand", {"demand_type": "Additional Interest", "docstatus": 1}))
+	print("delinquency job", frappe.db.exists("Scheduled Job Type", {"method": ["like", "%delinquency%"]}))
+
+
+def phone_sample():
+	from collections import Counter
+
+	from sacco_manager.utils import normalize_ke_phone
+
+	bad = [r.phone for r in frappe.get_all("SACCO Member", fields=["phone"]) if normalize_ke_phone(r.phone) != r.phone]
+	print(len(bad), Counter(len(str(b or "")) for b in bad), [str(b)[:3] + "***" for b in bad[:12]])
