@@ -1,0 +1,37 @@
+{
+ "doctype": "Page",
+ "name": "sacco-board",
+ "page_name": "sacco-board",
+ "title": "SACCO Board",
+ "module": "Sacco Manager",
+ "standard": "Yes",
+ "icon": "",
+ "system_page": 0,
+ "content": null,
+ "script": null,
+ "style": null,
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "role": "System Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "SACCO Administrator"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "SACCO Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "SACCO Auditor"
+  }
+ ],
+ "creation": "2026-11-07 12:00:00.000000",
+ "modified": "2026-11-07 12:00:00.000000",
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "docstatus": 0,
+ "idx": 0
+}

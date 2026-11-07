@@ -11,7 +11,7 @@ import pathlib
 import traceback
 
 import frappe
-from frappe.utils import add_days, flt, today
+from frappe.utils import getdate, add_days, flt, today
 
 RESULTS = []
 CTX = frappe._dict()
@@ -549,6 +549,61 @@ def t_print_formats():
 	return f"member file {len(html)} chars, customer file {len(html2)} chars"
 
 
+@check("group-company lending: setup, board approval and exposure cap")
+def t_group_company_loans():
+	co = CTX.company
+	prod = frappe.db.get_value("Loan Product", "GRPCO01", ["loan_account", "interest_income_account", "suspense_interest_income"], as_dict=True)
+	assert prod and prod.loan_account.startswith("1620") and prod.interest_income_account.startswith("4130"), prod
+	recv = frappe.db.get_value("Company", co, "default_receivable_account")
+	assert recv not in frappe.get_all("Loan Product", pluck="loan_account"), f"company receivable is a loan account: {recv}"
+	assert frappe.db.get_value("Customer", "Trident Plumbers Limited", "customer_group") == "Group Companies"
+	member_prod = frappe.get_all("Loan Product", filters={"name": ["!=", "GRPCO01"]}, fields=["suspense_interest_income",
+		"interest_income_account"], limit=1)[0]
+	assert member_prod.suspense_interest_income != member_prod.interest_income_account, "NPA interest still goes to income"
+	app = frappe.get_doc({"doctype": "Loan Application", "applicant_type": "Customer", "applicant": "Trident Plumbers Limited",
+		"company": co, "loan_product": "GRPCO01", "loan_amount": 500000, "is_term_loan": 1,
+		"repayment_method": "Repay Over Number of Periods", "repayment_periods": 12, "posting_date": today()})
+	app.flags.ignore_mandatory = True
+	app.insert()
+	frappe.set_user(CTX.manager)
+	app = frappe.get_doc("Loan Application", app.name)
+	app.status = "Approved"
+	msg = expect_error(app.save, contains="group company")
+	frappe.set_user("Administrator")
+	ba = frappe.get_doc({"doctype": "SACCO Board Approval", "approval_type": "Loan above limit", "subject": "Group company loan",
+		"decision": "Approved", "meeting_date": today(), "minute_ref": "MIN/TEST/GC", "reference_doctype": "Loan Application",
+		"reference_name": app.name}).insert()
+	ba.submit()
+	frappe.db.set_single_value("SACCO Settings", "group_company_exposure_limit", 0.001)
+	frappe.set_user(CTX.manager)
+	app = frappe.get_doc("Loan Application", app.name)
+	app.status = "Approved"
+	cap = expect_error(app.save, contains="limit")
+	frappe.set_user("Administrator")
+	frappe.db.set_single_value("SACCO Settings", "group_company_exposure_limit", 0)
+	frappe.set_user(CTX.manager)
+	app = frappe.get_doc("Loan Application", app.name)
+	app.status = "Approved"
+	app.save()
+	frappe.set_user("Administrator")
+	return f"blocked ('{msg[:40]}'), capped ('{cap[:40]}'), approved with {ba.name}"
+
+
+@check("board dashboard and AGM data build")
+def t_analytics():
+	from sacco_manager import analytics
+
+	b = analytics.get_board()
+	assert b["now"]["ratios"] and len(b["trends"]["labels"]) == 24, "board data incomplete"
+	g = analytics.get_agm(year=getdate(today()).year, savings_rate=5, dividend_rate=10)
+	assert "appropriation" in g and g["balance_sheet"]["Asset"] is not None
+	frappe.set_user(CTX.teller)
+	expect_error(analytics.get_board, contains="administrators")
+	frappe.set_user("Administrator")
+	r = {x["key"]: x["value"] for x in b["now"]["ratios"]}
+	return f"{len(b['now']['ratios'])} ratios (liquidity {r.get('liquidity')}%, PAR30 {r.get('par30')}%), AGM surplus {g['surplus']:,.0f}"
+
+
 @check("reports run")
 def t_reports():
 	from frappe.desk.query_report import run
@@ -581,7 +636,7 @@ def run():
 	try:
 		for t in [t_setup, t_settings_guard, t_member, t_deposit, t_withdrawal, t_auditor, t_portal, t_token,
 				t_approval, t_mpesa, t_interest, t_dividend, t_remittance, t_topup, t_system_manager, t_reporting, t_misc_features,
-				t_board_approval, t_sms, t_audit_fixes, t_print_formats, t_reports]:
+				t_board_approval, t_sms, t_audit_fixes, t_print_formats, t_group_company_loans, t_analytics, t_reports]:
 			t()
 	finally:
 		frappe.db.rollback()

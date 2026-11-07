@@ -54,9 +54,14 @@
   "management_pack_recipients",
   "column_break_reporting",
   "arrears_days_threshold",
+  "books_complete_from",
   "governance_section",
   "board_approval_loan_limit",
-  "board_approval_for_write_off"
+  "board_approval_for_write_off",
+  "group_company_lending_section",
+  "group_company_customer_group",
+  "column_break_gcl",
+  "group_company_exposure_limit"
  ],
  "fields": [
   {
@@ -345,6 +350,12 @@
    "default": "30"
   },
   {
+   "fieldname": "books_complete_from",
+   "fieldtype": "Date",
+   "label": "Books Complete From",
+   "description": "First date the ledger holds the full books (opening balances posted). The board dashboard and AGM pages only compare with earlier periods from this date; leave blank until the loan book is rebuilt."
+  },
+  {
    "fieldname": "governance_section",
    "fieldtype": "Section Break",
    "label": "Governance"
@@ -360,6 +371,29 @@
    "fieldtype": "Check",
    "label": "Board Approval Needed for Write-offs",
    "default": "1"
+  },
+  {
+   "fieldname": "group_company_lending_section",
+   "fieldtype": "Section Break",
+   "label": "Lending to Group Companies"
+  },
+  {
+   "fieldname": "group_company_customer_group",
+   "fieldtype": "Link",
+   "options": "Customer Group",
+   "default": "Group Companies",
+   "label": "Group Companies Customer Group",
+   "description": "Customers in this group are the sponsor companies. Their loans always need a SACCO Board Approval."
+  },
+  {
+   "fieldname": "column_break_gcl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "group_company_exposure_limit",
+   "fieldtype": "Percent",
+   "label": "Maximum Lent to Group Companies (% of Members' Savings)",
+   "description": "0 = no cap. Approval of a group-company loan is refused if total group-company loans would exceed this share of members' savings."
   }
  ],
  "grid_page_length": 50,

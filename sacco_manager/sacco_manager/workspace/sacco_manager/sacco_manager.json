@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\": \"hdr\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">Trident SACCO</span>\", \"col\": 12}}, {\"id\": \"sc0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Unallocated M-Pesa\", \"col\": 3}}, {\"id\": \"sc1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Withdrawals to approve\", \"col\": 3}}, {\"id\": \"sc2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Loan applications\", \"col\": 3}}, {\"id\": \"sc3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"New member\", \"col\": 3}}, {\"id\": \"nc0\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total Member Savings\", \"col\": 4}}, {\"id\": \"nc1\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Loan Book\", \"col\": 4}}, {\"id\": \"nc2\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"PAR 30\", \"col\": 4}}, {\"id\": \"nc3\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Unallocated M-Pesa\", \"col\": 6}}, {\"id\": \"nc4\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Waiting for Approval\", \"col\": 6}}, {\"id\": \"sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"c0\", \"type\": \"card\", \"data\": {\"card_name\": \"Members\", \"col\": 4}}, {\"id\": \"c1\", \"type\": \"card\", \"data\": {\"card_name\": \"Savings\", \"col\": 4}}, {\"id\": \"c2\", \"type\": \"card\", \"data\": {\"card_name\": \"Loans\", \"col\": 4}}, {\"id\": \"c3\", \"type\": \"card\", \"data\": {\"card_name\": \"M-Pesa\", \"col\": 4}}, {\"id\": \"c4\", \"type\": \"card\", \"data\": {\"card_name\": \"Period-end\", \"col\": 4}}, {\"id\": \"c5\", \"type\": \"card\", \"data\": {\"card_name\": \"Reports\", \"col\": 4}}, {\"id\": \"c6\", \"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 4}}]",
+ "content": "[{\"id\": \"hdr\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">Trident SACCO</span>\", \"col\": 12}}, {\"id\": \"sc0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Unallocated M-Pesa\", \"col\": 3}}, {\"id\": \"sc1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Withdrawals to approve\", \"col\": 3}}, {\"id\": \"sc2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Loan applications\", \"col\": 3}}, {\"id\": \"sc3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"New member\", \"col\": 3}}, {\"id\": \"scb\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"SACCO Board (live)\", \"col\": 3}}, {\"id\": \"sca\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"AGM presentation\", \"col\": 3}}, {\"id\": \"nc0\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total Member Savings\", \"col\": 4}}, {\"id\": \"nc1\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Loan Book\", \"col\": 4}}, {\"id\": \"nc2\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"PAR 30\", \"col\": 4}}, {\"id\": \"nc3\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Unallocated M-Pesa\", \"col\": 6}}, {\"id\": \"nc4\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Waiting for Approval\", \"col\": 6}}, {\"id\": \"nr0\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Core Capital to Assets\", \"col\": 3}}, {\"id\": \"nr1\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Liquidity Ratio\", \"col\": 3}}, {\"id\": \"nr2\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Loans to Deposits\", \"col\": 3}}, {\"id\": \"nr3\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Cost to Income\", \"col\": 3}}, {\"id\": \"sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"c0\", \"type\": \"card\", \"data\": {\"card_name\": \"Members\", \"col\": 4}}, {\"id\": \"c1\", \"type\": \"card\", \"data\": {\"card_name\": \"Savings\", \"col\": 4}}, {\"id\": \"c2\", \"type\": \"card\", \"data\": {\"card_name\": \"Loans\", \"col\": 4}}, {\"id\": \"c3\", \"type\": \"card\", \"data\": {\"card_name\": \"M-Pesa\", \"col\": 4}}, {\"id\": \"c4\", \"type\": \"card\", \"data\": {\"card_name\": \"Period-end\", \"col\": 4}}, {\"id\": \"c5\", \"type\": \"card\", \"data\": {\"card_name\": \"Reports\", \"col\": 4}}, {\"id\": \"c6\", \"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 4}}]",
  "creation": "2026-04-22 00:03:37.428373",
  "custom_blocks": [],
  "docstatus": 0,
@@ -523,6 +523,22 @@
   {
    "label": "Waiting for Approval",
    "number_card_name": "Waiting for Approval"
+  },
+  {
+   "label": "Core Capital to Assets",
+   "number_card_name": "Core Capital to Assets"
+  },
+  {
+   "label": "Liquidity Ratio",
+   "number_card_name": "Liquidity Ratio"
+  },
+  {
+   "label": "Loans to Deposits",
+   "number_card_name": "Loans to Deposits"
+  },
+  {
+   "label": "Cost to Income",
+   "number_card_name": "Cost to Income"
   }
  ],
  "owner": "Administrator",
@@ -583,6 +599,18 @@
    "link_to": "SACCO Member",
    "type": "DocType",
    "doc_view": "New"
+  },
+  {
+   "label": "SACCO Board (live)",
+   "link_to": "sacco-board",
+   "type": "Page",
+   "color": "Green"
+  },
+  {
+   "label": "AGM presentation",
+   "link_to": "sacco-agm",
+   "type": "Page",
+   "color": "Blue"
   }
  ],
  "title": "Trident SACCO"

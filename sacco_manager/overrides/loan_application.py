@@ -27,6 +27,9 @@ def validate(doc, method=None):
 		check_loan_application,
 	)
 
+	from sacco_manager.company_lending import check_application as check_group_company
+
+	check_group_company(doc)  # related-party rules first: clearer message
 	check_loan_application(doc)
 
 	rows = frappe.get_all(
