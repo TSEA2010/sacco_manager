@@ -1,4 +1,4 @@
-// Copyright (c) 2026, TSEA and contributors
+// Copyright (c) 2026, Trident SACCO and contributors
 // For license information, please see license.txt
 
 // frappe.ui.form.on("SACCO Settings", {

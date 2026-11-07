@@ -67,7 +67,7 @@
    "options": "Account"
   },
   {
-   "description": "example TSEA, TS, WHK",
+   "description": "Prefix for member numbers, e.g. TSCCSL",
    "fieldname": "naming_code",
    "fieldtype": "Data",
    "label": "Naming Code"

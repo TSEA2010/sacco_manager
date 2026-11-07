@@ -1,4 +1,4 @@
-# Copyright (c) 2026, TSEA and contributors
+# Copyright (c) 2026, Trident SACCO and contributors
 # For license information, please see license.txt
 # sacco_manager/sacco_manager/overrides/loan_application.py
 """
