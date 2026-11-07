@@ -52,8 +52,10 @@
   },
   {
    "fieldname": "member_no",
-   "fieldtype": "Autocomplete",
-   "label": "Member Number"
+   "fieldtype": "Data",
+   "label": "Member Number",
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "full_name",
@@ -63,19 +65,19 @@
   },
   {
    "fieldname": "id_number",
-   "fieldtype": "Int",
+   "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "ID Number",
-   "reqd": 1,
-   "unique": 1
+   "label": "National ID / Passport No",
+   "reqd": 1
   },
   {
    "fieldname": "phone",
-   "fieldtype": "Int",
+   "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Phone",
+   "label": "Mobile (M-Pesa)",
    "reqd": 1,
-   "unique": 1
+   "unique": 1,
+   "options": "Phone"
   },
   {
    "fieldname": "column_break_phvr",
@@ -134,8 +136,9 @@
   },
   {
    "fieldname": "contact_phone",
-   "fieldtype": "Int",
-   "label": "Contact Phone"
+   "fieldtype": "Data",
+   "label": "Contact Phone",
+   "options": "Phone"
   },
   {
    "fieldname": "relation",
@@ -151,13 +154,13 @@
    "fieldname": "kra_pin",
    "fieldtype": "Data",
    "label": "KRA Pin",
-   "reqd": 1
+   "reqd": 0
   },
   {
    "fieldname": "marital_status",
    "fieldtype": "Select",
    "label": "Marital Status",
-   "options": "\nSingle\nMarried\nDivorced\nWindowed"
+   "options": "\nSingle\nMarried\nDivorced\nWidowed"
   },
   {
    "fieldname": "first_name",
@@ -182,7 +185,7 @@
    "fieldname": "gender",
    "fieldtype": "Select",
    "label": "Gender",
-   "options": "\nMale\nFemale\nPrefer Not to Say\nAll"
+   "options": "\nMale\nFemale\nPrefer Not to Say"
   },
   {
    "fieldname": "shares_section",
@@ -204,7 +207,7 @@
    "fieldname": "member_type",
    "fieldtype": "Select",
    "label": "Member Type",
-   "options": "\nOrdinary"
+   "options": "Ordinary\nCorporate\nAssociate"
   },
   {
    "fieldname": "salutation",
@@ -280,7 +283,7 @@
    "link_fieldname": "member"
   }
  ],
- "modified": "2026-06-03 08:45:43.354920",
+ "modified": "2026-11-07 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sacco Manager",
  "name": "SACCO Member",
@@ -288,28 +291,116 @@
  "owner": "Administrator",
  "permissions": [
   {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
    "role": "System Manager",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
    "share": 1,
-   "write": 1
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 1
   },
   {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
+   "role": "SACCO Administrator",
+   "permlevel": 0,
    "print": 1,
-   "read": 1,
+   "email": 1,
    "report": 1,
-   "role": "Academics User",
-   "share": 1,
-   "write": 1
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 1
+  },
+  {
+   "role": "SACCO Manager",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  },
+  {
+   "role": "SACCO Credit Officer",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  },
+  {
+   "role": "SACCO Teller",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  },
+  {
+   "role": "SACCO Accountant",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  },
+  {
+   "role": "SACCO Auditor",
+   "permlevel": 0,
+   "print": 1,
+   "email": 0,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
   }
  ],
  "row_format": "Dynamic",
@@ -318,5 +409,6 @@
  "sort_order": "DESC",
  "states": [],
  "title_field": "full_name",
- "translated_doctype": 1
+ "translated_doctype": 1,
+ "search_fields": "full_name,member_no,id_number,phone"
 }
