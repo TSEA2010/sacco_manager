@@ -21,6 +21,7 @@ ADMIN, MGR, ACC, CREDIT, TELLER, AUDIT = (
 )
 STAFF_ROLES = (ADMIN, MGR, ACC, CREDIT, TELLER, AUDIT)
 MEMBER_ROLE = "Sacco Member"
+SYSTEM_MANAGER = "System Manager"
 
 ROLE_DESCRIPTIONS = {
 	ADMIN: "Configures SACCO Settings, M-Pesa, products and users. Can do everything a Manager can.",
@@ -185,9 +186,11 @@ def _lending_internal_doctypes():
 
 
 def ensure_external_permissions():
-	perms = dict(EXTERNAL_PERMS)
+	perms = {dt: dict(roles) for dt, roles in EXTERNAL_PERMS.items()}
 	for dt in _lending_internal_doctypes():
-		perms[dt] = LENDING_INTERNAL_DEFAULT
+		perms[dt] = dict(LENDING_INTERNAL_DEFAULT)
+	for roles in perms.values():
+		roles[SYSTEM_MANAGER] = "rwcsxad"  # System Manager: full rights everywhere the app touches
 	for doctype, roles in perms.items():
 		if not frappe.db.exists("DocType", doctype):
 			continue
@@ -206,8 +209,8 @@ def ensure_external_permissions():
 
 # Lending protects approval status with permlevel 1; only approvers get it.
 PERMLEVEL1 = {
-	"Loan Application": (ADMIN, MGR),
-	"Loan Security Release": (ADMIN, MGR),
+	"Loan Application": (ADMIN, MGR, "System Manager"),
+	"Loan Security Release": (ADMIN, MGR, "System Manager"),
 }
 
 

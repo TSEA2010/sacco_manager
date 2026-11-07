@@ -383,6 +383,29 @@ def t_topup():
 		f"net cash {t.net_disbursement}; clearing balance {flt(bal)}")
 
 
+@check("System Manager has full rights (own approval, loan status)")
+def t_system_manager():
+	sm = make_user("e2e.sysmgr@example.com", ["System Manager"])
+	frappe.set_user(sm)
+	wr = frappe.get_doc({"doctype": "Withdrawal Request", "member": CTX.member, "savings_account": CTX.acc,
+		"amount": 1000, "reason": "sysmgr test", "payment_mode": "Bank"}).insert()
+	wr.submit()  # same user creates and approves: allowed for System Manager
+	assert frappe.db.get_value("Withdrawal Request", wr.name, "status") == "Paid"
+	if CTX.app:
+		frappe.set_user("Administrator")
+		frappe.db.set_value("Loan Application", CTX.app, "status", "Open")
+		frappe.db.set_value("SACCO Loan Guarantor", {"loan_application": CTX.app}, "status", "Confirmed")
+		frappe.set_user(sm)
+		app = frappe.get_doc("Loan Application", CTX.app)
+		app.status = "Approved"
+		app.save()
+		assert frappe.db.get_value("Loan Application", CTX.app, "status") == "Approved", "permlevel 1 missing"
+	for dt in ("Loan", "Loan Repayment", "Journal Entry", "Loan Demand", "SACCO Savings Transaction", "SACCO Dividend Run"):
+		for pt in ("read", "write", "create", "delete"):
+			assert frappe.has_permission(dt, pt), f"{dt} {pt}"
+	return "own withdrawal approved; loan application approved; full rights on core doctypes"
+
+
 @check("reports run")
 def t_reports():
 	from frappe.desk.query_report import run
@@ -410,7 +433,7 @@ def run():
 	frappe.flags.in_test = True
 	try:
 		for t in [t_setup, t_settings_guard, t_member, t_deposit, t_withdrawal, t_auditor, t_portal, t_token,
-				t_approval, t_mpesa, t_interest, t_dividend, t_remittance, t_topup, t_reports]:
+				t_approval, t_mpesa, t_interest, t_dividend, t_remittance, t_topup, t_system_manager, t_reports]:
 			t()
 	finally:
 		frappe.db.rollback()

@@ -61,12 +61,15 @@ def is_valid_kra_pin(pin):
 # Segregation of duties (maker-checker)
 # ---------------------------------------------------------------------------
 def enforce_maker_checker(doc, action=None):
-	"""Block the user who created a money-moving document from also approving/submitting it."""
+	"""Block the user who created a money-moving document from also approving/submitting it.
+	Administrator and System Managers are exempt."""
 	if not cint(frappe.db.get_single_value("SACCO Settings", "enforce_maker_checker")):
 		return
 	user = frappe.session.user
 	if user in ("Administrator",) or getattr(frappe.flags, "in_import", False) or frappe.flags.in_patch:
 		return
+	if "System Manager" in frappe.get_roles(user):
+		return  # System Managers have full rights (owner's decision, Nov 2026)
 	if doc.owner == user:
 		frappe.throw(
 			_(
