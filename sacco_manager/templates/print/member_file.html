@@ -1,0 +1,233 @@
+{#- Member file: page 1 summary for the front of the physical file, then the detail pages.
+    Used by the "SACCO Member File" and "SACCO Customer File" print formats; expects `f` from
+    sacco_manager.print_file.sacco_member_file. -#}
+<style>
+  .mf { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 10px; color: #1a1a1a; line-height: 1.35; }
+  .mf table { width: 100%; border-collapse: collapse; }
+  .mf .hdr td { vertical-align: middle; }
+  .mf .hdr { border-bottom: 2.5px solid #1a3c2e; margin-bottom: 8px; }
+  .mf h1 { font-size: 17px; margin: 0; color: #1a3c2e; letter-spacing: .3px; }
+  .mf h2 { font-size: 11px; color: #fff; background: #1a3c2e; margin: 9px 0 0; padding: 3px 6px; text-transform: uppercase; letter-spacing: .5px; }
+  .mf h3 { font-size: 10.5px; color: #1a3c2e; margin: 8px 0 2px; border-bottom: 1px solid #1a3c2e; }
+  .mf .muted { color: #666; }
+  .mf .small { font-size: 8.5px; }
+  .mf .kv td { padding: 2px 5px; border-bottom: 1px solid #ececec; vertical-align: top; }
+  .mf .kv td.k { color: #555; width: 22%; white-space: nowrap; }
+  .mf .kv td.v { font-weight: 600; width: 28%; }
+  .mf .missing { color: #b42318; font-weight: 400; font-style: italic; }
+  .mf .grid th { background: #eef3f0; color: #1a3c2e; text-align: left; padding: 3px 5px; font-size: 9px; border-bottom: 1px solid #1a3c2e; }
+  .mf .grid td { padding: 2.5px 5px; border-bottom: 1px solid #ececec; vertical-align: top; }
+  .mf .num { text-align: right; white-space: nowrap; }
+  .mf tr.tot td { font-weight: 700; background: #f4f7f5; border-top: 1px solid #1a3c2e; }
+  .mf .tiles td { width: 25%; border: 1px solid #cfdcd5; padding: 5px 7px; vertical-align: top; }
+  .mf .tiles .lab { font-size: 8.5px; color: #555; text-transform: uppercase; }
+  .mf .tiles .val { font-size: 13px; font-weight: 700; color: #1a3c2e; }
+  .mf .tiles .neg { color: #b42318; }
+  .mf .photo { width: 92px; height: 112px; border: 1px dashed #999; text-align: center; vertical-align: middle; color: #999; font-size: 8.5px; }
+  .mf .photo img { max-width: 92px; max-height: 112px; }
+  .mf .badge { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 9px; font-weight: 700; }
+  .mf .b-ok { background: #e3f4e8; color: #17663a; }
+  .mf .b-warn { background: #fff4e0; color: #8a5300; }
+  .mf .b-bad { background: #fde8e7; color: #b42318; }
+  .mf .chk td { padding: 1.5px 4px; border-bottom: 1px solid #f0f0f0; width: 50%; }
+  .mf .tick { color: #17663a; font-weight: 700; width: 12px; display: inline-block; }
+  .mf .cross { color: #b42318; font-weight: 700; width: 12px; display: inline-block; }
+  .mf .sign td { padding: 14px 6px 2px; border-bottom: 1px solid #555; width: 25%; }
+  .mf .sign tr.l td { border: none; padding-top: 2px; font-size: 8.5px; color: #555; }
+  .mf .foot { margin-top: 8px; border-top: 1px solid #ccc; padding-top: 3px; font-size: 8px; color: #777; }
+  .mf .pb { page-break-before: always; }
+  .mf .memno { font-size: 20px; font-weight: 800; color: #1a3c2e; }
+</style>
+
+{%- macro val(v, kind=None) -%}
+  {%- if v not in (None, "", 0) or kind == "num" -%}
+    {%- if kind == "date" -%}{{ f.fdate(v) }}{%- elif kind == "num" -%}{{ f.fmt(v) }}{%- else -%}{{ v }}{%- endif -%}
+  {%- else -%}<span class="missing">not on file</span>{%- endif -%}
+{%- endmacro -%}
+
+{%- macro header(title, sub) -%}
+<table class="hdr"><tr>
+  <td style="width:60px">{% if f.logo %}<img src="{{ f.logo }}" style="height:46px">{% endif %}</td>
+  <td><h1>{{ title }}</h1><div class="muted">{{ f.company }}</div></td>
+  <td style="text-align:right">
+    <div class="memno">{{ f.member.member_no or f.member.name }}</div>
+    <div class="muted small">{{ sub }}</div>
+  </td>
+</tr></table>
+{%- endmacro -%}
+
+{% set m = f.member %}
+{% set st = m.status or "Active" %}
+<div class="mf">
+
+{# =========================== PAGE 1: FILE SUMMARY =========================== #}
+{{ header("Member File — Summary", "Printed " ~ f.printed_at ~ " by " ~ f.printed_by) }}
+
+<table><tr>
+  <td style="vertical-align:top; padding-right:8px">
+    <table class="kv">
+      <tr><td class="k">Full name</td><td class="v" colspan="3" style="font-size:12px">{{ (m.salutation ~ " ") if m.salutation }}{{ val(m.full_name) }}</td></tr>
+      <tr><td class="k">Member no.</td><td class="v">{{ val(m.member_no) }}</td>
+          <td class="k">Status</td><td class="v">
+            <span class="badge {{ 'b-ok' if st == 'Active' else ('b-bad' if st == 'Withdrawn' else 'b-warn') }}">{{ st }}</span>
+            {% if f.max_days and f.max_days > 30 %}<span class="badge b-bad">{{ f.max_days }} days in arrears</span>{% endif %}</td></tr>
+      <tr><td class="k">ID / passport</td><td class="v">{{ val(m.id_number) }}</td>
+          <td class="k">KRA PIN</td><td class="v">{{ val(m.kra_pin) }}</td></tr>
+      <tr><td class="k">Date of birth</td><td class="v">{{ val(m.date_of_birth, "date") }}{% if f.age %} <span class="muted">({{ f.age }} yrs)</span>{% endif %}</td>
+          <td class="k">Gender / marital</td><td class="v">{{ val(m.gender) }} / {{ val(m.marital_status) }}</td></tr>
+      <tr><td class="k">Employer / branch</td><td class="v">{{ val(m.branch) }}</td>
+          <td class="k">Member type</td><td class="v">{{ val(m.member_type) }}</td></tr>
+      <tr><td class="k">Joined</td><td class="v">{{ val(m.joining_date, "date") }}{% if f.years_member is not none %} <span class="muted">({{ f.years_member }} yrs)</span>{% endif %}</td>
+          <td class="k">ERP customer</td><td class="v">{{ val(m.customer) }}</td></tr>
+    </table>
+  </td>
+  <td class="photo">{% if f.photo %}<img src="{{ f.photo }}">{% else %}Affix<br>passport<br>photo{% endif %}</td>
+</tr></table>
+
+<h2>Contacts &amp; next of kin</h2>
+<table class="kv">
+  <tr><td class="k">Mobile (M-Pesa)</td><td class="v">{{ val(m.phone) }}{% if m.sms_opt_out %} <span class="muted">(SMS opt-out)</span>{% endif %}</td>
+      <td class="k">Email</td><td class="v">{{ val(m.email_id) }}</td></tr>
+  <tr><td class="k">Address</td><td class="v" colspan="3">
+    {%- if f.addresses -%}{% set a = f.addresses[0] %}{{ [a.address_line1, a.address_line2, a.city, a.county or a.state, a.pincode]|select|join(", ") }}
+    {%- else -%}<span class="missing">not on file</span>{%- endif -%}</td></tr>
+  <tr><td class="k">Next of kin</td><td class="v">{{ val(m.contact_name) }}</td>
+      <td class="k">Relationship</td><td class="v">{{ val(m.relation) }}</td></tr>
+  <tr><td class="k">Kin phone</td><td class="v">{{ val(m.contact_phone) }}</td>
+      <td class="k">Kin email</td><td class="v">{{ val(m.contact_email) }}</td></tr>
+</table>
+
+<h2>Financial position at {{ f.printed_on }}</h2>
+<table class="tiles" style="margin-top:4px"><tr>
+  <td><div class="lab">Share capital</div><div class="val">{{ f.fmt(m.share_balance) }}</div><div class="muted small">{{ m.total_shares or 0 }} shares</div></td>
+  <td><div class="lab">Savings / deposits</div><div class="val">{{ f.fmt(f.savings_total) }}</div>
+      <div class="muted small">{{ f.fmt(f.monthly_contribution) }} / month{% if f.savings_locked %} · {{ f.fmt(f.savings_locked) }} locked{% endif %}</div></td>
+  <td><div class="lab">Loans outstanding</div><div class="val {{ 'neg' if f.loan_principal }}">{{ f.fmt(f.loan_principal) }}</div>
+      <div class="muted small">{{ (f.open_loans or [])|length }} open · {{ f.fmt(f.loan_monthly) }} / month</div></td>
+  <td><div class="lab">Arrears</div><div class="val {{ 'neg' if f.loan_overdue }}">{{ f.fmt(f.loan_overdue) }}</div>
+      <div class="muted small">Guaranteeing others: {{ f.fmt(f.guarantee_total) }}</div></td>
+</tr></table>
+<table class="grid" style="margin-top:4px">
+  <tr><th>Account</th><th>Type</th><th class="num">Balance</th><th class="num">Locked (guarantees)</th><th class="num">Free</th><th>Status</th></tr>
+  {% for a in f.savings %}
+  <tr><td>{{ a.account_no or a.name }}</td><td>{{ a.account_type }}</td><td class="num">{{ f.fmt(a.balance) }}</td>
+      <td class="num">{{ f.fmt(a.locked) }}</td><td class="num">{{ f.fmt(a.free) }}</td><td>{{ a.status }}</td></tr>
+  {% else %}<tr><td colspan="6" class="missing">No savings account</td></tr>{% endfor %}
+  {% for ln in f.summary_loans %}
+  <tr><td>{{ ln.name }}</td><td>{{ ln.loan_product }}</td><td class="num">-{{ f.fmt(ln.principal) }}</td>
+      <td class="num">{% if ln.overdue %}<span style="color:#b42318">{{ f.fmt(ln.overdue) }} overdue</span>{% endif %}</td>
+      <td class="num">{{ f.fmt(ln.monthly_repayment_amount) }}/m</td><td>{{ ln.status }}{% if ln.days %} · {{ ln.days }}d{% endif %}</td></tr>
+  {% endfor %}
+  {% if f.more_loans %}<tr><td colspan="6" class="muted small">+ {{ f.more_loans }} more open loan(s) with smaller or nil balances — see the detail page.</td></tr>{% endif %}
+  {% for p in f.position %}{% if loop.last %}
+  <tr class="tot"><td colspan="2">{{ p[0] }} (shares + savings − loans)</td><td class="num">{{ f.fmt(p[1]) }}</td><td colspan="3"></td></tr>
+  {% endif %}{% endfor %}
+</table>
+
+<h2>KYC &amp; file checklist — {{ f.kyc_done }}/{{ f.kyc|length }} ({{ f.kyc_pct }}%)</h2>
+<table class="chk" style="margin-top:3px">
+  {% for row in f.kyc|batch(2) %}
+  <tr>{% for c in row %}<td>{% if c.ok %}<span class="tick">&#10003;</span>{% else %}<span class="cross">&#10007;</span>{% endif %} {{ c.label }}</td>{% endfor %}</tr>
+  {% endfor %}
+</table>
+{% if f.kyc_missing %}<div class="small" style="margin-top:3px"><b style="color:#b42318">To collect:</b> {{ f.kyc_missing|join(", ") }}</div>{% endif %}
+
+<table class="sign" style="margin-top:6px">
+  <tr><td></td><td></td><td></td><td></td></tr>
+  <tr class="l"><td>Filed / updated by</td><td>Date</td><td>Verified by (officer)</td><td>Date</td></tr>
+</table>
+<div class="foot">Confidential — personal data held under the Kenya Data Protection Act 2019. Summary generated from the SACCO system; the detail pages follow. Reprint after any change to keep the file current.</div>
+
+{# =========================== PAGE 2+: DETAIL =========================== #}
+<div class="pb"></div>
+{{ header("Member File — Detail", (m.full_name or "") ~ " · printed " ~ f.printed_on) }}
+
+<h3>Personal record</h3>
+<table class="kv">
+  <tr><td class="k">First / middle / last</td><td class="v">{{ [m.first_name, m.middle_name, m.last_name]|select|join(" ") or "" }}</td>
+      <td class="k">Consent</td><td class="v">{% if m.consent_data_processing %}Yes — {{ f.fdate(m.consent_date) }} ({{ m.consent_method or "method not recorded" }}){% else %}<span class="missing">not recorded</span>{% endif %}</td></tr>
+  <tr><td class="k">Registration fee</td><td class="v">{% if f.registration_fee %}{{ f.fmt(f.registration_fee.total_debit) }} on {{ f.fdate(f.registration_fee.posting_date) }}{% else %}<span class="missing">not recorded</span>{% endif %}</td>
+      <td class="k">Customer group</td><td class="v">{{ val(m.customer_group) }}</td></tr>
+  {% if f.customer %}<tr><td class="k">Customer name</td><td class="v">{{ f.customer.customer_name }}</td>
+      <td class="k">Customer mobile / email</td><td class="v">{{ f.customer.mobile_no or "" }} {{ f.customer.email_id or "" }}</td></tr>{% endif %}
+</table>
+{% if f.addresses|length > 1 or f.contacts %}
+<table class="grid" style="margin-top:4px">
+  <tr><th>Other addresses &amp; contacts</th><th>Detail</th></tr>
+  {% for a in f.addresses[1:] %}<tr><td>{{ a.address_type or "Address" }}</td><td>{{ [a.address_line1, a.address_line2, a.city, a.county or a.state, a.pincode, a.phone]|select|join(", ") }}</td></tr>{% endfor %}
+  {% for c in f.contacts %}<tr><td>Contact: {{ c.full_name }}</td><td>{{ [c.mobile_no, c.phone, c.email_id, c.designation]|select|join(" · ") }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+
+<h3>Loans (all, newest first)</h3>
+<table class="grid">
+  <tr><th>Loan</th><th>Product</th><th>Disbursed on</th><th class="num">Amount</th><th class="num">Rate</th><th class="num">Term</th>
+      <th class="num">Instalment</th><th class="num">Principal o/s</th><th class="num">Overdue</th><th>Status</th></tr>
+  {% for ln in f.loans %}
+  <tr><td>{{ ln.name }}</td><td>{{ ln.loan_product }}</td><td>{{ f.fdate(ln.disbursement_date) }}</td>
+      <td class="num">{{ f.fmt(ln.disbursed_amount or ln.loan_amount) }}</td><td class="num">{{ ln.rate_of_interest or "" }}%</td>
+      <td class="num">{{ ln.repayment_periods or "" }}</td><td class="num">{{ f.fmt(ln.monthly_repayment_amount) }}</td>
+      <td class="num">{{ f.fmt(ln.principal) }}</td><td class="num">{{ f.fmt(ln.overdue) if ln.overdue else "" }}</td>
+      <td>{{ ln.status }}{% if ln.closure_date %} {{ f.fdate(ln.closure_date) }}{% endif %}</td></tr>
+  {% if ln.guarantors %}<tr><td></td><td colspan="9" class="small muted">Guarantors: {% for g in ln.guarantors %}{{ g.guarantor_name }} ({{ f.fmt(g.pledge_value) }}, {{ g.status }}){{ "; " if not loop.last }}{% endfor %}</td></tr>{% endif %}
+  {% else %}<tr><td colspan="10" class="muted">No loans.</td></tr>{% endfor %}
+</table>
+{% if f.applications %}
+<table class="grid" style="margin-top:3px">
+  <tr><th>Pending application</th><th>Product</th><th>Date</th><th class="num">Amount</th><th>Status</th></tr>
+  {% for a in f.applications %}<tr><td>{{ a.name }}</td><td>{{ a.loan_product }}</td><td>{{ f.fdate(a.posting_date) }}</td><td class="num">{{ f.fmt(a.loan_amount) }}</td><td>{{ a.status }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+
+<h3>Guarantees this member has given</h3>
+<table class="grid">
+  <tr><th>Borrower</th><th>Loan / application</th><th class="num">Pledge</th><th class="num">Loan balance</th><th>Status</th></tr>
+  {% for g in f.guarantees_given %}
+  <tr><td>{{ g.applicant_name }} ({{ g.applicant_no or g.applicant_member }})</td><td>{{ g.loan }}</td>
+      <td class="num">{{ f.fmt(g.pledge_value) }}</td><td class="num">{{ f.fmt(g.loan_balance) }}</td><td>{{ g.status }}</td></tr>
+  {% else %}<tr><td colspan="5" class="muted">None active.</td></tr>{% endfor %}
+</table>
+
+<table><tr>
+  <td style="width:50%; vertical-align:top; padding-right:6px">
+    <h3>Share capital (last 10)</h3>
+    <table class="grid">
+      <tr><th>Date</th><th>Type</th><th class="num">Shares</th><th class="num">Amount</th></tr>
+      {% for s in f.share_entries %}<tr><td>{{ f.fdate(s.date) }}</td><td>{{ s.transaction_type }}</td><td class="num">{{ s.shares }}</td><td class="num">{{ f.fmt(s.total_amount) }}</td></tr>
+      {% else %}<tr><td colspan="4" class="muted">Brought forward {{ f.fmt(m.share_balance) }} (before share ledger).</td></tr>{% endfor %}
+    </table>
+    <h3>Loan repayments (last 10)</h3>
+    <table class="grid">
+      <tr><th>Date</th><th>Loan</th><th class="num">Paid</th></tr>
+      {% for r in f.repayments %}<tr><td>{{ f.fdate(r.posting_date) }}</td><td>{{ r.against_loan }}</td><td class="num">{{ f.fmt(r.amount_paid) }}</td></tr>
+      {% else %}<tr><td colspan="3" class="muted">None.</td></tr>{% endfor %}
+    </table>
+  </td>
+  <td style="width:50%; vertical-align:top; padding-left:6px">
+    <h3>Savings activity (last 15)</h3>
+    <table class="grid">
+      <tr><th>Date</th><th>Type</th><th>Account</th><th class="num">Amount</th></tr>
+      {% for t in f.transactions %}<tr><td>{{ f.fdate(t.posting_date) }}</td><td>{{ t.transaction_type }}</td><td class="small">{{ t.savings_account }}</td>
+        <td class="num">{{ ("-" if t.transaction_type in ("Withdrawal", "Withholding Tax") else "") ~ f.fmt(t.amount) }}</td></tr>
+      {% else %}<tr><td colspan="4" class="muted">None.</td></tr>{% endfor %}
+    </table>
+  </td>
+</tr></table>
+
+<h3>Documents in the system</h3>
+<table class="grid">
+  <tr><th>File</th><th>Attached to</th><th>Uploaded</th></tr>
+  {% for a in f.attachments %}<tr><td>{{ a.file_name }}</td><td>{{ a.attached_to_doctype }}</td><td>{{ f.fdate(a.creation) }}</td></tr>
+  {% else %}<tr><td colspan="3" class="missing">No scanned documents attached — scan the ID, KRA PIN, photo and signed form into the member record.</td></tr>{% endfor %}
+</table>
+
+{% if f.pending_withdrawals or f.comments %}
+<h3>Open items &amp; notes</h3>
+<table class="grid">
+  {% for w in f.pending_withdrawals %}<tr><td style="width:25%">Withdrawal request {{ w.name }}</td><td>{{ f.fmt(w.amount) }} — awaiting approval</td></tr>{% endfor %}
+  {% for c in f.comments %}<tr><td style="width:25%">{{ f.fdate(c.creation) }} · {{ c.owner }}</td><td>{{ c.content|striptags }}</td></tr>{% endfor %}
+</table>
+{% endif %}
+
+<div class="foot">{{ f.company }} · Member file {{ m.member_no or m.name }} · printed {{ f.printed_at }} by {{ f.printed_by }} · Confidential</div>
+</div>

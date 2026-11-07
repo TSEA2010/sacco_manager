@@ -538,6 +538,17 @@ def t_audit_fixes():
 	return f"due {r.due_date}, penalty {r.penalty_amount}; transfer JE {je.name}; manual JE blocked: {msg[:50]}"
 
 
+@check("member file print formats render with data")
+def t_print_formats():
+	html = frappe.get_print("SACCO Member", CTX.member, print_format="SACCO Member File")
+	no = frappe.db.get_value("SACCO Member", CTX.member, "member_no")
+	assert "Member File" in html and "KYC" in html and str(no) in html, "member file missing content"
+	cust = frappe.db.get_value("SACCO Member", CTX.member, "customer")
+	html2 = frappe.get_print("Customer", cust, print_format="SACCO Customer File")
+	assert "Member File" in html2, "customer file did not resolve the member"
+	return f"member file {len(html)} chars, customer file {len(html2)} chars"
+
+
 @check("reports run")
 def t_reports():
 	from frappe.desk.query_report import run
@@ -570,7 +581,7 @@ def run():
 	try:
 		for t in [t_setup, t_settings_guard, t_member, t_deposit, t_withdrawal, t_auditor, t_portal, t_token,
 				t_approval, t_mpesa, t_interest, t_dividend, t_remittance, t_topup, t_system_manager, t_reporting, t_misc_features,
-				t_board_approval, t_sms, t_audit_fixes, t_reports]:
+				t_board_approval, t_sms, t_audit_fixes, t_print_formats, t_reports]:
 			t()
 	finally:
 		frappe.db.rollback()

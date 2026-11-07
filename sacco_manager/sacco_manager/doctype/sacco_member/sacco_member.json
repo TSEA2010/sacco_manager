@@ -448,5 +448,6 @@
  "states": [],
  "title_field": "full_name",
  "translated_doctype": 1,
- "search_fields": "full_name,member_no,id_number,phone"
+ "search_fields": "full_name,member_no,id_number,phone",
+ "default_print_format": "SACCO Member File"
 }

@@ -50,3 +50,13 @@ scheduler_events = {
 website_route_rules = [
 	{"from_route": "/guarantor_confirm", "to_route": "guarantor-confirm"},
 ]
+
+# ---------------------------------------------------------------------------
+# Print formats: "SACCO Member File" / "SACCO Customer File" read their data through these
+# ---------------------------------------------------------------------------
+jinja = {
+	"methods": [
+		"sacco_manager.print_file.sacco_member_file",
+		"sacco_manager.print_file.sacco_customer_file",
+	],
+}

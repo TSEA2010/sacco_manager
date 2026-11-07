@@ -9,3 +9,4 @@ sacco_manager.patches.v1_0.clean_sacco_settings
 sacco_manager.patches.v1_0.reset_sacco_custom_perms
 sacco_manager.patches.v1_0.disable_conflicting_client_scripts
 sacco_manager.patches.v1_1.set_settings_defaults
+sacco_manager.patches.v1_1.customer_default_print_format
