@@ -36,7 +36,7 @@ class LoanTopUp(Document):
 			frappe.throw(_("Top-up amount must be greater than zero."))
 		if not self.new_interest_rate:
 			self.new_interest_rate = loan.rate_of_interest
-		out = loan_outstanding(self.loan, self.top_up_date)
+		out = loan_outstanding(self.loan, self.top_up_date, payment_type="Loan Closure")
 		self.outstanding_principal = out["principal"]
 		self.settlement_amount = round(out["payable"], 2)
 		self.new_principal = round(flt(self.settlement_amount) + flt(self.top_up_amount), 2)
@@ -109,12 +109,18 @@ class LoanTopUp(Document):
 		self.db_set("loan_disbursement", disb.name)
 
 		rp = create_loan_repayment(self.loan, self.settlement_amount, self.top_up_date, clearing,
-			reference_number=self.name, remarks=f"Settled by top-up {self.name} / new loan {new_loan.name}")
+			reference_number=self.name, remarks=f"Settled by top-up {self.name} / new loan {new_loan.name}",
+			repayment_type="Loan Closure")
 		self.db_set("settlement_repayment", rp.name)
+		# Lending's payoff at posting time is authoritative; the member receives the rest
+		net = round(flt(self.new_principal) - flt(rp.amount_paid), 2)
+		if net <= 0:
+			frappe.throw(_("The old loan payoff {0} leaves nothing to pay out; increase the top-up.").format(rp.amount_paid))
+		self.db_set({"settlement_amount": rp.amount_paid, "net_disbursement": net})
 
 		self.db_set("cash_journal_entry", make_journal_entry(
-			[{"account": clearing, "debit": flt(self.net_disbursement)},
-			 {"account": self.payment_account, "credit": flt(self.net_disbursement)}],
+			[{"account": clearing, "debit": net},
+			 {"account": self.payment_account, "credit": net}],
 			self.top_up_date, f"Top-up cash to member - {self.name}", reference=(self.doctype, self.name)))
 		self.db_set("status", "Submitted")
 

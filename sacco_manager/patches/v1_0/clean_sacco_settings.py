@@ -22,7 +22,9 @@ def execute():
 		updates["branch_receivable_account"] = None
 	if _root(get("interest_expense_account")) not in (None, "Expense"):
 		updates["interest_expense_account"] = None
-	if get("enforce_maker_checker") is None:
+	in_singles = lambda f: frappe.db.sql(  # noqa: E731
+		"SELECT 1 FROM `tabSingles` WHERE doctype='SACCO Settings' AND field=%s", f)
+	if not in_singles("enforce_maker_checker"):
 		updates["enforce_maker_checker"] = 1
 	for field, value in (("portal_enabled", 1), ("guarantor_link_validity_days", 14),
 			("dividend_wht_rate", 5), ("max_penalty_percent", 10)):

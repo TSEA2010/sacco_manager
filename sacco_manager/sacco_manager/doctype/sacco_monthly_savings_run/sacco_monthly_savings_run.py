@@ -11,6 +11,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, today
 
+from sacco_manager.utils import describe_error
 from sacco_manager.sacco_manager.doctype.sacco_savings_transaction.sacco_savings_transaction import (
 	create_savings_transaction,
 )
@@ -49,7 +50,7 @@ class SACCOMonthlySavingsRun(Document):
 					remarks=f"{self.period_month} {self.period_year} savings",
 				)
 			except Exception as e:
-				frappe.throw(_("Row {0} ({1}): {2}").format(row.idx, row.member, e))
+				frappe.throw(_("Row {0} ({1}): {2}").format(row.idx, row.member, describe_error(e)))
 			row.db_set({"status": "Posted", "transaction_ref": txn.name})
 		self.db_set("status", "Submitted")
 

@@ -88,7 +88,6 @@
   },
   {
    "allow_on_submit": 1,
-   "default": "user",
    "fieldname": "approved_by",
    "fieldtype": "Link",
    "label": "Approved By",
@@ -103,7 +102,6 @@
    "read_only": 1
   },
   {
-   "default": "user",
    "fieldname": "initiated_by",
    "fieldtype": "Link",
    "label": "Initiated By",

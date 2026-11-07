@@ -46,15 +46,24 @@ ROLE_PROFILES = {
 EXTERNAL_PERMS = {
 	# Lending
 	"Loan Application": {ADMIN: "rwcsxa", MGR: "rwcsxa", CREDIT: "rwc", ACC: "r", AUDIT: "r"},
-	"Loan": {ADMIN: "rwcsxa", MGR: "rwcsxa", CREDIT: "rwc", ACC: "r", TELLER: "r", AUDIT: "r"},
+	# Lending updates days-past-due on the Loan when a repayment is submitted, so the
+	# submitter needs write (not create/submit) on Loan.
+	"Loan": {ADMIN: "rwcsxa", MGR: "rwcsxa", CREDIT: "rwc", ACC: "rw", TELLER: "r", AUDIT: "r"},
 	"Loan Disbursement": {ADMIN: "rwcsxa", MGR: "rwcsxa", ACC: "rwc", CREDIT: "r", AUDIT: "r"},
-	"Loan Repayment": {ADMIN: "rwcsxa", MGR: "rwcsxa", ACC: "rwcs", TELLER: "rwc", CREDIT: "r", AUDIT: "r"},
+	"Loan Repayment": {ADMIN: "rwcsxad", MGR: "rwcsxad", ACC: "rwcsd", TELLER: "rwc", CREDIT: "r", AUDIT: "r"},
 	"Loan Security": {ADMIN: "rwc", MGR: "rwc", CREDIT: "rwc", ACC: "r", AUDIT: "r"},
 	"Loan Security Type": {ADMIN: "rwc", MGR: "r", CREDIT: "r", ACC: "r", AUDIT: "r"},
 	"Loan Product": {ADMIN: "rwc", MGR: "r", CREDIT: "r", ACC: "r", TELLER: "r", AUDIT: "r"},
-	"Loan Demand": {ADMIN: "r", MGR: "r", ACC: "r", CREDIT: "r", AUDIT: "r"},
-	"Loan Interest Accrual": {ADMIN: "r", MGR: "r", ACC: "r", AUDIT: "r"},
-	"Loan Repayment Schedule": {ADMIN: "r", MGR: "r", ACC: "r", CREDIT: "r", TELLER: "r", AUDIT: "r"},
+	# Lending creates these itself while a disbursement / repayment is submitted, with the
+	# submitting user's permissions; managers and accountants therefore need create + submit.
+	"Loan Demand": {ADMIN: "rwcsxd", MGR: "rwcsxd", ACC: "rwcsxd", CREDIT: "r", AUDIT: "r"},
+	"Loan Interest Accrual": {ADMIN: "rwcsxd", MGR: "rwcsxd", ACC: "rwcsxd", AUDIT: "r"},
+	"Process Loan Interest Accrual": {ADMIN: "rwcsxd", MGR: "rwcsxd", ACC: "rwcsxd", AUDIT: "r"},
+	"Process Loan Demand": {ADMIN: "rwcsxd", MGR: "rwcsxd", ACC: "rwcsxd", AUDIT: "r"},
+	"Loan Repayment Repost": {ADMIN: "rwcsxd", MGR: "rwcsxd", ACC: "rwcsxd", AUDIT: "r"},
+	"Loan Security Assignment": {ADMIN: "rwcs", MGR: "rwcs", ACC: "rwcs", CREDIT: "rwc", AUDIT: "r"},
+	"Loan Security Deposit": {ADMIN: "rwcsxd", MGR: "rwcsxd", ACC: "rwcsxd", AUDIT: "r"},
+	"Loan Repayment Schedule": {ADMIN: "rwcsxd", MGR: "rwcsxd", ACC: "rwcsxd", CREDIT: "r", TELLER: "r", AUDIT: "r"},
 	"Loan Write Off": {ADMIN: "rwcsxa", MGR: "rwcsxa", ACC: "r", AUDIT: "r"},
 	"Loan Restructure": {ADMIN: "rwcsxa", MGR: "rwcsxa", CREDIT: "rwc", ACC: "r", AUDIT: "r"},
 	# ERPNext accounting / masters
@@ -111,6 +120,7 @@ def after_migrate():
 	ensure_roles()
 	ensure_role_profiles()
 	ensure_external_permissions()
+	ensure_permlevel1()
 	ensure_report_roles()
 	create_custom_fields(CUSTOM_FIELDS, ignore_validate=True, update=True)
 	link_customers_to_members()
@@ -141,20 +151,44 @@ def ensure_roles():
 
 def ensure_role_profiles():
 	for profile, roles in ROLE_PROFILES.items():
-		doc = frappe.get_doc("Role Profile", profile) if frappe.db.exists("Role Profile", profile) else frappe.new_doc("Role Profile")
+		exists = frappe.db.exists("Role Profile", profile)
+		doc = frappe.get_doc("Role Profile", profile) if exists else frappe.new_doc("Role Profile")
 		doc.role_profile = profile
 		have = {r.role for r in doc.get("roles")}
-		for r in roles:
-			if r not in have:
-				doc.append("roles", {"role": r})
+		missing = [r for r in roles if r not in have]
+		if exists and not missing:
+			continue
+		for r in missing:
+			doc.append("roles", {"role": r})
 		doc.save(ignore_permissions=True)
 
 
 RIGHTS = {"r": "read", "w": "write", "c": "create", "s": "submit", "x": "cancel", "a": "amend", "d": "delete"}
 
 
+# Lending reposts back-dated repayments by cancelling/deleting and recreating its own records
+LENDING_INTERNAL_DEFAULT = {ADMIN: "rwcsxd", MGR: "rwcsxd", ACC: "rwcsxd", AUDIT: "r"}
+
+
+def _lending_internal_doctypes():
+	"""Every Lending doctype not listed explicitly: Lending creates many of these itself
+	(classification, accrual, repost, NPA logs ...) under the submitting user's permissions."""
+	try:
+		modules = frappe.get_module_list("lending")
+	except Exception:
+		return []
+	return frappe.get_all(
+		"DocType",
+		filters={"module": ["in", modules], "istable": 0, "issingle": 0, "name": ["not in", list(EXTERNAL_PERMS)]},
+		pluck="name",
+	)
+
+
 def ensure_external_permissions():
-	for doctype, roles in EXTERNAL_PERMS.items():
+	perms = dict(EXTERNAL_PERMS)
+	for dt in _lending_internal_doctypes():
+		perms[dt] = LENDING_INTERNAL_DEFAULT
+	for doctype, roles in perms.items():
 		if not frappe.db.exists("DocType", doctype):
 			continue
 		meta = frappe.get_meta(doctype)
@@ -168,6 +202,29 @@ def ensure_external_permissions():
 				update_permission_property(doctype, role, 0, ptype, 1 if letter in rights else 0, validate=False)
 			for ptype in ("report", "export", "print"):
 				update_permission_property(doctype, role, 0, ptype, 1, validate=False)
+
+
+# Lending protects approval status with permlevel 1; only approvers get it.
+PERMLEVEL1 = {
+	"Loan Application": (ADMIN, MGR),
+	"Loan Security Release": (ADMIN, MGR),
+}
+
+
+def ensure_permlevel1():
+	for doctype, roles in PERMLEVEL1.items():
+		if not frappe.db.exists("DocType", doctype):
+			continue
+		for role in roles:
+			if not frappe.db.exists("Custom DocPerm", {"parent": doctype, "role": role, "permlevel": 1}):
+				add_permission(doctype, role, 1)
+			update_permission_property(doctype, role, 1, "read", 1, validate=False)
+			update_permission_property(doctype, role, 1, "write", 1, validate=False)
+		for role in (AUDIT, ACC, CREDIT):
+			if not frappe.db.exists("Custom DocPerm", {"parent": doctype, "role": role, "permlevel": 1}):
+				add_permission(doctype, role, 1)
+			update_permission_property(doctype, role, 1, "read", 1, validate=False)
+			update_permission_property(doctype, role, 1, "write", 0, validate=False)
 
 
 def ensure_report_roles():

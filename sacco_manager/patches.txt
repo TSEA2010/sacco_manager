@@ -6,3 +6,4 @@
 sacco_manager.patches.v1_0.normalize_member_contacts
 sacco_manager.patches.v1_0.remap_statuses
 sacco_manager.patches.v1_0.clean_sacco_settings
+sacco_manager.patches.v1_0.reset_sacco_custom_perms

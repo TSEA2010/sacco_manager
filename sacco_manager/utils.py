@@ -129,3 +129,14 @@ def get_withdrawable_balance(savings_account):
 	balance = flt(frappe.db.get_value("SACCO Savings Account", savings_account, "balance"))
 	locked = get_committed_pledges(savings_account) / (get_multiplier() or 1)
 	return max(0.0, balance - locked)
+
+
+def describe_error(e):
+	"""Short, useful reason for users; permission errors name the doctype/frame involved."""
+	msg = str(e) or type(e).__name__
+	if isinstance(e, frappe.PermissionError):
+		for line in reversed(frappe.get_traceback().splitlines()):
+			if "lending/" in line or "erpnext/" in line or "sacco_manager/" in line:
+				msg += f" ({line.strip()[-160:]})"
+				break
+	return msg[:400]
