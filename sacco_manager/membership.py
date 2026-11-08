@@ -1,11 +1,21 @@
 # Copyright (c) 2026, Trident SACCO and contributors
 # For license information, please see license.txt
-"""Public endpoint behind /join: anyone (staff of the group companies) can apply without an account.
+"""Endpoint behind /join: staff of the group companies apply without an account.
 
-Abuse controls: rate limit per IP, a hidden honeypot field, size/type limits on documents, all
-uploads private, duplicate-ID check. Nothing is created in the books until staff approve."""
+Kept away from the public internet, crawlers, bots and spam by:
+* a joining code (SACCO Settings > Joining Code) shared only internally; without it the page shows
+  just a code box, and the server refuses submissions without the right code;
+* noindex meta, excluded from the sitemap and Disallowed in robots.txt;
+* a signed form token: submissions faster than a person could fill the form, or older than a day,
+  are refused; a hidden honeypot field;
+* rate limits: 5 per IP per hour and a daily cap for the whole site;
+* private uploads with size/type/content checks; duplicate-ID check.
+Nothing is created in the books until staff approve."""
 
 import base64
+import hashlib
+import hmac
+import time
 
 import frappe
 from frappe import _
@@ -18,6 +28,36 @@ FIELDS = ("salutation", "first_name", "middle_name", "last_name", "id_number", "
 FILES = {"photo": ("jpg", "jpeg", "png"), "id_copy": ("jpg", "jpeg", "png", "pdf"), "kra_copy": ("jpg", "jpeg", "png", "pdf"),
 	"signed_form": ("jpg", "jpeg", "png", "pdf")}
 MAX_FILE = 3 * 1024 * 1024
+MIN_FILL_SECONDS = 8
+DAILY_CAP = 40
+
+
+def _secret():
+	return (frappe.local.conf.get("secret_key") or frappe.local.site or "sacco").encode()
+
+
+def join_code():
+	return (frappe.db.get_single_value("SACCO Settings", "join_code") or "").strip()
+
+
+def code_ok(code):
+	expected = join_code()
+	return not expected or hmac.compare_digest(expected.upper(), (code or "").strip().upper())
+
+
+def form_token():
+	ts = str(int(time.time()))
+	return f"{ts}.{hmac.new(_secret(), ts.encode(), hashlib.sha256).hexdigest()[:24]}"
+
+
+def _token_ok(token):
+	try:
+		ts, sig = str(token or "").split(".", 1)
+		age = time.time() - int(ts)
+	except ValueError:
+		return False
+	good = hmac.compare_digest(sig, hmac.new(_secret(), ts.encode(), hashlib.sha256).hexdigest()[:24])
+	return good and MIN_FILL_SECONDS <= age <= 86400
 
 
 def employers():
@@ -40,6 +80,15 @@ def create_application(data, files=None):
 	data = frappe.parse_json(data) if isinstance(data, str) else (data or {})
 	if data.get("website"):  # honeypot: real people never see this field
 		return {"name": None}
+	if not code_ok(data.get("join_code")):
+		frappe.throw(_("The joining code is not right. Ask HR or the SACCO office for the joining link."), frappe.PermissionError)
+	if not frappe.flags.in_test and not _token_ok(data.get("form_token")):
+		frappe.throw(_("Please reload the page and fill the form again."))
+	key = f"sacco_join_count:{frappe.utils.today()}"
+	count = cint(frappe.cache.get_value(key))
+	if count >= DAILY_CAP:
+		frappe.throw(_("Too many applications today. Please try again tomorrow or apply at the SACCO office."))
+	frappe.cache.set_value(key, count + 1, expires_in_sec=90000)
 	values = {k: data.get(k) for k in FIELDS if data.get(k) not in (None, "")}
 	if values.get("employer") not in {e["value"] for e in employers()}:
 		frappe.throw(_("Choose your employer from the list."))
@@ -89,8 +138,3 @@ def _notify_staff(doc):
 
 	queue_sms(doc.phone, _("Dear {0}, we received your Trident SACCO membership application {1}. We will contact you once it is reviewed.")
 		.format((doc.first_name or "").title(), doc.name), reference=doc.name)
-
-
-@frappe.whitelist(allow_guest=True)
-def application_options():
-	return {"employers": employers(), "enabled": cint(frappe.db.get_single_value("SACCO Settings", "online_applications_enabled"))}

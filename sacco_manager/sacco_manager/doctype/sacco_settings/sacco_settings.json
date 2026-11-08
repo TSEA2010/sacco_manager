@@ -67,6 +67,7 @@
   "dpd_log_keep_days",
   "online_section",
   "online_applications_enabled",
+  "join_code",
   "application_notify",
   "cb_online",
   "member_login_otp",
@@ -457,6 +458,12 @@
    "fieldtype": "Check",
    "label": "Members Can Log In With Mobile Number + Password",
    "default": "1"
+  },
+  {
+   "fieldname": "join_code",
+   "fieldtype": "Data",
+   "label": "Joining Code",
+   "description": "Required to open /join. Share the link https://<site>/join?code=CODE only inside the companies (HR, notice boards, staff groups). Change it if it leaks."
   }
  ],
  "grid_page_length": 50,

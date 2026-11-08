@@ -3,6 +3,7 @@
 """Page controller for /guarantor-confirm (token-protected, guest allowed)."""
 
 no_cache = 1
+sitemap = 0
 
 
 def get_context(context):

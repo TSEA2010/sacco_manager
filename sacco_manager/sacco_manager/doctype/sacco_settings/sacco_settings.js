@@ -49,6 +49,14 @@ frappe.ui.form.on("SACCO Settings", {
 			} });
 			d.show();
 		}, __("Reports"));
+		frm.add_custom_button(__("Joining link"), () => {
+			const url = `${window.location.origin}/join?code=${encodeURIComponent(frm.doc.join_code || "")}`;
+			frappe.msgprint({ title: __("Link for staff to apply"), message: frm.doc.join_code
+				? `<p>${__("Share only inside the companies (HR, notice boards, staff groups):")}</p><p><b>${frappe.utils.escape_html(url)}</b></p>
+				   <p class="text-muted small">${__("If it leaks, change the Joining Code; old links stop working.")}</p>`
+				: __("Set a Joining Code first; without one the form is open to anyone.") });
+			if (frm.doc.join_code && navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
+		}, __("Tools"));
 		frm.add_custom_button(__("Database size"), () =>
 			frappe.call("sacco_manager.housekeeping.storage_report").then((r) => {
 				const d = r.message, dp = d.dpd || {};

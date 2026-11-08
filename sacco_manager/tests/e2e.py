@@ -713,8 +713,11 @@ def t_membership():
 	png = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"0" * 64).decode()
 	data = {"first_name": "Wanjiku", "last_name": "Testapplicant", "id_number": "E2E99887766", "phone": "0712000111",
 		"email": "wanjiku.e2e@example.com", "employer": "DR. Plumber", "employee_id": "E2E-EMP-2", "monthly_contribution": 1500,
-		"consent": 1, "kin_name": "Kamau", "kin_phone": "0712000222", "address": "Box 1, Industrial Area"}
+		"consent": 1, "kin_name": "Kamau", "kin_phone": "0712000222", "address": "Box 1, Industrial Area",
+		"join_code": frappe.db.get_single_value("SACCO Settings", "join_code")}
 	frappe.set_user("Guest")
+	expect_error(lambda: membership.create_application(json.dumps({**data, "join_code": "WRONG"})), contains="joining code")
+	assert not membership._token_ok(membership.form_token()), "an instant submission must be refused"
 	out = membership.create_application(json.dumps(data), json.dumps([{"field": "photo", "filename": "me.png",
 		"content": "data:image/png;base64," + png}]))
 	hp = membership.create_application(json.dumps({**data, "id_number": "E2E1", "website": "spam"}))
