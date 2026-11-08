@@ -15,6 +15,8 @@
   "phone",
   "email_id",
   "branch",
+  "employee_id",
+  "membership_application",
   "member_type",
   "column_break_phvr",
   "joining_date",
@@ -299,6 +301,19 @@
    "fieldname": "sms_opt_out",
    "fieldtype": "Check",
    "label": "Opted out of SMS"
+  },
+  {
+   "fieldname": "employee_id",
+   "fieldtype": "Data",
+   "label": "Staff / Employee No (at employer)",
+   "description": "Employee ID in the employer's ERPNext; used to send and read payroll deductions."
+  },
+  {
+   "fieldname": "membership_application",
+   "fieldtype": "Link",
+   "label": "Membership Application",
+   "options": "SACCO Membership Application",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,

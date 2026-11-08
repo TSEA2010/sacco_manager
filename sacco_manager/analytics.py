@@ -107,7 +107,12 @@ def snapshot(as_at):
 	def pct(a, b):
 		return round(a / b * 100, 1) if b else 0
 
+	float_target = flt(frappe.db.get_single_value("SACCO Settings", "liquidity_float_target"))
+	liquid_now = pick("Liquid assets")
+
 	return frappe._dict(
+		float_target=float_target,
+		available_to_lend=max(0, liquid_now - float_target),
 		group_company_loans=group_loans,
 		group_company_interest_12m=group_interest_12,
 		as_at=str(t),
@@ -305,6 +310,18 @@ def alerts(t):
 		n = frappe.db.count("SACCO Board Approval", {"docstatus": 0})
 		if n:
 			add("info", _("{0} board approvals pending").format(n), "List/SACCO Board Approval?docstatus=0")
+	target = flt(frappe.db.get_single_value("SACCO Settings", "liquidity_float_target"))
+	if target:
+		liquid = _gl("a.account_type IN ('Cash', 'Bank')", {"company": get_company(), "t": t})
+		if liquid < target:
+			add("bad", _("Cash is below the liquid float ({0} of {1}): recall funds from the group companies before lending more").format(
+				frappe.format_value(liquid, {"fieldtype": "Currency"}), frappe.format_value(target, {"fieldtype": "Currency"})))
+		elif liquid > target * 1.5:
+			add("info", _("{0} above the liquid float is idle and could be lent to the group companies").format(
+				frappe.format_value(liquid - target, {"fieldtype": "Currency"})))
+	n = frappe.db.count("SACCO Membership Application", {"status": ["in", ["Submitted", "Under Review"]]})
+	if n:
+		add("info", _("{0} membership applications to review").format(n), "List/SACCO Membership Application?status=Submitted")
 	diff = _savings_at(t) - (-_gl("a.name = %(a)s", {"company": get_company(), "t": t, "a": get_settings().savings_liability_account}))
 	if get_settings().savings_liability_account and abs(diff) >= 1:
 		add("bad", _("Savings sub-ledger and GL differ by {0}").format(frappe.format_value(diff, {"fieldtype": "Currency"})),

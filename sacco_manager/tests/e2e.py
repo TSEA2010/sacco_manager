@@ -246,7 +246,7 @@ def t_approval():
 	frappe.set_user(CTX.manager)
 	app = frappe.get_doc("Loan Application", CTX.app)
 	app.status = "Approved"
-	msg = expect_error(app.save, contains="guarantees not in place")
+	msg = expect_error(app.save, contains="waiting for")
 	return f"credit officer cannot approve; manager can; pending guarantee blocks: {msg[:60]}"
 
 
@@ -615,6 +615,211 @@ def t_housekeeping():
 	return f"{pv['removable']:,} of {pv['rows']:,} arrears-log rows removable; {r['cancelled_gl_rows']:,} cancelled GL rows"
 
 
+@check("employer facility: Board approval required; deductions kept by the company become a drawdown")
+def t_employer_facility():
+	from sacco_manager.sacco_manager.doctype.sacco_employer.sacco_employer import create_facility
+
+	emp = frappe.db.get_value("SACCO Employer", {"branch": "DR. Plumber"}, "name")
+	assert emp and frappe.db.exists("Loan Product", "GRPFAC01"), "employer/facility product missing"
+	frappe.db.set_value("SACCO Employer", emp, {"facility_limit": 2000000, "facility_rate": 10})
+	msg = expect_error(lambda: create_facility(emp), contains="Board Approval")
+	ba = frappe.get_doc({"doctype": "SACCO Board Approval", "approval_type": "Loan above limit", "subject": "Doctor Plumber facility",
+		"decision": "Approved", "meeting_date": today(), "minute_ref": "MIN/TEST/FAC", "amount": 2000000,
+		"reference_doctype": "SACCO Employer", "reference_name": emp}).insert()
+	ba.submit()
+	loan = create_facility(emp)
+	r = frappe.get_doc({"doctype": "SACCO Branch Remittance", "branch": "DR. Plumber", "period_month": "November",
+		"period_year": 2026, "received_amount": 1000, "received_date": "2026-12-20",
+		"settlement": "Kept by the company as a facility drawdown"})
+	r.append("members", {"member": CTX.member, "savings_account": CTX.acc, "expected_amount": 1000, "received_savings": 1000})
+	r.insert()
+	assert not r.is_late and not r.penalty_amount, "kept deductions must not be charged a late penalty"
+	frappe.db.set_value("SACCO Branch Remittance", r.name, "owner", CTX.accountant)
+	frappe.set_user(CTX.manager)
+	r = frappe.get_doc("SACCO Branch Remittance", r.name)
+	r.submit()
+	frappe.set_user("Administrator")
+	dis = frappe.db.get_value("SACCO Branch Remittance", r.name, "facility_disbursement")
+	assert dis, "no facility drawdown"
+	clearing = frappe.db.get_single_value("SACCO Settings", "branch_receivable_account")
+	gl = {(g.account[:4], flt(g.debit), flt(g.credit)) for g in frappe.get_all("GL Entry", filters={"voucher_no": dis, "is_cancelled": 0},
+		fields=["account", "debit", "credit"])}
+	assert ("1620", 1000.0, 0.0) in gl and (clearing[:4], 0.0, 1000.0) in gl, gl
+	assert flt(frappe.db.get_value("Loan", loan, "disbursed_amount")) == 1000
+	return f"blocked without approval ('{msg[:35]}'); facility {loan}; drawdown {dis} Dr 1620 / Cr clearing"
+
+
+class FakeERP:
+	"""In-memory stand-in for a company's ERPNext."""
+
+	def __init__(self):
+		self.adds, self.slips = {}, {}
+
+	def get_list(self, doctype, filters, fields, limit=0):
+		if doctype == "Additional Salary":
+			emp = next(f[2] for f in filters if f[0] == "employee")
+			return [v for v in self.adds.values() if v["employee"] == emp]
+		return [{"name": n, "employee": s["employee"]} for n, s in self.slips.items()]
+
+	def get_doc(self, doctype, name):
+		return self.slips[name]
+
+	def insert(self, doctype, doc):
+		name = f"HR-ADS-{len(self.adds) + 1}"
+		self.adds[name] = {**doc, "name": name, "docstatus": 0}
+		return self.adds[name]
+
+	def update(self, doctype, name, values):
+		self.adds[name].update(values)
+		return self.adds[name]
+
+
+@check("employer ERPNext: deductions pushed to payroll and payslips read back into a remittance")
+def t_employer_erp():
+	from sacco_manager import employer_erp
+
+	emp = frappe.get_doc("SACCO Employer", {"branch": "DR. Plumber"})
+	frappe.db.set_value("SACCO Member", CTX.member, "employee_id", "E2E-EMP-1")
+	fake = FakeERP()
+	frappe.flags.sacco_erp_client = fake
+	try:
+		out = employer_erp.push_deductions(emp.name, "December", 2026)
+		mine = [a for a in fake.adds.values() if a["employee"] == "E2E-EMP-1"]
+		expected = next(r.total for r in employer_erp.deduction_schedule("DR. Plumber") if r.member == CTX.member)
+		assert out["created"] >= 1 and mine and flt(mine[0]["amount"]) == expected, (out, mine, expected)
+		again = employer_erp.push_deductions(emp.name, "December", 2026)
+		assert again["created"] == 0, "second push must update, not duplicate"
+		comp = emp.salary_component
+		fake.slips = {"SAL-1": {"employee": "E2E-EMP-1", "deductions": [{"salary_component": comp, "amount": 1500}]},
+			"SAL-2": {"employee": "NOT-A-MEMBER", "deductions": [{"salary_component": comp, "amount": 300},
+				{"salary_component": "PAYE", "amount": 9999}]}}
+		res = employer_erp.pull_deductions(emp.name, "December", 2026)
+	finally:
+		frappe.flags.sacco_erp_client = None
+	rem = frappe.get_doc("SACCO Branch Remittance", res["remittance"])
+	got = sum(flt(r.received_savings) + flt(r.received_loan_repayment) for r in rem.members if r.member == CTX.member)
+	assert flt(rem.received_amount) == 1800 and abs(got - 1500) < 0.01 and "NOT-A-MEMBER" in res["unmatched"], (rem.received_amount, got, res)
+	return f"pushed {out['created']} drafts; read 2 slips -> {rem.name} {rem.received_amount}; member got {got}; 1 unmatched"
+
+
+@check("online membership application: submit, duplicate blocked, approve creates member, reject")
+def t_membership():
+	import base64
+	import json
+
+	from sacco_manager import membership
+	from sacco_manager.sacco_manager.doctype.sacco_membership_application import sacco_membership_application as A
+
+	png = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"0" * 64).decode()
+	data = {"first_name": "Wanjiku", "last_name": "Testapplicant", "id_number": "E2E99887766", "phone": "0712000111",
+		"email": "wanjiku.e2e@example.com", "employer": "DR. Plumber", "employee_id": "E2E-EMP-2", "monthly_contribution": 1500,
+		"consent": 1, "kin_name": "Kamau", "kin_phone": "0712000222", "address": "Box 1, Industrial Area"}
+	frappe.set_user("Guest")
+	out = membership.create_application(json.dumps(data), json.dumps([{"field": "photo", "filename": "me.png",
+		"content": "data:image/png;base64," + png}]))
+	hp = membership.create_application(json.dumps({**data, "id_number": "E2E1", "website": "spam"}))
+	frappe.set_user("Administrator")
+	assert hp["name"] is None, "honeypot accepted"
+	app = frappe.get_doc("SACCO Membership Application", out["name"])
+	assert app.status == "Submitted" and app.source == "Online" and app.photo and app.phone == "254712000111", app.as_dict()
+	expect_error(lambda: membership.create_application(json.dumps(data)), contains="already being processed")
+	frappe.set_user(CTX.teller)
+	expect_error(lambda: A.approve(app.name), contains="")
+	frappe.set_user(CTX.manager)
+	res = A.approve(app.name)
+	frappe.set_user("Administrator")
+	m = frappe.get_doc("SACCO Member", res["member"])
+	acc = frappe.get_all("SACCO Savings Account", filters={"member": m.name}, fields=["monthly_contribution"])
+	files = frappe.db.count("File", {"attached_to_doctype": "SACCO Member", "attached_to_name": m.name})
+	assert m.consent_data_processing and m.branch == "DR. Plumber" and m.employee_id == "E2E-EMP-2" and m.contact_name == "Kamau"
+	assert acc and flt(acc[0].monthly_contribution) == 1500 and files >= 1, (acc, files)
+	app2 = membership.create_application(json.dumps({**data, "id_number": "E2E55554444", "phone": "0712000333"}))
+	frappe.set_user(CTX.manager)
+	A.reject(app2["name"], "Not on the payroll")
+	frappe.set_user("Administrator")
+	assert frappe.db.get_value("SACCO Membership Application", app2["name"], "status") == "Rejected"
+	return f"{app.name} -> member {res['member_no']} with savings account and {files} document(s); {app2['name']} rejected"
+
+
+@check("guarantors: request, partial accept, decline/replace, coverage rule on approval")
+def t_guarantors():
+	import json
+
+	from sacco_manager import guarantors as G
+	from sacco_manager.api import sacco_portal as P
+	from sacco_manager.sacco_manager.doctype.sacco_member.sacco_member import create_portal_user
+	from sacco_manager.sacco_manager.doctype.sacco_savings_transaction.sacco_savings_transaction import (
+		create_savings_transaction,
+	)
+
+	acc2 = frappe.get_all("SACCO Savings Account", filters={"member": CTX.member2}, pluck="name")[0]
+	create_savings_transaction(acc2, "Deposit", 50000, today(), payment_account=frappe.db.get_single_value("SACCO Settings", "cash_account"))
+	email2 = "e2e.member2@example.com"
+	make_user(email2, [], user_type="Website User")
+	frappe.db.set_value("SACCO Member", CTX.member2, {"is_user": 1, "user_id": email2})
+	create_portal_user(CTX.member2)
+	frappe.set_user("e2e.member@example.com")
+	app = P.submit_loan_application_v2("TSCCSL0001", 20000, 12, "School fees",
+		guarantors=json.dumps([{"is_self": True, "pledge_value": 20000}]))["application"]
+	req = G.request_guarantee(app, CTX.member2, 8000)
+	frappe.set_user(email2)
+	mine = G.my_guarantees()
+	assert any(r["name"] == req["row"] for r in mine["requests"]), mine
+	ok = G.respond(req["row"], "accept", 5000)
+	assert ok["status"] == "Confirmed" and flt(frappe.db.get_value("SACCO Loan Guarantor", req["row"], "pledge_value")) == 5000
+	frappe.set_user("e2e.member@example.com")
+	expect_error(lambda: G.request_guarantee(app, CTX.member2, 1000), contains="already a guarantor")
+	frappe.set_user("Administrator")
+	# a declined guarantor no longer blocks approval when the confirmed pledges cover the loan
+	frappe.db.set_value("SACCO Loan Guarantor", req["row"], "status", "Declined")
+	self_row = frappe.db.get_value("SACCO Loan Guarantor", {"loan_application": app, "is_self": 1}, "name")
+	frappe.db.set_value("SACCO Loan Guarantor", self_row, "pledge_value", 10000)
+	frappe.set_user(CTX.manager)
+	la = frappe.get_doc("Loan Application", app)
+	la.status = "Approved"
+	short = expect_error(la.save, contains="confirmed guarantees cover")
+	frappe.set_user("Administrator")
+	frappe.db.set_value("SACCO Loan Guarantor", self_row, "pledge_value", 20000)
+	frappe.set_user(CTX.manager)
+	la = frappe.get_doc("Loan Application", app)
+	la.status = "Approved"
+	la.save()
+	frappe.set_user("Administrator")
+	return f"{app}: requested 8,000, accepted 5,000; short cover blocked ('{short[:40]}'); approved once covered"
+
+
+@check("member login: phone or email resolves only portal members; one-time code verifies once")
+def t_member_login():
+	from sacco_manager import member_login as L
+
+	user = "e2e.member@example.com"
+	phone = frappe.db.get_value("SACCO Member", CTX.member, "phone")
+	assert L.resolve_user("0" + phone[3:]) == user and L.resolve_user("+" + phone) == user and L.resolve_user(user) == user
+	assert L.resolve_user(CTX.manager) is None, "desk users must not log in through the member page"
+	frappe.db.set_single_value("SACCO Settings", "member_login_otp", 1)
+	assert "If an account matches" in L.send_login_code("0" + phone[3:], "email")["message"]
+	assert L.send_login_code("0700000999", "email")["message"], "unknown numbers get the same answer"
+	expect_error(lambda: L.verify_login_code(user, "abcdef"), contains="wrong")
+	frappe.cache.set_value(L._key(user), {"h": L._hash(user, "123456"), "tries": 0}, expires_in_sec=300)
+
+	class LM:
+		user = None
+
+		def login_as(self, u):
+			self.user = u
+
+	old = getattr(frappe.local, "login_manager", None)
+	frappe.local.login_manager = LM()
+	try:
+		r = L.verify_login_code(phone, "123 456")
+		logged = frappe.local.login_manager.user
+	finally:
+		frappe.local.login_manager = old
+	assert r["redirect"] == "/sacco-portal" and logged == user
+	assert not frappe.cache.get_value(L._key(user)), "code must work only once"
+	return "phone/email resolve; staff refused; code works once"
+
+
 @check("reports run")
 def t_reports():
 	from frappe.desk.query_report import run
@@ -647,7 +852,8 @@ def run():
 	try:
 		for t in [t_setup, t_settings_guard, t_member, t_deposit, t_withdrawal, t_auditor, t_portal, t_token,
 				t_approval, t_mpesa, t_interest, t_dividend, t_remittance, t_topup, t_system_manager, t_reporting, t_misc_features,
-				t_board_approval, t_sms, t_audit_fixes, t_print_formats, t_group_company_loans, t_analytics, t_housekeeping, t_reports]:
+				t_board_approval, t_sms, t_audit_fixes, t_print_formats, t_group_company_loans, t_analytics, t_housekeeping,
+				t_employer_facility, t_employer_erp, t_membership, t_guarantors, t_member_login, t_reports]:
 			t()
 	finally:
 		frappe.db.rollback()

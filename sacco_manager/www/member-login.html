@@ -1,0 +1,105 @@
+{% extends "templates/web.html" %}
+{% block title %}Member Login · Trident SACCO{% endblock %}
+
+{% block head_include %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+.ml{font-family:'DM Sans',sans-serif;background:#f4f2ee;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:48px 16px;color:#1a1a1a}
+.ml *{box-sizing:border-box}
+.ml-card{background:#fff;border:1px solid #e5e0d8;border-radius:16px;padding:28px;max-width:420px;width:100%}
+.ml h1{font-size:22px;font-weight:700;color:#1a3c2e;margin:0 0 4px}
+.ml .sub{color:#666;font-size:13px;margin-bottom:18px}
+.ml .tabs{display:flex;background:#f4f2ee;border-radius:10px;padding:4px;margin-bottom:18px}
+.ml .tab{flex:1;border:none;background:none;padding:9px;border-radius:8px;font:inherit;font-size:13px;font-weight:600;color:#666;cursor:pointer}
+.ml .tab.on{background:#fff;color:#1a3c2e;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ml label{display:block;font-size:12px;font-weight:600;color:#444;margin:10px 0 4px}
+.ml input{width:100%;padding:11px 12px;border:1px solid #d9d4cb;border-radius:9px;font:inherit;font-size:15px}
+.ml input:focus{outline:2px solid #a8d5b5;border-color:#1a7f5a}
+.ml .code{letter-spacing:.4em;text-align:center;font-size:20px}
+.ml .btn{background:#1a3c2e;color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:16px}
+.ml .btn.alt{background:#fff;color:#1a3c2e;border:1px solid #1a3c2e;margin-top:8px}
+.ml .btn[disabled]{opacity:.6;cursor:wait}
+.ml .msg{border-radius:9px;padding:10px 12px;font-size:13px;margin-top:12px;display:none}
+.ml .msg.err{background:#fde8e7;color:#b42318}.ml .msg.ok{background:#e3f4e8;color:#17663a}
+.ml .foot{font-size:12px;color:#888;margin-top:18px;text-align:center}
+.ml .foot a{color:#1a7f5a}
+.ml .hidden{display:none}
+.ml .chan{display:flex;gap:14px;font-size:13px;margin-top:8px}.ml .chan input{width:auto}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="ml"><div class="ml-card">
+  <h1>Member login</h1>
+  <div class="sub">Use your mobile number or email.</div>
+  <div class="tabs">
+    {% if opts.password %}<button class="tab on" data-t="pw" type="button">Password</button>{% endif %}
+    {% if opts.otp %}<button class="tab {% if not opts.password %}on{% endif %}" data-t="otp" type="button">One-time code</button>{% endif %}
+  </div>
+
+  <form id="ml-pw" class="{% if not opts.password %}hidden{% endif %}">
+    <label>Mobile number or email</label><input name="identifier" autocomplete="username" required placeholder="07XX XXX XXX">
+    <label>Password</label><input name="password" type="password" autocomplete="current-password" required>
+    <button class="btn" type="submit">Log in</button>
+  </form>
+
+  <form id="ml-otp" class="{% if opts.password or not opts.otp %}hidden{% endif %}">
+    <label>Mobile number or email</label><input name="identifier" autocomplete="username" required placeholder="07XX XXX XXX">
+    <div class="chan">
+      {% if opts.sms %}<label style="margin:0;font-weight:500"><input type="radio" name="channel" value="sms" checked> SMS</label>{% endif %}
+      <label style="margin:0;font-weight:500"><input type="radio" name="channel" value="email" {% if not opts.sms %}checked{% endif %}> Email</label>
+    </div>
+    <button class="btn" type="button" id="ml-send">Send me a code</button>
+    <div id="ml-code-box" class="hidden">
+      <label>6-digit code</label><input name="code" class="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+      <button class="btn" type="submit">Log in</button>
+      <button class="btn alt" type="button" id="ml-resend">Send a new code</button>
+    </div>
+  </form>
+
+  <div class="msg" id="ml-msg"></div>
+  <div class="foot">Not a member yet? <a href="/join">Apply to join</a><br>Staff: <a href="/login">staff login</a></div>
+</div></div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  const msg = document.getElementById("ml-msg");
+  const say = (t, ok) => { msg.textContent = t; msg.className = "msg " + (ok ? "ok" : "err"); msg.style.display = "block"; };
+  const go = (r) => { window.location.href = (r.message && r.message.redirect) || "/sacco-portal"; };
+  const errText = (r) => { try { return JSON.parse(JSON.parse(r._server_messages)[0]).message; } catch (e) { return "Login failed. Check your details."; } };
+  document.querySelectorAll(".ml .tab").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(".ml .tab").forEach((x) => x.classList.toggle("on", x === b));
+    document.getElementById("ml-pw").classList.toggle("hidden", b.dataset.t !== "pw");
+    document.getElementById("ml-otp").classList.toggle("hidden", b.dataset.t !== "otp");
+    msg.style.display = "none";
+  }));
+  const call = (method, args, ok) => frappe.call({ method, args, freeze: false, callback: ok,
+    error: (r) => say(errText(r)) , always: () => {} });
+
+  const pw = document.getElementById("ml-pw");
+  pw && pw.addEventListener("submit", (e) => {
+    e.preventDefault();
+    call("sacco_manager.member_login.login_with_password", { identifier: pw.identifier.value, password: pw.password.value }, go);
+  });
+
+  const otp = document.getElementById("ml-otp");
+  const send = () => {
+    if (!otp.identifier.value.trim()) return say("Enter your mobile number or email.");
+    const ch = (otp.querySelector("input[name=channel]:checked") || {}).value || "email";
+    call("sacco_manager.member_login.send_login_code", { identifier: otp.identifier.value, channel: ch }, (r) => {
+      say(r.message.message, true);
+      document.getElementById("ml-code-box").classList.remove("hidden");
+      otp.code.focus();
+    });
+  };
+  document.getElementById("ml-send") && document.getElementById("ml-send").addEventListener("click", send);
+  document.getElementById("ml-resend") && document.getElementById("ml-resend").addEventListener("click", send);
+  otp && otp.addEventListener("submit", (e) => {
+    e.preventDefault();
+    call("sacco_manager.member_login.verify_login_code", { identifier: otp.identifier.value, code: otp.code.value }, go);
+  });
+})();
+</script>
+{% endblock %}

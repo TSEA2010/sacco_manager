@@ -2,8 +2,9 @@
 # For license information, please see license.txt
 """Loan Application gates:
 1. Only SACCO Managers/Administrators may approve.
-2. An application with guarantor rows cannot be approved while any guarantee is Pending or
-   Declined, or while any pledge exceeds what the guarantor's savings can still back."""
+2. An application with guarantor rows cannot be approved while any guarantee is still pending, while
+   the confirmed pledges do not cover the loan (a declined guarantor can be replaced), or while any
+   confirmed pledge exceeds what the guarantor's savings can still back."""
 
 import frappe
 from frappe import _
@@ -40,16 +41,17 @@ def validate(doc, method=None):
 	if not rows:
 		return
 	pending = [r.guarantor_name for r in rows if r.status == "Pending"]
-	declined = [r.guarantor_name for r in rows if r.status == "Declined"]
-	if pending or declined:
-		parts = []
-		if pending:
-			parts.append(_("awaiting {0}").format(", ".join(pending)))
-		if declined:
-			parts.append(_("declined by {0}").format(", ".join(declined)))
-		frappe.throw(_("Cannot approve: guarantees not in place ({0}).").format("; ".join(parts)),
+	if pending:
+		frappe.throw(_("Cannot approve: still waiting for {0} to answer the guarantee request.").format(", ".join(pending)),
 			title=_("Guarantor approval pending"))
-	short = [r.guarantor_name for r in rows
+	confirmed = [r for r in rows if r.status == "Confirmed"]
+	covered = sum(flt(r.pledge_value) for r in confirmed)
+	if covered + 0.5 < flt(doc.loan_amount):
+		declined = [r.guarantor_name for r in rows if r.status == "Declined"]
+		frappe.throw(_("Cannot approve: confirmed guarantees cover {0} of the {1} loan{2}. Add another guarantor or reduce the loan.").format(
+			frappe.format_value(covered, {"fieldtype": "Currency"}), frappe.format_value(doc.loan_amount, {"fieldtype": "Currency"}),
+			_(" ({0} declined)").format(", ".join(declined)) if declined else ""), title=_("Not enough guarantees"))
+	short = [r.guarantor_name for r in confirmed
 		if flt(r.pledge_value) > get_pledge_capacity(r.savings_account, exclude_application=doc.name) + 0.5]
 	if short:
 		frappe.throw(_("Cannot approve: savings of {0} no longer cover their pledge.").format(", ".join(short)))

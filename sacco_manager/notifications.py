@@ -96,8 +96,10 @@ def on_guarantor_insert(doc, method=None):
 	if not phone:
 		return
 	applicant = frappe.db.get_value("SACCO Member", doc.applicant_member, "full_name") or ""
-	queue_sms(phone, f"Dear {first}, {applicant} has asked you to guarantee a loan with {_kes(doc.pledge_value)} of "
-		f"your savings capacity ({doc.loan_application}). Check your email to confirm or decline, or call the office.",
+	from sacco_manager.guarantors import request_link
+
+	queue_sms(phone, f"Dear {first}, {applicant} asks you to guarantee {_kes(doc.pledge_value)} of a loan "
+		f"({doc.loan_application}). Accept or decline: {request_link(doc)} or in the member portal.",
 		reference=doc.name)
 
 

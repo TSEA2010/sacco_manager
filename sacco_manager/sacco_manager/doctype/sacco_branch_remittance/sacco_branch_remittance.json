@@ -17,6 +17,9 @@
   "expected_amount",
   "received_amount",
   "received_date",
+  "settlement",
+  "facility_disbursement",
+  "source",
   "payment_account",
   "reference_no",
   "allocated_amount",
@@ -196,6 +199,30 @@
    "fieldtype": "Currency",
    "label": "Unallocated",
    "read_only": 1
+  },
+  {
+   "fieldname": "settlement",
+   "fieldtype": "Select",
+   "label": "Settlement",
+   "options": "Paid to the SACCO in cash\nKept by the company as a facility drawdown",
+   "default": "Paid to the SACCO in cash",
+   "description": "Kept by the company: the amount deducted is lent to the company on its facility instead of being paid in."
+  },
+  {
+   "fieldname": "facility_disbursement",
+   "fieldtype": "Link",
+   "label": "Facility Drawdown",
+   "options": "Loan Disbursement",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Data",
+   "label": "Source",
+   "read_only": 1,
+   "no_copy": 1,
+   "description": "Set when built from the employer's payroll."
   }
  ],
  "grid_page_length": 50,

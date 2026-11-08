@@ -105,6 +105,11 @@ CUSTOM_FIELDS = {
 		{"fieldname": "sacco_member", "fieldtype": "Link", "label": "SACCO Member", "options": "SACCO Member",
 			"insert_after": "national_id", "read_only": 1},
 	],
+	"Loan Disbursement": [
+		{"fieldname": "sacco_disbursement_account", "fieldtype": "Link", "label": "Credit Account (SACCO)", "options": "Account",
+			"insert_after": "disbursement_account", "read_only": 1,
+			"description": "Set when a group company keeps its members' deductions: the drawdown credits Employer Remittance Clearing."},
+	],
 	"Loan Repayment": [
 		{"fieldname": "sacco_mpesa_transaction", "fieldtype": "Link", "label": "M-Pesa Payment",
 			"options": "SACCO M-Pesa Transaction", "insert_after": "reference_number", "read_only": 1},

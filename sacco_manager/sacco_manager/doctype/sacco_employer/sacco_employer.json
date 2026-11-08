@@ -1,0 +1,296 @@
+{
+ "actions": [],
+ "creation": "2026-11-07 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "module": "Sacco Manager",
+ "owner": "Administrator",
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 1
+  },
+  {
+   "role": "SACCO Administrator",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 1
+  },
+  {
+   "role": "SACCO Manager",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  },
+  {
+   "role": "SACCO Accountant",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  },
+  {
+   "role": "SACCO Credit Officer",
+   "permlevel": 0,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  },
+  {
+   "role": "SACCO Auditor",
+   "permlevel": 0,
+   "print": 1,
+   "email": 0,
+   "report": 1,
+   "export": 1,
+   "share": 0,
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0,
+   "delete": 0
+  }
+ ],
+ "name": "SACCO Employer",
+ "autoname": "field:employer_name",
+ "naming_rule": "By fieldname",
+ "title_field": "employer_name",
+ "fields": [
+  {
+   "fieldname": "employer_name",
+   "fieldtype": "Data",
+   "label": "Employer",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch (members' employer)",
+   "options": "Branch",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Company as Borrower (Customer)",
+   "options": "Customer",
+   "in_list_view": 1,
+   "description": "The company in the Group Companies customer group. Its facility and retained deductions are lent to this customer."
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1"
+  },
+  {
+   "fieldname": "remittance_settlement",
+   "fieldtype": "Select",
+   "label": "Monthly Deductions Are Usually",
+   "options": "Paid to the SACCO in cash\nKept by the company as a facility drawdown",
+   "default": "Paid to the SACCO in cash",
+   "description": "Default for this employer's monthly remittances; can be changed on each remittance."
+  },
+  {
+   "fieldname": "facility_section",
+   "fieldtype": "Section Break",
+   "label": "Funding Facility (SACCO lends to the company)"
+  },
+  {
+   "fieldname": "facility_loan",
+   "fieldtype": "Link",
+   "label": "Facility (Lending loan)",
+   "options": "Loan",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "facility_limit",
+   "fieldtype": "Currency",
+   "label": "Facility Limit"
+  },
+  {
+   "fieldname": "facility_rate",
+   "fieldtype": "Percent",
+   "label": "Interest Rate (% p.a.)"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "facility_start",
+   "fieldtype": "Date",
+   "label": "Facility Start"
+  },
+  {
+   "fieldname": "facility_end",
+   "fieldtype": "Date",
+   "label": "Facility Review / End Date"
+  },
+  {
+   "fieldname": "facility_agreement",
+   "fieldtype": "Attach",
+   "label": "Signed Facility Agreement"
+  },
+  {
+   "fieldname": "erp_section",
+   "fieldtype": "Section Break",
+   "label": "Connection to the Company's ERPNext (payroll deductions)",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "erp_enabled",
+   "fieldtype": "Check",
+   "label": "Connect to Employer ERPNext"
+  },
+  {
+   "fieldname": "erp_url",
+   "fieldtype": "Data",
+   "label": "ERPNext URL",
+   "options": "URL",
+   "depends_on": "erp_enabled",
+   "description": "e.g. https://trident.m.frappe.cloud — the company's own site."
+  },
+  {
+   "fieldname": "erp_company",
+   "fieldtype": "Data",
+   "label": "Company Name in that ERPNext",
+   "depends_on": "erp_enabled"
+  },
+  {
+   "fieldname": "salary_component",
+   "fieldtype": "Data",
+   "label": "SACCO Deduction Salary Component",
+   "depends_on": "erp_enabled",
+   "default": "Trident Sacco"
+  },
+  {
+   "fieldname": "cb3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "erp_api_key",
+   "fieldtype": "Data",
+   "label": "API Key",
+   "depends_on": "erp_enabled"
+  },
+  {
+   "fieldname": "erp_api_secret",
+   "fieldtype": "Password",
+   "label": "API Secret",
+   "depends_on": "erp_enabled",
+   "description": "Create an API user in the company ERPNext with HR User + read on Salary Slip; never use an Administrator key."
+  },
+  {
+   "fieldname": "payroll_day",
+   "fieldtype": "Int",
+   "label": "Payroll Date (day of month)",
+   "default": "25",
+   "depends_on": "erp_enabled",
+   "description": "Additional Salary payroll date used when the SACCO pushes the month's deductions."
+  },
+  {
+   "fieldname": "last_sync",
+   "fieldtype": "Small Text",
+   "label": "Last Sync Result",
+   "read_only": 1,
+   "no_copy": 1
+  }
+ ],
+ "field_order": [
+  "employer_name",
+  "branch",
+  "customer",
+  "cb1",
+  "enabled",
+  "remittance_settlement",
+  "facility_section",
+  "facility_loan",
+  "facility_limit",
+  "facility_rate",
+  "cb2",
+  "facility_start",
+  "facility_end",
+  "facility_agreement",
+  "erp_section",
+  "erp_enabled",
+  "erp_url",
+  "erp_company",
+  "salary_component",
+  "cb3",
+  "erp_api_key",
+  "erp_api_secret",
+  "payroll_day",
+  "last_sync"
+ ],
+ "modified": "2026-11-07 18:00:00.000000",
+ "modified_by": "Administrator"
+}

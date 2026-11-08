@@ -4,6 +4,9 @@
 
 On submit (maker-checker):
 1. Receipt:      Dr bank/M-Pesa (payment_account)      Cr Employer Remittance Clearing
+   or, when the company keeps the deductions ("Kept by the company as a facility drawdown"):
+                 a Loan Disbursement on the employer's facility: Dr Loans to Group Companies [company]
+                 Cr Employer Remittance Clearing, so the company owes the amount with interest.
 2. Per member:   savings deposit, loan repayment and share purchase, each paid from the
                  clearing account (Dr clearing / Cr member savings, loan, share capital)
 3. Late penalty: Dr Employer Remittance Clearing       Cr Penalty Income
@@ -28,6 +31,9 @@ from sacco_manager.sacco_manager.doctype.sacco_savings_transaction.sacco_savings
 )
 from sacco_manager.sacco_manager.doctype.sacco_share_ledger.sacco_share_ledger import create_share_entry
 from sacco_manager.utils import describe_error, enforce_maker_checker, get_settings, require_setting
+
+
+KEEP = "Kept by the company as a facility drawdown"
 
 
 class SACCOBranchRemittance(Document):
@@ -64,10 +70,13 @@ class SACCOBranchRemittance(Document):
 		due_day = min(due_day, calendar.monthrange(year, month)[1])
 		self.due_date = f"{year}-{month:02d}-{due_day:02d}"
 
+	def is_kept(self):
+		return self.settlement == KEEP
+
 	def _calculate_penalty(self):
 		self.is_late, self.days_late, self.penalty_amount = 0, 0, 0
-		if not self.received_date or not self.due_date:
-			return
+		if not self.received_date or not self.due_date or self.is_kept():
+			return  # kept deductions are a facility drawdown that earns interest, not a late payment
 		days = date_diff(getdate(self.received_date), getdate(self.due_date))
 		if days <= 0:
 			return
@@ -143,16 +152,51 @@ class SACCOBranchRemittance(Document):
 		self._check_duplicates()
 		if flt(self.received_amount) <= 0 or not self.received_date:
 			frappe.throw(_("Enter the Amount Received and Date Received before submitting."))
-		if not self.payment_account:
+		if self.is_kept():
+			self._facility()  # validates the facility exists and has room
+		elif not self.payment_account:
 			self.payment_account = require_setting("cash_account", "Default Cash / Bank Account")
+
+	def _facility(self):
+		from sacco_manager.sacco_manager.doctype.sacco_employer.sacco_employer import for_branch
+
+		employer = for_branch(self.branch)
+		loan = frappe.db.get_value("SACCO Employer", employer, "facility_loan") if employer else None
+		if not loan or frappe.db.get_value("Loan", loan, "docstatus") != 1:
+			frappe.throw(_("{0} has no open facility, so the deductions cannot be kept by the company. "
+				"Open the facility on SACCO Employer, or record the remittance as paid in cash.").format(self.branch))
+		available = flt(frappe.db.get_value("Loan", loan, "available_limit_amount"))
+		if available and flt(self.received_amount) > available + 0.005:
+			frappe.throw(_("The facility has {0} left; this drawdown of {1} would exceed the Board's limit.").format(
+				frappe.format_value(available, {"fieldtype": "Currency"}),
+				frappe.format_value(self.received_amount, {"fieldtype": "Currency"})))
+		return loan
+
+	def _draw_on_facility(self, clearing):
+		loan = frappe.get_doc("Loan", self._facility())
+		dis = frappe.get_doc({
+			"doctype": "Loan Disbursement", "against_loan": loan.name, "company": loan.company,
+			"applicant_type": loan.applicant_type, "applicant": loan.applicant,
+			"disbursement_date": self.received_date, "posting_date": self.received_date,
+			"disbursed_amount": flt(self.received_amount), "sacco_disbursement_account": clearing,
+			"reference_number": self.name,
+		})
+		dis.flags.ignore_permissions = True
+		dis.flags.ignore_mandatory = True
+		dis.insert()
+		dis.submit()
+		return dis.name
 
 	def on_submit(self):
 		clearing = require_setting("branch_receivable_account", "Employer Remittance Clearing")
 		ref = (self.doctype, self.name)
-		self.db_set("receipt_journal_entry", make_journal_entry(
-			[{"account": self.payment_account, "debit": flt(self.received_amount)},
-			 {"account": clearing, "credit": flt(self.received_amount)}],
-			self.received_date, f"Check-off received - {self.title} ({self.reference_no or ''})", reference=ref))
+		if self.is_kept():
+			self.db_set("facility_disbursement", self._draw_on_facility(clearing))
+		else:
+			self.db_set("receipt_journal_entry", make_journal_entry(
+				[{"account": self.payment_account, "debit": flt(self.received_amount)},
+				 {"account": clearing, "credit": flt(self.received_amount)}],
+				self.received_date, f"Check-off received - {self.title} ({self.reference_no or ''})", reference=ref))
 
 		label = f"{self.period_month} {self.period_year} check-off"
 		for r in self.members:
@@ -196,7 +240,7 @@ class SACCOBranchRemittance(Document):
 
 	def on_cancel(self):
 		self.ignore_linked_doctypes = ("SACCO Savings Transaction", "Loan Repayment", "SACCO Share Ledger",
-			"Journal Entry", "GL Entry", "Payment Ledger Entry")
+			"Journal Entry", "GL Entry", "Payment Ledger Entry", "Loan Disbursement")
 		for r in self.members:
 			for field, dt in (("loan_repayment", "Loan Repayment"), ("share_entry", "SACCO Share Ledger")):
 				if r.get(field) and frappe.db.get_value(dt, r.get(field), "docstatus") == 1:
@@ -207,4 +251,8 @@ class SACCOBranchRemittance(Document):
 		cancel_linked_savings_transactions(self.doctype, self.name)
 		cancel_journal_entry(self.penalty_journal_entry)
 		cancel_journal_entry(self.receipt_journal_entry)
+		if self.facility_disbursement and frappe.db.get_value("Loan Disbursement", self.facility_disbursement, "docstatus") == 1:
+			d = frappe.get_doc("Loan Disbursement", self.facility_disbursement)
+			d.flags.ignore_permissions = True
+			d.cancel()
 		self.db_set("status", "Cancelled")

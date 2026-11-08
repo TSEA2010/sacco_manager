@@ -67,3 +67,11 @@ def check_application(doc):
 			frappe.throw(_("This loan would take lending to group companies to {0}, above the limit of {1}% of members' savings "
 				"({2}). Reduce the amount or have the Board change the limit in SACCO Settings.").format(fmt(after), limit, fmt(cap)),
 				title=_("Group company exposure limit"))
+
+
+def apply_disbursement_account(doc, method=None):
+	"""Loan Disbursement validate hook. Lending always copies the loan's disbursement (bank) account;
+	a drawdown created from a remittance the company kept must instead credit Employer Remittance
+	Clearing. The remittance sets sacco_disbursement_account; nothing else changes."""
+	if doc.get("sacco_disbursement_account"):
+		doc.disbursement_account = doc.sacco_disbursement_account

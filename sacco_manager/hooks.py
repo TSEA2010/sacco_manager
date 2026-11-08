@@ -31,6 +31,7 @@ doc_events = {
 	# SMS notifications (only when enabled in SACCO Settings; queued, never block the posting)
 	"SACCO Savings Transaction": {"on_submit": "sacco_manager.notifications.on_savings_transaction_submit"},
 	"Loan Repayment": {"on_submit": "sacco_manager.notifications.on_loan_repayment_submit"},
+	"Loan Disbursement": {"validate": "sacco_manager.company_lending.apply_disbursement_account"},
 	"SACCO Loan Guarantor": {"after_insert": "sacco_manager.notifications.on_guarantor_insert"},
 }
 

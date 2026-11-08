@@ -1,0 +1,149 @@
+{% extends "templates/web.html" %}
+{% block title %}Join Trident SACCO{% endblock %}
+
+{% block head_include %}
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+.jn{font-family:'DM Sans',sans-serif;background:#f4f2ee;min-height:100vh;padding:28px 16px 60px;color:#1a1a1a}
+.jn *{box-sizing:border-box}
+.jn-card{max-width:760px;margin:0 auto;background:#fff;border:1px solid #e5e0d8;border-radius:16px;padding:28px}
+.jn h1{font-size:24px;font-weight:700;color:#1a3c2e;margin:0 0 4px}
+.jn .sub{color:#666;font-size:14px;margin-bottom:18px}
+.jn h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#1a3c2e;margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid #eee}
+.jn .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.jn .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 16px}
+.jn label{display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:4px}
+.jn label .req{color:#c0392b}
+.jn input,.jn select,.jn textarea{width:100%;padding:10px 12px;border:1px solid #d9d4cb;border-radius:9px;font:inherit;font-size:14px;background:#fff}
+.jn input:focus,.jn select:focus,.jn textarea:focus{outline:2px solid #a8d5b5;border-color:#1a7f5a}
+.jn .hint{font-size:11px;color:#888;margin-top:3px}
+.jn .full{grid-column:1/-1}
+.jn .check{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#333;margin-top:10px}
+.jn .check input{width:auto;margin-top:3px}
+.jn .btn{background:#1a3c2e;color:#fff;border:none;border-radius:10px;padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:22px}
+.jn .btn[disabled]{opacity:.6;cursor:wait}
+.jn .err{background:#fde8e7;color:#b42318;border-radius:9px;padding:10px 12px;font-size:13px;margin-top:14px;display:none}
+.jn .ok{text-align:center;padding:30px 10px}
+.jn .ok .ref{font-size:22px;font-weight:700;color:#1a7f5a;margin:10px 0}
+.jn .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+@media (max-width:640px){.jn .grid,.jn .grid3{grid-template-columns:1fr}.jn-card{padding:18px}}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="jn">
+<div class="jn-card" id="jn-card">
+  <h1>Join Trident SACCO</h1>
+  <div class="sub">For staff of the group companies. Your savings are deducted from your salary each month. The SACCO office reviews your application and confirms by SMS.</div>
+  {% if not enabled %}
+  <div class="err" style="display:block">Online applications are closed at the moment. Please apply at the SACCO office.</div>
+  {% else %}
+  <form id="jn-form" autocomplete="on" novalidate>
+    <div class="hp" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+
+    <h2>Your details</h2>
+    <div class="grid3">
+      <div><label>First name <span class="req">*</span></label><input name="first_name" required maxlength="60"></div>
+      <div><label>Middle name</label><input name="middle_name" maxlength="60"></div>
+      <div><label>Last name <span class="req">*</span></label><input name="last_name" required maxlength="60"></div>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <div><label>National ID / Passport No <span class="req">*</span></label><input name="id_number" required maxlength="20" inputmode="numeric"></div>
+      <div><label>KRA PIN</label><input name="kra_pin" maxlength="11" placeholder="A012345678Z" style="text-transform:uppercase"></div>
+      <div><label>Date of birth</label><input name="date_of_birth" type="date"></div>
+      <div><label>Gender</label><select name="gender"><option value=""></option><option>Male</option><option>Female</option><option>Prefer Not to Say</option></select></div>
+      <div><label>Marital status</label><select name="marital_status"><option value=""></option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option></select></div>
+    </div>
+
+    <h2>Contact</h2>
+    <div class="grid">
+      <div><label>Mobile number (M-Pesa) <span class="req">*</span></label><input name="phone" type="tel" required placeholder="07XX XXX XXX" autocomplete="tel"></div>
+      <div><label>Email</label><input name="email" type="email" autocomplete="email"><div class="hint">Needed for online access and statements.</div></div>
+      <div class="full"><label>Physical / postal address</label><input name="address" maxlength="140"></div>
+      <div><label>Town</label><input name="town" maxlength="60"></div>
+    </div>
+
+    <h2>Employment and savings</h2>
+    <div class="grid">
+      <div><label>Employer <span class="req">*</span></label><select name="employer" required><option value=""></option>
+        {% for e in employers %}<option value="{{ e.value }}">{{ e.label }}</option>{% endfor %}</select></div>
+      <div><label>Staff / employee number</label><input name="employee_id" maxlength="40"><div class="hint">As on your payslip — links your payroll deductions.</div></div>
+      <div><label>Job title / department</label><input name="job_title" maxlength="80"></div>
+      <div><label>Monthly savings deduction (KES) <span class="req">*</span></label><input name="monthly_contribution" type="number" min="1" step="100" required></div>
+    </div>
+
+    <h2>Next of kin</h2>
+    <div class="grid">
+      <div><label>Full name</label><input name="kin_name" maxlength="80"></div>
+      <div><label>Relationship</label><input name="kin_relation" maxlength="40"></div>
+      <div><label>Phone</label><input name="kin_phone" type="tel"></div>
+      <div><label>Email</label><input name="kin_email" type="email"></div>
+    </div>
+
+    <h2>Documents</h2>
+    <div class="grid">
+      <div><label>Passport photo</label><input type="file" data-field="photo" accept="image/jpeg,image/png"></div>
+      <div><label>Copy of ID (front and back)</label><input type="file" data-field="id_copy" accept="image/jpeg,image/png,application/pdf"></div>
+      <div><label>KRA PIN certificate</label><input type="file" data-field="kra_copy" accept="image/jpeg,image/png,application/pdf"></div>
+      <div><label>Signed form / latest payslip</label><input type="file" data-field="signed_form" accept="image/jpeg,image/png,application/pdf"></div>
+    </div>
+    <div class="hint">JPG, PNG or PDF, up to 3 MB each. You can also bring them to the office.</div>
+
+    <h2>Declaration</h2>
+    <label class="check"><input type="checkbox" name="consent" required> <span>I apply to join Trident SACCO. I authorise my employer to deduct the amount above, and the SACCO's loan instalments, from my salary every month. I consent to the SACCO processing my personal data for membership, savings and loans, as required by the Data Protection Act 2019. <span class="req">*</span></span></label>
+    <label class="check"><input type="checkbox" name="wants_portal"> <span>I would like online access to see my savings and loans (an email address is required).</span></label>
+
+    <div class="err" id="jn-err"></div>
+    <button class="btn" id="jn-btn" type="submit">Submit application</button>
+  </form>
+  {% endif %}
+</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  const form = document.getElementById("jn-form");
+  if (!form) return;
+  const err = document.getElementById("jn-err"), btn = document.getElementById("jn-btn");
+  const show = (m) => { err.textContent = m; err.style.display = "block"; err.scrollIntoView({ behavior: "smooth", block: "center" }); };
+  const readFile = (f) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    err.style.display = "none";
+    const data = {};
+    new FormData(form).forEach((v, k) => { data[k] = typeof v === "string" ? v.trim() : v; });
+    data.consent = form.consent.checked ? 1 : 0;
+    data.wants_portal = form.wants_portal.checked ? 1 : 0;
+    if (!data.first_name || !data.last_name || !data.id_number || !data.phone || !data.employer || !data.monthly_contribution)
+      return show("Please fill in all fields marked *.");
+    if (!data.consent) return show("Please tick the declaration to continue.");
+    if (data.wants_portal && !data.email) return show("Online access needs an email address.");
+    const files = [];
+    for (const input of form.querySelectorAll("input[type=file]")) {
+      const f = input.files[0];
+      if (!f) continue;
+      if (f.size > 3 * 1024 * 1024) return show(f.name + " is larger than 3 MB.");
+      files.push({ field: input.dataset.field, filename: f.name, content: await readFile(f) });
+    }
+    ["photo", "id_copy", "kra_copy", "signed_form"].forEach((k) => delete data[k]);
+    btn.disabled = true; btn.textContent = "Submitting…";
+    frappe.call({
+      method: "sacco_manager.membership.submit_application",
+      args: { data: JSON.stringify(data), files: JSON.stringify(files) },
+      callback: (r) => {
+        const ref = (r.message || {}).name || "";
+        document.getElementById("jn-card").innerHTML = `<div class="ok"><h1>Application received</h1>
+          <div class="ref">${frappe.utils.escape_html(ref)}</div>
+          <p>Thank you. Keep this reference. The SACCO office will review your application and confirm by SMS${data.email ? " and email" : ""}.</p></div>`;
+        window.scrollTo(0, 0);
+      },
+      error: () => { btn.disabled = false; btn.textContent = "Submit application"; },
+      always: () => { btn.disabled = false; btn.textContent = "Submit application"; },
+    });
+  });
+})();
+</script>
+{% endblock %}

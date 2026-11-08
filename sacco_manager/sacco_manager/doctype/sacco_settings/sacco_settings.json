@@ -62,8 +62,15 @@
   "group_company_customer_group",
   "column_break_gcl",
   "group_company_exposure_limit",
+  "liquidity_float_target",
   "housekeeping_section",
-  "dpd_log_keep_days"
+  "dpd_log_keep_days",
+  "online_section",
+  "online_applications_enabled",
+  "application_notify",
+  "cb_online",
+  "member_login_otp",
+  "member_login_phone"
  ],
  "fields": [
   {
@@ -410,6 +417,46 @@
    "non_negative": 1,
    "label": "Keep Daily Arrears Log For (days)",
    "description": "Lending writes a days-past-due row for every loan every day. Each week rows older than this are removed, except month-end rows and each loan's latest row. 0 = keep everything."
+  },
+  {
+   "fieldname": "liquidity_float_target",
+   "fieldtype": "Currency",
+   "label": "Liquid Float to Keep",
+   "description": "Cash the SACCO keeps for withdrawals and member loans; the rest can be lent to the group companies."
+  },
+  {
+   "fieldname": "online_section",
+   "fieldtype": "Section Break",
+   "label": "Online Membership and Member Login",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "online_applications_enabled",
+   "fieldtype": "Check",
+   "label": "Accept Online Membership Applications (/join)",
+   "default": "1"
+  },
+  {
+   "fieldname": "application_notify",
+   "fieldtype": "Small Text",
+   "label": "Notify These Emails of New Applications",
+   "description": "One email per line. SACCO Managers are also notified."
+  },
+  {
+   "fieldname": "cb_online",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "member_login_otp",
+   "fieldtype": "Check",
+   "label": "Members Can Log In With a One-Time Code (SMS / email)",
+   "default": "1"
+  },
+  {
+   "fieldname": "member_login_phone",
+   "fieldtype": "Check",
+   "label": "Members Can Log In With Mobile Number + Password",
+   "default": "1"
   }
  ],
  "grid_page_length": 50,

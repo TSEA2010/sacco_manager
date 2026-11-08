@@ -352,6 +352,7 @@ function renderShell(s){
             navBtn("transactions","Transactions",I.list),
             navBtn("loans","Loans",I.credit),
             navBtn("applications","Applications",I.clock),
+            navBtn("guarantees","Guarantees",I.shield),
           '</div>',
           '<div class="sp-sidenav-section">',
             '<div class="sp-sidenav-label">Actions</div>',
@@ -359,7 +360,7 @@ function renderShell(s){
             (s.mpesa&&s.mpesa.enabled)?navBtn("mpesa","Pay with M-Pesa",I.credit):"",
           '</div>',
           '<div class="sp-sidenav-section">',
-            '<button class="sp-nav-item" onclick="window.location.href=\'/login\'" style="color:#888">',I.logout,' Sign out</button>',
+            '<button class="sp-nav-item" onclick="window.location.href=\'/api/method/web_logout\'" style="color:#888">',I.logout,' Sign out</button>',
           '</div>',
         '</nav>',
       '</aside>',
@@ -385,6 +386,7 @@ function showTab(tab){
   else if(tab==="applications")renderApplicationsTab(main);
   else if(tab==="apply")       renderApplyTab(main);
   else if(tab==="mpesa")       renderMpesaTab(main);
+  else if(tab==="guarantees")  renderGuaranteesTab(main);
 }
 window.spTab=function(t){showTab(t);};
 
@@ -602,6 +604,7 @@ function appCardHTML(a){
   var allConfirmed=guarantors.length&&guarantors.every(function(g){return g.status==="Confirmed";});
   return['<div class="sp-app-card">','<div class="sp-app-top"><div><div class="sp-app-name">',esc(a.loan_product||a.name),'</div><div class="sp-app-meta">',esc(a.name),' &middot; Applied ',fmt_date(a.posting_date),'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px"><span class="pill '+sp+'">',esc(a.status||"Open"),'</span><span style="font-size:13px;font-weight:600;font-family:\'DM Mono\',monospace">',fmt_kes(a.loan_amount),'</span></div></div>',
   '<div style="font-size:12px;color:#aaa">',esc(a.repayment_periods||"--"),' months &middot; ',flt(a.rate_of_interest),'% p.a.</div>',
+  a.status==="Open"?'<div style="margin-top:10px"><button class="sp-btn" onclick="spAskGuarantor(\''+esc(a.name)+'\')">'+I.plus+' Add / replace a guarantor</button></div>':"",
   guarantors.length?['<div class="sp-app-guarantors"><div class="sp-app-guarantors-label">Guarantors &amp; pledges</div>',guarantors.map(function(g){var gp=g.status==="Confirmed"?"pill-green":g.status==="Declined"?"pill-red":"pill-amber";var gl=g.status==="Confirmed"?"\u2713 Confirmed":g.status==="Declined"?"\u2717 Declined":"\u23F3 Pending";return'<div class="sp-guarantor-row"><div class="sp-g-avatar" style="width:26px;height:26px;font-size:10px">'+initials(g.guarantor_name||g.guarantor)+'</div><div style="flex:1;font-size:13px">'+esc(g.guarantor_name||g.guarantor)+'<span style="font-size:11px;color:#aaa;margin-left:6px">'+fmt_kes(g.pledge_value||0)+'</span></div><span class="pill '+gp+'">'+gl+'</span></div>';}).join(""),allConfirmed?'<div style="margin-top:8px;font-size:12px;color:#16a34a;display:flex;align-items:center;gap:5px">'+I.check+' All confirmed &mdash; ready for review</div>':"","</div>"].join(""):"",
   '</div>'].join("");
 }
@@ -991,6 +994,63 @@ window.spStkPush=function(){
     always:function(){btn.disabled=false;btn.textContent="Send request";}});
 };
 
+
+/* ── GUARANTEES ── */
+var G="sacco_manager.guarantors.";
+function gcall(method,args){return new Promise(function(res,rej){frappe.call({method:G+method,args:args||{},
+  callback:function(r){r.exc?rej(r.exc):res(r.message);},error:function(e){rej(e);}});});}
+function renderGuaranteesTab(main){
+  main.innerHTML=skeleton("Guarantees");
+  gcall("my_guarantees").then(function(d){
+    var req=d.requests||[],given=d.given||[];
+    main.innerHTML=['<div class="sp-section active">',
+      '<div class="sp-section-header"><div class="sp-section-title">Guarantees</div><div class="sp-section-sub">Requests to guarantee other members, and guarantees you have given</div></div>',
+      '<div class="sp-metrics"><div class="sp-metric"><div class="sp-metric-label">Waiting for you</div><div class="sp-metric-value">',req.length,'</div></div>',
+      '<div class="sp-metric"><div class="sp-metric-label">Guarantees given</div><div class="sp-metric-value">',fmt_kes(d.total_pledged),'</div></div>',
+      '<div class="sp-metric"><div class="sp-metric-label">Savings locked by them</div><div class="sp-metric-value">',fmt_kes(d.locked_savings),'</div></div></div>',
+      '<div class="sp-card"><div style="font-weight:600;margin-bottom:10px">Requests waiting for your answer</div>',
+      req.length?req.map(function(r){return['<div class="sp-guarantor-card" style="display:block">',
+        '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><b>',esc(r.applicant),'</b> asks you to guarantee <b>',fmt_kes(r.pledge_value),'</b>',
+        '<div style="font-size:12px;color:#888">',esc(r.loan_product||""),' loan of ',fmt_kes(r.loan_amount),' over ',esc(r.periods||"--"),' months &middot; ',esc(r.application),'</div></div>',
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">',
+        '<input type="number" id="gp-',esc(r.name),'" value="',Math.min(r.pledge_value,r.max_pledge||r.pledge_value),'" max="',r.pledge_value,'" min="1" style="width:130px;padding:8px;border:1px solid #d9d4cb;border-radius:8px">',
+        '<button class="sp-btn sp-btn-primary" onclick="spGuarRespond(\'',esc(r.name),'\',\'accept\')">Accept</button>',
+        '<button class="sp-btn" onclick="spGuarRespond(\'',esc(r.name),'\',\'decline\')">Decline</button></div></div>',
+        r.can_cover?"":'<div style="font-size:12px;color:#b45309;margin-top:6px">Your savings can back up to '+fmt_kes(r.max_pledge)+' — you can accept a smaller amount.</div>',
+        '<div style="font-size:11px;color:#999;margin-top:6px">While the loan is unpaid, part of your savings is locked; if the borrower defaults the SACCO may recover from it.</div>',
+        '</div>'].join("");}).join(""):emptyState("No requests waiting."),
+      '</div>',
+      '<div class="sp-card"><div style="font-weight:600;margin-bottom:10px">Guarantees you have given</div>',
+      given.length?'<table style="width:100%;font-size:13px;border-collapse:collapse"><tr><th style="text-align:left">Borrower</th><th style="text-align:left">Application</th><th style="text-align:right">Guaranteed</th><th style="text-align:right">Loan balance</th><th>Status</th></tr>'+
+        given.map(function(g){return'<tr><td>'+esc(g.applicant)+'</td><td>'+esc(g.application)+'</td><td style="text-align:right">'+fmt_kes(g.pledge_value)+'</td><td style="text-align:right">'+fmt_kes(g.loan_balance)+'</td><td><span class="pill '+(g.active?"pill-amber":"pill-green")+'">'+(g.active?"Active":"Released")+'</span></td></tr>';}).join("")+'</table>':emptyState("You have not guaranteed anyone."),
+      '</div></div>'].join("");
+  }).catch(function(e){main.innerHTML=errState(e);});
+}
+window.spGuarRespond=function(row,action){
+  var amt=(document.getElementById("gp-"+row)||{}).value;
+  var go=function(){gcall("respond",{row:row,action:action,pledge_value:action==="accept"?amt:null}).then(function(r){
+    frappe.show_alert({message:r.message,indicator:"green"});renderGuaranteesTab(document.getElementById("sp-main"));}).catch(function(){});};
+  if(action==="accept")frappe.confirm("Guarantee "+fmt_kes(amt)+"? Part of your savings will be locked until the loan is repaid.",go);else go();
+};
+window.spAskGuarantor=function(app){
+  var d=new frappe.ui.Dialog({title:"Ask a member to guarantee "+app,fields:[
+    {fieldname:"q",fieldtype:"Data",label:"Search member (name or number)"},
+    {fieldname:"results",fieldtype:"HTML"},
+    {fieldname:"member",fieldtype:"Data",hidden:1},
+    {fieldname:"chosen",fieldtype:"HTML"},
+    {fieldname:"amount",fieldtype:"Currency",label:"Amount to guarantee",reqd:1}],
+    primary_action_label:"Send request",
+    primary_action:function(v){if(!v.member){frappe.msgprint("Choose a member from the list.");return;}
+      gcall("request_guarantee",{application:app,guarantor_member:v.member,pledge_value:v.amount}).then(function(r){
+        d.hide();frappe.show_alert({message:r.message,indicator:"green"});spTab("applications");}).catch(function(){});}});
+  var t=null;d.fields_dict.q.$input.on("input",function(){var q=this.value;clearTimeout(t);if(q.length<2)return;t=setTimeout(function(){
+    api("search_members",{query:q,exclude:""}).then(function(ms){d.fields_dict.results.$wrapper.html((ms||[]).map(function(m){
+      return'<div data-m="'+esc(m.name)+'" data-n="'+esc(m.full_name||m.name)+'" style="cursor:pointer;padding:6px 4px;border-bottom:1px solid #f0ece6">'+esc(m.full_name||m.name)+' <span style="color:#999">'+esc(m.member_no||"")+' &middot; '+esc(m.branch||"")+'</span></div>';}).join("")||"No members found.");
+      d.fields_dict.results.$wrapper.find("[data-m]").on("click",function(){d.set_value("member",this.dataset.m);
+        d.fields_dict.chosen.$wrapper.html("<b>Chosen:</b> "+esc(this.dataset.n));});});},300);});
+  d.show();
+};
+
 /* ── HELPERS ── */
 function txPill(type){var m={Deposit:"pill-green",Withdrawal:"pill-red",Interest:"pill-blue"};return'<span class="pill '+(m[type]||"pill-gray")+'">'+esc(type||"--")+'</span>';}
 function alertHTML(type,msg){var cls=type==="success"?"sp-alert-success":"sp-alert-error";var icon=type==="success"?I.check:I.x;return'<div class="sp-alert '+cls+'">'+icon+'<span>'+msg+'</span></div>';}
@@ -1000,13 +1060,13 @@ function errState(e){var msg=typeof e==="string"?e:"An error occurred.";return'<
 
 /* ── BOOT ── */
 frappe.ready(function(){
-  if(frappe.session.user==="Guest"){window.location.href="/login?redirect-to=/sacco-portal";return;}
+  if(frappe.session.user==="Guest"){window.location.href="/member-login";return;}
   Promise.all([api("get_portal_summary"),api("get_loan_types")]).then(function(res){
     S.summary=res[0];S.loan_types=res[1]||[];
     renderShell(S.summary);
   }).catch(function(e){
     var msg=typeof e==="string"?e:"No SACCO Member account linked to your login. Contact the SACCO office.";
-    root.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:80vh"><div style="text-align:center;max-width:360px"><div style="font-size:32px;margin-bottom:12px">⚠️</div><div style="font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px">Unable to load portal</div><div style="font-size:13px;color:#888;margin-bottom:20px">'+esc(msg)+'</div><a href="/login" style="color:#1a3c2e;font-weight:500;font-size:13px">← Back to login</a></div></div>';
+    root.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:80vh"><div style="text-align:center;max-width:360px"><div style="font-size:32px;margin-bottom:12px">⚠️</div><div style="font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px">Unable to load portal</div><div style="font-size:13px;color:#888;margin-bottom:20px">'+esc(msg)+'</div><a href="/member-login" style="color:#1a3c2e;font-weight:500;font-size:13px">← Back to login</a></div></div>';
   });
 });
 

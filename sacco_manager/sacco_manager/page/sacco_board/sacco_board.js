@@ -152,7 +152,7 @@ sacco.Board = class {
 				${kpi(__("Loan book"), f.short(n.loan_book), `${n.borrowers} ${__("borrowers")} · ` + f.change(n.loan_book, p.loan_book))}
 				${kpi(__("Lent to group companies"), f.short(n.group_company_loans), `${__("interest 12m")} ${f.short(n.group_company_interest_12m)}`)}
 				${kpi(__("Total assets"), f.short(n.total_assets), f.change(n.total_assets, p.total_assets))}
-				${kpi(__("Liquid funds"), f.short(n.liquid), __("cash, bank, M-Pesa"))}
+				${kpi(__("Liquid funds"), f.short(n.liquid), n.float_target ? `${__("float")} ${f.short(n.float_target)} · ${__("free to lend")} ${f.short(n.available_to_lend)}` : __("cash, bank, M-Pesa"))}
 				${kpi(__("Surplus (12 months)"), f.short(n.surplus_12m), `${__("income")} ${f.short(n.income_12m)} · ${__("costs")} ${f.short(n.expense_12m)}`)}
 			</div>
 			<h5 class="sec">${__("Business ratios")}</h5>
