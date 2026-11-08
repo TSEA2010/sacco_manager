@@ -19,12 +19,12 @@
 .jn input:focus,.jn select:focus,.jn textarea:focus{outline:2px solid #a8d5b5;border-color:#1a7f5a}
 .jn .hint{font-size:11px;color:#888;margin-top:3px}
 .jn .full{grid-column:1/-1}
-.jn label.check{display:grid !important;grid-template-columns:20px minmax(0,1fr);column-gap:10px;align-items:start;
+.jn label.jn-decl{display:grid !important;background:none !important;border-radius:0 !important;height:auto !important;min-height:0 !important;padding:0 !important;border:0 !important;grid-template-columns:20px minmax(0,1fr);column-gap:10px;align-items:start;
   font-size:13px;font-weight:400;line-height:1.5;color:#333;margin-top:12px;cursor:pointer;width:100%}
-.jn label.check input[type=checkbox]{appearance:auto !important;-webkit-appearance:checkbox !important;width:18px !important;
+.jn label.jn-decl input[type=checkbox]{appearance:auto !important;-webkit-appearance:checkbox !important;width:18px !important;
   height:18px !important;min-width:18px;margin:2px 0 0 !important;padding:0 !important;box-shadow:none !important;background:none}
-.jn label.check input[type=checkbox]::before,.jn label.check input[type=checkbox]::after{display:none !important;content:none !important}
-.jn label.check span{min-width:0;display:block}
+.jn label.jn-decl input[type=checkbox]::before,.jn label.jn-decl input[type=checkbox]::after{display:none !important;content:none !important}
+.jn label.jn-decl span{min-width:0;display:block}
 .jn .codebox{max-width:360px;margin:10px auto 0;text-align:left}
 .jn .codebox input{text-transform:uppercase;letter-spacing:.15em;text-align:center;font-size:18px}
 .jn .btn{background:#1a3c2e;color:#fff;border:none;border-radius:10px;padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:22px}
@@ -107,8 +107,8 @@
     <div class="hint">JPG, PNG or PDF, up to 3 MB each. You can also bring them to the office.</div>
 
     <h2>Declaration</h2>
-    <label class="check"><input type="checkbox" name="consent" required><span>I apply to join Trident SACCO. I authorise my employer to deduct the amount above, and the SACCO's loan instalments, from my salary every month. I consent to the SACCO processing my personal data for membership, savings and loans, as required by the Data Protection Act 2019. <span class="req">*</span></span></label>
-    <label class="check"><input type="checkbox" name="wants_portal"><span>I would like online access to see my savings and loans (an email address is required).</span></label>
+    <label class="jn-decl"><input type="checkbox" name="consent" required><span>I apply to join Trident SACCO. I authorise my employer to deduct the amount above, and the SACCO's loan instalments, from my salary every month. I consent to the SACCO processing my personal data for membership, savings and loans, as required by the Data Protection Act 2019. <span class="req">*</span></span></label>
+    <label class="jn-decl"><input type="checkbox" name="wants_portal"><span>I would like online access to see my savings and loans (an email address is required).</span></label>
 
     <div class="err" id="jn-err"></div>
     <button class="btn" id="jn-btn" type="submit">Submit application</button>
