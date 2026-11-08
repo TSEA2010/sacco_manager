@@ -9,7 +9,9 @@ no_cache = 1
 
 def get_context(context):
 	if frappe.session.user != "Guest":
-		frappe.local.flags.redirect_location = "/sacco-portal"
+		# staff already signed in go to the desk; only members go to the portal
+		is_staff = frappe.db.get_value("User", frappe.session.user, "user_type") == "System User"
+		frappe.local.flags.redirect_location = "/app" if is_staff else "/sacco-portal"
 		raise frappe.Redirect
 	from sacco_manager.member_login import login_options
 
