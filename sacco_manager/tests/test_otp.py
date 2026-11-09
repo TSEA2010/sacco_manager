@@ -167,3 +167,34 @@ class TestMemberOtpLogin(_TestCase):
 		roles = set(frappe.get_roles(member.user_id))
 		self.assertIn(otp.SACCO_MEMBER_ROLE, roles)
 		self.assertNotIn("Employee", roles)
+
+	# ---- existing portal logins -------------------------------------------
+	def _member_with_portal_login(self, enabled=1):
+		"""A member the office already gave a portal login (Create Portal User / joining flow)."""
+		email = f"portal.{frappe.generate_hash(length=6)}@example.com"
+		member = _make_member(email_id=email)
+		frappe.get_doc({"doctype": "User", "email": email, "first_name": "Portal", "enabled": enabled,
+			"user_type": "Website User", "send_welcome_email": 0,
+			"roles": [{"role": otp.SACCO_MEMBER_ROLE}]}).insert(ignore_permissions=True)
+		frappe.db.set_value("SACCO Member", member.name, {"user_id": email, "is_user": 1, "portal_user_created": 1})
+		member.reload()
+		return member, email
+
+	def test_existing_portal_login_is_reused_not_replaced(self):
+		# /member-login signs in to this same login with a password; the code login must not swap it
+		# for a new @sacco.* account, or the member's password login would point at nothing.
+		member, email = self._member_with_portal_login()
+		otp.request_login_otp(member.id_number)
+		otp.verify_login_otp(member.id_number, self._code_from_sms())
+		member.reload()
+		self.assertEqual(member.user_id, email)
+		self.assertEqual(frappe.session.user, email)
+		self.assertFalse(frappe.db.exists("User", otp._sacco_login_id(member)))
+
+	def test_switched_off_portal_login_is_not_switched_back_on(self):
+		member, email = self._member_with_portal_login(enabled=0)
+		otp.request_login_otp(member.id_number)
+		with self.assertRaises(frappe.AuthenticationError):
+			otp.verify_login_otp(member.id_number, self._code_from_sms())
+		self.assertEqual(frappe.db.get_value("User", email, "enabled"), 0)
+		self.assertEqual(frappe.session.user, "Administrator")

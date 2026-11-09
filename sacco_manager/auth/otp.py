@@ -108,15 +108,37 @@ def _sacco_login_id(member):
 	return f"{local}@{SYNTHETIC_EMAIL_DOMAIN}"
 
 
+def _linked_portal_login(member):
+	"""The member's current portal login when it is already a dedicated SACCO login (a Website User
+	that carries the Sacco Member role, linked with portal_user_created), else None.
+
+	Such a login was made by the office (Create Portal User) or the joining flow, and /member-login
+	signs in to it with a password or a code. Reusing it here adds no role to anyone and keeps those
+	logins working; replacing it would leave the member's password login pointing at nothing."""
+	if not (member.user_id and member.portal_user_created):
+		return None
+	u = frappe.db.get_value("User", member.user_id, ["enabled", "user_type"], as_dict=True)
+	if not u or u.user_type != "Website User" or SACCO_MEMBER_ROLE not in frappe.get_roles(member.user_id):
+		return None
+	if not u.enabled:
+		# The office switched this login off on purpose: a phone code must not switch it back on.
+		frappe.throw(_("Your portal access is switched off. Please contact the SACCO office."), frappe.AuthenticationError)
+	return member.user_id
+
+
 def _ensure_portal_user(member):
 	"""Make sure the member has an enabled, dedicated Website-User login (never an employee/ESS or
 	desk account), and return its name. Runs after the code has been verified."""
+	existing = _linked_portal_login(member)
+	if existing:
+		return existing
+
 	user_id = _sacco_login_id(member)
 
 	if frappe.db.exists("User", user_id):
 		user = frappe.get_doc("User", user_id)
 		if not user.enabled:
-			user.db_set("enabled", 1)
+			frappe.throw(_("Your portal access is switched off. Please contact the SACCO office."), frappe.AuthenticationError)
 	else:
 		user = frappe.get_doc(
 			{

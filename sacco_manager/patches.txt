@@ -15,3 +15,4 @@ sacco_manager.patches.v1_1.set_settings_defaults #2026-11-07 housekeeping and le
 sacco_manager.patches.v1_2.employers_and_facility
 sacco_manager.patches.v1_1.set_settings_defaults #2026-11-08 online and float fields
 sacco_manager.patches.v1_2.protect_public_pages
+sacco_manager.patches.v1_2.protect_public_pages #2026-11-09 sacco-login

@@ -7,7 +7,7 @@ import secrets
 
 import frappe
 
-PATHS = ("/join", "/member-login", "/sacco-portal", "/guarantor-confirm")
+PATHS = ("/join", "/member-login", "/sacco-login", "/sacco-portal", "/guarantor-confirm")
 ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # no 0/O/1/I to avoid misreading
 
 
