@@ -92,7 +92,8 @@ class TestMemberOtpLogin(_TestCase):
 	def test_member_with_unusable_phone_sends_nothing(self):
 		member = _make_member()
 		# phone is mandatory, but an imported member can hold a number that is not a valid KE mobile.
-		frappe.db.set_value("SACCO Member", member.name, "phone", "123")
+		# (random suffix: phone is unique, and a real site may already hold "123")
+		frappe.db.set_value("SACCO Member", member.name, "phone", "123" + f"{secrets.randbelow(10 ** 4):04d}")
 		res = otp.request_login_otp(member.id_number)
 		self.assertTrue(res["sent"])  # still generic
 		self.assertEqual(self.sent, [])  # but nothing could be sent
@@ -173,9 +174,11 @@ class TestMemberOtpLogin(_TestCase):
 		"""A member the office already gave a portal login (Create Portal User / joining flow)."""
 		email = f"portal.{frappe.generate_hash(length=6)}@example.com"
 		member = _make_member(email_id=email)
-		frappe.get_doc({"doctype": "User", "email": email, "first_name": "Portal", "enabled": enabled,
+		frappe.get_doc({"doctype": "User", "email": email, "first_name": "Portal", "enabled": 1,
 			"user_type": "Website User", "send_welcome_email": 0,
 			"roles": [{"role": otp.SACCO_MEMBER_ROLE}]}).insert(ignore_permissions=True)
+		if not enabled:  # db write: disabling through the form needs a real login manager
+			frappe.db.set_value("User", email, "enabled", 0)
 		frappe.db.set_value("SACCO Member", member.name, {"user_id": email, "is_user": 1, "portal_user_created": 1})
 		member.reload()
 		return member, email

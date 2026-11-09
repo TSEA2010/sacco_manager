@@ -17,8 +17,12 @@ def execute():
 	robots = frappe.db.get_single_value("Website Settings", "robots_txt") or ""
 	missing = [p for p in PATHS if f"Disallow: {p}" not in robots]
 	if missing:
-		block = ("" if not robots.strip() else robots.rstrip() + "\n\n")
-		if "User-agent: *" not in robots:
-			block += "User-agent: *\n"
-		block += "\n".join(f"Disallow: {p}" for p in missing) + "\n"
+		# Add to the "User-agent: *" group when the file ends with it (no blank line: older robots
+		# parsers end a group at a blank line), else start that group.
+		agents = [ln for ln in robots.splitlines() if ln.lower().startswith("user-agent:")]
+		if agents and agents[-1].split(":", 1)[1].strip() == "*":
+			block = robots.rstrip() + "\n"
+		else:
+			block = (robots.rstrip() + "\n\n" if robots.strip() else "") + "User-agent: *\n"
+		block +="\n".join(f"Disallow: {p}" for p in missing) + "\n"
 		frappe.db.set_single_value("Website Settings", "robots_txt", block)
