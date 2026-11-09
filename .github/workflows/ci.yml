@@ -72,6 +72,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y mariadb-client
+          # The runner's client defaults to requiring TLS; the 10.6 service has none. This covers
+          # every mariadb CLI call, including the ones bench/frappe make internally for new-site.
+          printf '[client]\nskip-ssl\n' > ~/.my.cnf
 
       - name: Setup bench
         run: |
