@@ -31,7 +31,10 @@ doc_events = {
 # -> Penalty Interest Rate and grace period), which charges only on overdue instalments.
 scheduler_events = {
 	"hourly": ["sacco_manager.mobile_money.allocation.retry_unallocated"],
-	"daily": ["sacco_manager.tasks.mark_dormant_accounts"],
+	"daily": [
+		"sacco_manager.tasks.mark_dormant_accounts",
+		"sacco_manager.auth.otp.clear_expired_codes",
+	],
 }
 
 website_route_rules = [

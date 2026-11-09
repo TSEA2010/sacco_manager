@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Trident SACCO — Member Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#f4f2ee;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#fff;border:1px solid #e5e0d8;border-radius:18px;width:100%;max-width:400px;padding:32px 28px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+.brand-icon{width:42px;height:42px;background:#1a3c2e;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand-icon svg{width:22px;height:22px;fill:#a8d5b5}
+.brand-name{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.brand-sub{font-size:11px;color:#888;letter-spacing:.04em;text-transform:uppercase}
+h1{font-size:20px;font-weight:600;letter-spacing:-.03em;margin-bottom:4px}
+.lede{font-size:13px;color:#888;margin-bottom:22px;line-height:1.5}
+label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:7px;letter-spacing:.01em}
+input{width:100%;font-family:'DM Sans',sans-serif;font-size:15px;color:#1a1a1a;background:#f4f2ee;border:1px solid #e5e0d8;border-radius:10px;padding:13px 14px;outline:none;transition:border .12s,background .12s}
+input:focus{border-color:#1a3c2e;background:#fff}
+input#code{font-family:'DM Mono',monospace;font-size:24px;letter-spacing:10px;text-align:center}
+button{width:100%;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:#a8d5b5;background:#1a3c2e;border:none;border-radius:10px;padding:14px;margin-top:18px;cursor:pointer;transition:opacity .12s}
+button:hover{opacity:.92}
+button:disabled{opacity:.55;cursor:default}
+.msg{font-size:13px;border-radius:10px;padding:11px 13px;margin-top:16px;line-height:1.45;display:none}
+.msg.err{display:block;background:#fdecea;color:#b42318;border:1px solid #f6cbc5}
+.msg.ok{display:block;background:#eaf6ee;color:#1a7f3c;border:1px solid #c6e8d1}
+.row-links{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+.link{background:none;border:none;color:#1a3c2e;font-size:12.5px;font-weight:600;cursor:pointer;padding:0;width:auto;margin:0}
+.link:disabled{color:#aaa;cursor:default}
+.hidden{display:none}
+.foot{text-align:center;font-size:11px;color:#aaa;margin-top:22px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2 3 6v2h18V6l-9-4ZM5 10v7H3v2h18v-2h-2v-7h-2v7h-3v-7h-2v7H9v-7H7v7H5v-7Z"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">Trident SACCO</div>
+      <div class="brand-sub">Member Portal</div>
+    </div>
+  </div>
+
+  <!-- Step 1: National ID -->
+  <form id="step-id" autocomplete="off">
+    <h1>Sign in</h1>
+    <p class="lede">Enter your National ID or Passport number. We'll send a one-time code by SMS to the phone registered with the SACCO.</p>
+    <label for="id_number">National ID / Passport No</label>
+    <input id="id_number" name="id_number" type="text" inputmode="numeric" autocomplete="off" autofocus>
+    <button type="submit" id="send-btn">Send code</button>
+  </form>
+
+  <!-- Step 2: Code -->
+  <form id="step-code" class="hidden" autocomplete="off">
+    <h1>Enter code</h1>
+    <p class="lede">We sent a 6-digit code by SMS. It expires in 5 minutes.</p>
+    <label for="code">One-time code</label>
+    <input id="code" name="code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+    <button type="submit" id="verify-btn">Verify &amp; sign in</button>
+    <div class="row-links">
+      <button type="button" class="link" id="back-link">← Change ID</button>
+      <button type="button" class="link" id="resend-link">Resend code</button>
+    </div>
+  </form>
+
+  <div class="msg" id="msg"></div>
+  <div class="foot">Trident Savings &amp; Credit Co-operative Society</div>
+</div>
+
+<script>
+(function(){
+  function qp(name){ try { return new URLSearchParams(location.search).get(name); } catch(e){ return null; } }
+  function safeLocal(p){ return (p && p.charAt(0) === '/' && p.charAt(1) !== '/') ? p : '/sacco-portal'; }
+  var REDIRECT = safeLocal(qp('redirect-to'));
+  var stepId = document.getElementById('step-id');
+  var stepCode = document.getElementById('step-code');
+  var msg = document.getElementById('msg');
+  var sendBtn = document.getElementById('send-btn');
+  var verifyBtn = document.getElementById('verify-btn');
+  var resendLink = document.getElementById('resend-link');
+  var idInput = document.getElementById('id_number');
+  var codeInput = document.getElementById('code');
+  var currentId = '';
+
+  function show(text, kind){ msg.textContent = text; msg.className = 'msg ' + kind; }
+  function clearMsg(){ msg.className = 'msg'; msg.textContent = ''; }
+
+  async function call(method, params){
+    var r = await fetch('/api/method/' + method, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json'},
+      body: new URLSearchParams(params)
+    });
+    var data = {};
+    try { data = await r.json(); } catch(e){}
+    if(!r.ok){
+      var text = 'Something went wrong. Please try again.';
+      try {
+        var sm = JSON.parse(data._server_messages || '[]');
+        if(sm.length){ text = JSON.parse(sm[0]).message || text; }
+      } catch(e){}
+      throw new Error(text);
+    }
+    return data.message;
+  }
+
+  function startResendCooldown(){
+    var left = 30;
+    resendLink.disabled = true;
+    resendLink.textContent = 'Resend in ' + left + 's';
+    var t = setInterval(function(){
+      left--;
+      if(left <= 0){ clearInterval(t); resendLink.disabled = false; resendLink.textContent = 'Resend code'; }
+      else { resendLink.textContent = 'Resend in ' + left + 's'; }
+    }, 1000);
+  }
+
+  async function requestCode(id){
+    await call('sacco_manager.auth.otp.request_login_otp', {id_number: id});
+  }
+
+  stepId.addEventListener('submit', async function(e){
+    e.preventDefault(); clearMsg();
+    var id = idInput.value.trim();
+    if(!id){ show('Please enter your ID number.', 'err'); return; }
+    sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
+    try {
+      await requestCode(id);
+      currentId = id;
+      stepId.classList.add('hidden');
+      stepCode.classList.remove('hidden');
+      show('If that ID belongs to a member, a code has been sent by SMS.', 'ok');
+      codeInput.focus();
+      startResendCooldown();
+    } catch(err){ show(err.message, 'err'); }
+    finally { sendBtn.disabled = false; sendBtn.textContent = 'Send code'; }
+  });
+
+  stepCode.addEventListener('submit', async function(e){
+    e.preventDefault(); clearMsg();
+    var code = codeInput.value.trim();
+    if(code.length !== 6){ show('Enter the 6-digit code.', 'err'); return; }
+    verifyBtn.disabled = true; verifyBtn.textContent = 'Signing in…';
+    try {
+      var res = await call('sacco_manager.auth.otp.verify_login_otp', {id_number: currentId, code: code});
+      window.location.href = (res && res.redirect) || REDIRECT;
+    } catch(err){
+      show(err.message, 'err');
+      verifyBtn.disabled = false; verifyBtn.textContent = 'Verify & sign in';
+    }
+  });
+
+  resendLink.addEventListener('click', async function(){
+    clearMsg();
+    try { await requestCode(currentId); show('A new code has been sent.', 'ok'); startResendCooldown(); }
+    catch(err){ show(err.message, 'err'); }
+  });
+
+  document.getElementById('back-link').addEventListener('click', function(){
+    clearMsg();
+    stepCode.classList.add('hidden');
+    stepId.classList.remove('hidden');
+    codeInput.value = '';
+    idInput.focus();
+  });
+})();
+</script>
+</body>
+</html>
