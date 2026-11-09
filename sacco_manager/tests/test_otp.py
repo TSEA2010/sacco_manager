@@ -97,12 +97,25 @@ class TestMemberOtpLogin(_TestCase):
 		self.assertTrue(res["sent"])  # still generic
 		self.assertEqual(self.sent, [])  # but nothing could be sent
 
-	def test_rate_limit_after_three_sends(self):
+	def test_rate_limit_is_silent_and_stops_sending(self):
 		member = _make_member()
 		for _ in range(otp.MAX_SENDS_PER_HOUR):
 			otp.request_login_otp(member.id_number)
-		with self.assertRaises(frappe.ValidationError):
-			otp.request_login_otp(member.id_number)
+		self.assertEqual(len(self.sent), otp.MAX_SENDS_PER_HOUR)
+		# The next request is throttled: same generic reply, but no new SMS (no distinct error that
+		# would reveal membership).
+		res = otp.request_login_otp(member.id_number)
+		self.assertTrue(res["sent"])
+		self.assertEqual(len(self.sent), otp.MAX_SENDS_PER_HOUR)
+
+	def test_throttle_is_silent_for_unknown_id(self):
+		# Hammering one unknown ID never yields a distinct error and never sends — identical to the
+		# generic reply a member gets, so throttling can't be used to tell members apart.
+		uid = "UNKNOWN-" + frappe.generate_hash(length=6)
+		for _ in range(otp.MAX_SENDS_PER_HOUR + 2):
+			res = otp.request_login_otp(uid)
+			self.assertTrue(res["sent"])
+		self.assertEqual(self.sent, [])
 
 	# ---- verify -----------------------------------------------------------
 	def test_verify_wrong_code_raises_and_counts_attempt(self):

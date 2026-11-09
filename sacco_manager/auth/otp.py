@@ -32,8 +32,11 @@ from sacco_manager.utils import SACCO_MEMBER_ROLE, get_settings, normalize_ke_ph
 
 CODE_LENGTH = 6
 CODE_TTL_SECONDS = 300  # 5 minutes
-MAX_SENDS_PER_HOUR = 3
-MAX_VERIFY_ATTEMPTS = 5
+MAX_SENDS_PER_HOUR = 3  # per submitted ID
+MAX_VERIFY_ATTEMPTS = 5  # per code, before it is burned
+MAX_VERIFY_PER_HOUR = 10  # per submitted ID
+MAX_IP_REQUESTS_PER_HOUR = 60  # per IP, across request + verify (when an IP is known)
+RATE_WINDOW = 3600
 
 # Login address for a member who has no real email. Kept out of any real mailbox namespace.
 SYNTHETIC_EMAIL_DOMAIN = "sacco.tridentplumbers.com"
@@ -78,9 +81,21 @@ def _deliver_sms(phone, message):
 	send_sms([phone], message, success_msg=False)
 
 
-def _recent_send_count(member_name):
-	since = add_to_date(now_datetime(), seconds=-3600)
-	return frappe.db.count("SACCO Login Code", {"member": member_name, "creation": [">", since]})
+def _ip():
+	return getattr(frappe.local, "request_ip", None)
+
+
+def _throttle(bucket, ident, limit, window=RATE_WINDOW):
+	"""Fixed-window counter in Redis. Returns True while still within the limit.
+
+	Applied to raw inputs (IP, submitted ID) before any membership lookup, so throttling behaves
+	identically for members and non-members and can't be used to tell them apart."""
+	key = f"sacco_otp:{bucket}:{getattr(frappe.local, 'site', '')}:{cstr(ident).lower()}"
+	cache = frappe.cache()
+	count = cache.incrby(key, 1)
+	if count == 1:
+		cache.expire(key, window)
+	return count <= limit
 
 
 def _ensure_portal_user(member):
@@ -148,7 +163,16 @@ def request_login_otp(id_number):
 	if not _portal_enabled():
 		frappe.throw(_("The member portal is currently disabled."), frappe.PermissionError)
 
-	member = _active_member(id_number)
+	# Throttle raw inputs before any lookup, so a rate limit can't reveal who is a member. On limit
+	# we return the same generic reply (and the counter still climbs), never a distinct error.
+	idn = _clean_id(id_number)
+	ip = _ip()
+	if ip and not _throttle("req_ip", ip, MAX_IP_REQUESTS_PER_HOUR):
+		return generic
+	if not _throttle("req_id", idn, MAX_SENDS_PER_HOUR):
+		return generic
+
+	member = _active_member(idn)
 	if not member:
 		return generic
 
@@ -156,12 +180,6 @@ def request_login_otp(id_number):
 	if not phone:
 		# No usable number to send to; stay generic so we reveal nothing.
 		return generic
-
-	if _recent_send_count(member.name) >= MAX_SENDS_PER_HOUR:
-		frappe.throw(
-			_("Too many login codes requested. Please wait an hour and try again."),
-			frappe.ValidationError,
-		)
 
 	code = f"{secrets.randbelow(10 ** CODE_LENGTH):0{CODE_LENGTH}d}"
 	frappe.get_doc(
@@ -193,32 +211,43 @@ def verify_login_otp(id_number, code):
 	told to go to /sacco-portal."""
 	invalid = _("That code is wrong or has expired. Please request a new one.")
 
-	member = _active_member(id_number)
+	idn = _clean_id(id_number)
+	ip = _ip()
+	# Same uniform throttles as request, so brute force is bounded per IP and per ID (members or not).
+	if ip and not _throttle("ver_ip", ip, MAX_IP_REQUESTS_PER_HOUR):
+		frappe.throw(invalid, frappe.AuthenticationError)
+	if not _throttle("ver_id", idn, MAX_VERIFY_PER_HOUR):
+		frappe.throw(invalid, frappe.AuthenticationError)
+
+	member = _active_member(idn)
 	if not member:
 		frappe.throw(invalid, frappe.AuthenticationError)
 
-	row_name = frappe.db.get_value(
+	# Lock the live code row for this member so concurrent verifies serialise: the read -> attempt
+	# check -> increment below is then atomic, and the 5-try limit cannot be raced past.
+	row = frappe.db.get_value(
 		"SACCO Login Code",
 		{"member": member.name, "status": "Sent", "expires_at": [">", now_datetime()]},
-		"name",
+		["name", "code_hash", "attempts"],
+		as_dict=True,
 		order_by="creation desc",
+		for_update=True,
 	)
-	if not row_name:
+	if not row:
 		frappe.throw(invalid, frappe.AuthenticationError)
 
-	row = frappe.get_doc("SACCO Login Code", row_name)
 	if cint(row.attempts) >= MAX_VERIFY_ATTEMPTS:
-		row.db_set("status", "Blocked")
+		frappe.db.set_value("SACCO Login Code", row.name, "status", "Blocked")
 		_persist()
 		frappe.throw(_("Too many attempts. Please request a new code."), frappe.AuthenticationError)
 
-	row.db_set("attempts", cint(row.attempts) + 1)
+	frappe.db.set_value("SACCO Login Code", row.name, "attempts", cint(row.attempts) + 1)
 	if not hmac.compare_digest(row.code_hash, _hash_code(code)):
 		_persist()  # keep the attempt count even though we raise
 		frappe.throw(invalid, frappe.AuthenticationError)
 
 	# Correct code. Burn this and any other live codes for the member, then open the session.
-	row.db_set("status", "Used")
+	frappe.db.set_value("SACCO Login Code", row.name, "status", "Used")
 	frappe.db.set_value(
 		"SACCO Login Code",
 		{"member": member.name, "status": "Sent"},
