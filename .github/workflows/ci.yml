@@ -38,6 +38,9 @@ jobs:
     env:
       # sacco_manager targets ERPNext v16 + Lending (hooks: required_apps). Match production.
       FRAPPE_BRANCH: version-16
+      # uv's default (first-match) can't resolve frappe v16's dependency set; consider all
+      # candidate versions like pip does.
+      UV_INDEX_STRATEGY: unsafe-best-match
 
     steps:
       - name: Clone
