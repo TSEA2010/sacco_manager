@@ -40,7 +40,10 @@ doc_events = {
 # -> Penalty Interest Rate and grace period), which charges only on overdue instalments.
 scheduler_events = {
 	"hourly": ["sacco_manager.mobile_money.allocation.retry_unallocated"],
-	"daily": ["sacco_manager.tasks.mark_dormant_accounts"],
+	"daily": [
+		"sacco_manager.tasks.mark_dormant_accounts",
+		"sacco_manager.auth.otp.clear_expired_codes",
+	],
 	"weekly": ["sacco_manager.notifications.weekly_arrears_reminders", "sacco_manager.housekeeping.weekly"],
 	"cron": {
 		# 07:00 on the 5th: previous month's management pack to the recipients in SACCO Settings
