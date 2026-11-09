@@ -98,23 +98,23 @@ def _throttle(bucket, ident, limit, window=RATE_WINDOW):
 	return count <= limit
 
 
-def _ensure_portal_user(member):
-	"""Make sure the member has an enabled Website-User login, and return its name.
+def _sacco_login_id(member):
+	"""The member's dedicated SACCO login, in a namespace of its own (@sacco.*). Deliberately NOT
+	the member's real email: sacco_manager may be installed ON the Trident/Astral ERP site, where
+	the member could also be an employee. Reusing that employee's ESS user and adding the Sacco
+	Member role to it would break their PIN sign-in (which needs exactly Employee + Employee Self
+	Service). A separate login keeps the two identities from ever touching."""
+	local = re.sub(r"[^a-z0-9]+", "-", (member.member_no or member.name).lower()).strip("-")
+	return f"{local}@{SYNTHETIC_EMAIL_DOMAIN}"
 
-	Runs after the code has been verified, so it does not gate on desk permissions. A member who is
-	already a desk (System) user is refused: phone OTP must not open a privileged account."""
-	user_id = (member.user_id or member.email_id or "").strip().lower()
-	if not user_id:
-		local = re.sub(r"[^a-z0-9]+", "-", (member.member_no or member.name).lower()).strip("-")
-		user_id = f"{local}@{SYNTHETIC_EMAIL_DOMAIN}"
+
+def _ensure_portal_user(member):
+	"""Make sure the member has an enabled, dedicated Website-User login (never an employee/ESS or
+	desk account), and return its name. Runs after the code has been verified."""
+	user_id = _sacco_login_id(member)
 
 	if frappe.db.exists("User", user_id):
 		user = frappe.get_doc("User", user_id)
-		if user.user_type != "Website User" and not frappe.flags.in_test:
-			frappe.throw(
-				_("This membership is linked to a staff account. Please sign in with your staff login."),
-				frappe.PermissionError,
-			)
 		if not user.enabled:
 			user.db_set("enabled", 1)
 	else:

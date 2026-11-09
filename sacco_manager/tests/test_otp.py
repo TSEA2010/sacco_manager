@@ -151,11 +151,19 @@ class TestMemberOtpLogin(_TestCase):
 		with self.assertRaises(frappe.AuthenticationError):
 			otp.verify_login_otp(member.id_number, code)
 
-	def test_member_with_email_reuses_that_login(self):
+	def test_login_user_is_dedicated_not_the_members_email(self):
+		# Even when the member has a real email (which could be an employee's ESS login on a shared
+		# ERP site), the SACCO login is a separate @sacco.* account carrying only the Sacco Member
+		# role — so an employee's account and its PIN sign-in are never touched.
 		email = f"member.{frappe.generate_hash(length=6)}@example.com"
 		member = _make_member(email_id=email)
 		otp.request_login_otp(member.id_number)
 		code = self._code_from_sms()
 		otp.verify_login_otp(member.id_number, code)
 		member.reload()
-		self.assertEqual(member.user_id, email)
+		self.assertNotEqual(member.user_id, email)
+		self.assertTrue(member.user_id.endswith("@" + otp.SYNTHETIC_EMAIL_DOMAIN))
+		self.assertEqual(frappe.session.user, member.user_id)
+		roles = set(frappe.get_roles(member.user_id))
+		self.assertIn(otp.SACCO_MEMBER_ROLE, roles)
+		self.assertNotIn("Employee", roles)
